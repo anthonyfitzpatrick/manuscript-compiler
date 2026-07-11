@@ -1,4 +1,4 @@
-import { FileSystemAdapter, Vault } from "obsidian";
+import { FileSystemAdapter, TFolder, Vault } from "obsidian";
 import { ManuscriptCompiler } from "./compiler";
 import { MarkdownExporter } from "./exporter";
 import type { Book, CompileWarning } from "./model";
@@ -15,6 +15,7 @@ export class ManuscriptValidationService {
     const started = performance.now(); const compiler = new ManuscriptCompiler(this.vault); const book = await compiler.buildModel(scan, profile);
     const exporter = new MarkdownExporter(this.vault); const outputPath = exporter.getOutputPath(profile.exportFolder, profile.outputFilename, { BookTitle: profile.variables.BookTitle || book.title }, profile.exportTarget === "docx" ? ".docx" : ".md");
     const issues = new WarningEngine().analyze(book, profile, outputPath); const profileValidation = validateProfile(profile); profileValidation.errors.forEach((message) => issues.push({ severity: "error", code: "invalid-profile", message }));
+    const outputFolder = this.vault.getAbstractFileByPath(profile.exportFolder); if (!outputFolder) issues.push({ severity: "information", code: "missing-output-folder", message: `Output folder does not exist yet: ${profile.exportFolder}`, suggestion: "It will be created automatically on the first export." }); else if (!(outputFolder instanceof TFolder)) issues.push({ severity: "error", code: "invalid-output-folder", message: `Export folder points to a file: ${profile.exportFolder}`, suggestion: "Choose a folder path that is outside the manuscript root." });
     let pandoc: PandocStatus = { available: false, explanation: "Not required for Markdown validation." };
     if (profile.exportTarget !== "markdown") {
       pandoc = await new PandocService(this.settings).detect(); if (!pandoc.available) issues.push({ severity: "error", code: "pandoc-missing", message: pandoc.explanation ?? "Pandoc is unavailable." });

@@ -21,8 +21,9 @@ export class ManuscriptParser {
     const documents = (files: TFile[]): ManuscriptDocument[] => files.map((file) => cache.get(file.path)).filter((document): document is ManuscriptDocument => document !== undefined);
     const frontDocuments = documents(scan.frontMatter);
     const backDocuments = documents(scan.backMatter);
-    const parts = scan.parts.map((part) => this.createPart(part, documents, settings));
-    const orphanScenes = documents(scan.looseScenes) as Scene[];
+    const rootDocuments = documents(scan.looseScenes) as Scene[];
+    const parts = settings.useParts ? scan.parts.map((part) => this.createPart(part, documents, settings)) : [this.createPartlessBook(scan, rootDocuments, documents, settings)];
+    const orphanScenes = settings.useParts ? rootDocuments : [];
     sortDocuments(frontDocuments, settings.metadataOrdering);
     sortDocuments(backDocuments, settings.metadataOrdering);
     sortDocuments(orphanScenes, settings.metadataOrdering);
@@ -72,12 +73,20 @@ export class ManuscriptParser {
   }
 
   private createPart(scanned: ScannedPart, documents: (files: TFile[]) => ManuscriptDocument[], settings: CompileOptions): Part {
-    const orphanScenes = documents(scanned.looseScenes) as Scene[];
-    const chapters = scanned.chapters.map((chapter) => this.createChapter(chapter, documents, settings));
+    const direct = documents(scanned.looseScenes) as Scene[];
+    const noteChapters = settings.chapterSource === "notes" ? direct.map((scene) => this.chapterFromDocument(scene, settings)) : [];
+    const orphanScenes = settings.chapterSource === "folders" ? direct : [];
+    const chapters = [...noteChapters, ...scanned.chapters.map((chapter) => this.createChapter(chapter, documents, settings))];
     const representative = [...orphanScenes, ...chapters.flatMap((chapter) => chapter.scenes)].find((scene) => scene.metadata.part !== undefined);
     const metadataNumber = extractNumber(representative?.metadata.part);
     return { title: scanned.folder.name, name: titleName(scanned.folder.name), number: settings.metadataOrdering ? metadataNumber ?? extractNumber(scanned.folder.name) : extractNumber(scanned.folder.name), path: scanned.folder.path, order: metadataNumber, chapters, orphanScenes };
   }
+  private createPartlessBook(scan: ScannedBook, rootDocuments: Scene[], documents: (files: TFile[]) => ManuscriptDocument[], settings: CompileOptions): Part {
+    const rootChapters = settings.chapterSource === "notes" ? rootDocuments.map((scene) => this.chapterFromDocument(scene, settings)) : [];
+    const folderChapters = scan.parts.map((folder) => { const scenes = [...documents(folder.looseScenes), ...folder.chapters.flatMap((chapter) => documents(chapter.scenes))] as Scene[]; const representative = scenes.find((scene) => scene.metadata.chapter !== undefined); const metadataNumber = extractNumber(representative?.metadata.chapter); return { title: folder.folder.name, name: titleName(folder.folder.name), number: settings.metadataOrdering ? metadataNumber ?? extractNumber(folder.folder.name) : extractNumber(folder.folder.name), path: folder.folder.path, order: metadataNumber, scenes, orphan: false }; });
+    return { title: scan.root.name, name: scan.root.name, path: scan.root.path, chapters: [...rootChapters, ...folderChapters], orphanScenes: settings.chapterSource === "folders" ? rootDocuments : [], synthetic: true };
+  }
+  private chapterFromDocument(scene: Scene, settings: CompileOptions): Chapter { const metadataNumber = extractNumber(scene.metadata.chapter); return { title: scene.title, name: titleName(scene.title), number: settings.metadataOrdering ? metadataNumber ?? scene.number : scene.number, path: scene.file.path, order: metadataNumber ?? scene.metadata.order, scenes: [scene], orphan: false }; }
   private createChapter(scanned: ScannedChapter, documents: (files: TFile[]) => ManuscriptDocument[], settings: CompileOptions): Chapter {
     const scenes = documents(scanned.scenes) as Scene[];
     const representative = scenes.find((scene) => scene.metadata.chapter !== undefined);

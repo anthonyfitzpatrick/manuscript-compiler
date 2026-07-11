@@ -16,7 +16,6 @@ export class MarkdownExporter implements Exporter {
     const withoutKnownExtension = rendered.replace(/\.(?:md|docx)$/i, ""); const safeName = withoutKnownExtension.replace(/[\\/:*?"<>|]/g, "-").trim() || "Manuscript";
     return normalizePath(folder ? `${folder}/${safeName}${extension}` : `${safeName}${extension}`);
   }
-  exists(path: string): boolean { return this.vault.getAbstractFileByPath(path) instanceof TFile; }
   async export(request: ExportRequest): Promise<ExportResult> { const file = await this.write(request.outputPath, request.markdown); return { format: this.format, path: file.path, file }; }
   async write(path: string, markdown: string): Promise<TFile> { const slash = path.lastIndexOf("/"); if (slash >= 0) await this.ensureFolder(path.slice(0, slash)); const existing = this.vault.getAbstractFileByPath(path); if (existing instanceof TFile) { await this.vault.modify(existing, markdown); return existing; } return this.vault.create(path, markdown); }
   async ensureFolder(path: string): Promise<void> { const parts = normalizePath(path).split("/"); for (let index = 1; index <= parts.length; index += 1) { const current = parts.slice(0, index).join("/"); if (!this.vault.getAbstractFileByPath(current)) await this.vault.createFolder(current); } }
@@ -43,6 +42,3 @@ export class DocxExporter implements Exporter {
     } finally { await fs.rm(temporaryDirectory, { recursive: true, force: true }); }
   }
 }
-
-export class JsonDebugExporter implements Exporter { readonly format = "json"; async export(_request: ExportRequest): Promise<ExportResult> { throw new Error("JSON debug export is not enabled in Stage 4."); } }
-export class HtmlExporter implements Exporter { readonly format = "html"; async export(_request: ExportRequest): Promise<ExportResult> { throw new Error("HTML export is reserved for a future stage."); } }

@@ -49,6 +49,7 @@ export interface Part {
   order?: number;
   chapters: Chapter[];
   orphanScenes: Scene[];
+  synthetic?: boolean;
 }
 
 export interface Book {
@@ -65,7 +66,7 @@ export interface Book {
 }
 
 export type WarningSeverity = "information" | "warning" | "error";
-export interface CompileWarning { severity: WarningSeverity; code: string; message: string; path?: string; }
+export interface CompileWarning { severity: WarningSeverity; code: string; message: string; path?: string; suggestion?: string; }
 export interface NamedStatistic { name: string; words: number; }
 export interface ManuscriptStatistics {
   totalWordCount: number; chapterCount: number; sceneCount: number; averageChapterLength: number; averageSceneLength: number;
@@ -87,7 +88,9 @@ export interface CompileResult extends CompileStatistics {
   warnings: string[];
   issues: CompileWarning[];
   statistics: ManuscriptStatistics;
+  timings?: CompileTimings;
 }
+export interface CompileTimings { totalMs: number; scanMs: number; parseMs: number; filterMs: number; generationMs: number; exportMs: number; }
 
 export interface CompilePreview extends CompileStatistics {
   book: Book;

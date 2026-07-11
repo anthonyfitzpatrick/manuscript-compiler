@@ -17,7 +17,7 @@ export class ManuscriptCompiler {
     const statistics = this.statistics.calculate(book, profile, wordsPerMinute);
     const generationStarted = performance.now(); const markdown = this.generator.generate(book, profile, statistics, compileDate); this.timings.generationDurationMs = performance.now() - generationStarted;
     const issues = this.warnings.analyze(book, profile, outputPath); book.issues = issues;
-    return { markdown, parts: book.parts.length, chapters: statistics.chapterCount, scenes: statistics.sceneCount,
+    return { markdown, parts: profile.useParts ? book.parts.length : 0, chapters: statistics.chapterCount, scenes: statistics.sceneCount,
       frontMatter: book.frontMatter.documents.filter((document) => !document.excluded && profile.includeFrontMatter).length,
       backMatter: book.backMatter.documents.filter((document) => !document.excluded && profile.includeBackMatter).length,
       wordCount: statistics.totalWordCount, readingTimeMinutes: statistics.readingTimeMinutes,

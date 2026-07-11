@@ -7,5 +7,10 @@ export class TFile {}
 export class TFolder {}
 export class Vault {}
 export class FileSystemAdapter {}
+export class App {}
+export class FuzzySuggestModal<T> {}
+export class Modal {}
+export class Notice {}
+export class Setting {}
 export const Platform = { isDesktopApp: true };
 export const normalizePath = (value: string): string => value;

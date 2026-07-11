@@ -13,3 +13,4 @@ export function chooseLocalFile(accept: string, callback: (path: string) => void
   const input = document.createElement("input"); input.type = "file"; input.accept = accept;
   input.setAttribute("aria-label", "Choose local file"); input.addEventListener("change", () => { const selected = input.files?.[0] as (File & { path?: string }) | undefined; if (selected?.path) callback(selected.path); }); input.click();
 }
+export function getObsidianVersion(): string { try { const electron = (globalThis as typeof globalThis & { require?: (id: string) => { remote?: { app?: { getVersion(): string } } } }).require?.("electron"); return electron?.remote?.app?.getVersion() ?? "Unavailable through documented API"; } catch { return "Unavailable through documented API"; } }

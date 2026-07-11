@@ -2,6 +2,39 @@
 
 Manuscript Compiler is a self-contained Obsidian publishing-workflow plugin that turns a folder-based book into deterministic Markdown and professional DOCX files. Source notes are read-only and are never modified.
 
+## Quick Start
+
+1. Install and enable Manuscript Compiler.
+2. Complete the first-run wizard: choose manuscript and export folders, detect Pandoc if desired, and choose Standard or Vellum.
+3. Open the Command Palette and run **Manuscript Compiler: Validate Manuscript**.
+4. Resolve any Errors, review Warnings, then run **Compile Current Book**.
+5. Review the searchable compile preview and select **Compile**.
+
+The first-run wizard offers to compile `samples/Complete Sample Book` when that folder is present in the vault. The Settings page also includes **Open profile wizard** for every later project.
+
+## Installation
+
+For a manual Release Candidate installation, copy `manifest.json`, `main.js`, and `styles.css` into:
+
+```text
+<your vault>/.obsidian/plugins/manuscript-compiler/
+```
+
+Restart or reload Obsidian, enable **Community plugins**, then enable **Manuscript Compiler**. Manuscript Compiler itself does not require any other community plugin. Pandoc is optional and only needed for DOCX.
+
+## First Compile
+
+Your manuscript can use Part folders containing Chapter folders containing scene notes. Profiles can also support no Parts and chapters stored as individual notes. Set **Use Parts** and **Chapter source** in the guided profile wizard or profile settings.
+
+Before export, the preview lets you:
+
+- Search chapter and scene names
+- Expand or collapse the whole structure
+- Inspect scene metadata and inclusion status
+- Filter issues by severity
+- Sort issues with Errors or Information first
+- Review output paths, Pandoc state, statistics, and estimated pages
+
 ## Plugin independence
 
 Manuscript Compiler has zero runtime dependency on community plugins. It does not call another plugin's API, read another plugin's settings, invoke another plugin's commands, or access Obsidian's community-plugin registry.
@@ -20,7 +53,7 @@ Each compile profile can export:
 
 Markdown remains the canonical intermediate representation. The scanner, parser, manuscript model, filters, ordering, cleaning pipeline, statistics, warnings, and Markdown generator run identically for every target. Format exporters receive the generated Markdown afterward.
 
-The exporter interface currently has complete Markdown and DOCX implementations. HTML and JSON debug exporter placeholders establish extension points for future formats.
+The exporter interface currently has complete Markdown and DOCX implementations and remains open to future formats without changing compiler logic.
 
 ## Installing Pandoc
 
@@ -70,6 +103,8 @@ Profiles independently store:
 
 Profiles can be created, renamed, duplicated, deleted, imported/exported as validated JSON, and reset to the built-in Default and Vellum profiles. Stage 3 profiles migrate automatically to Markdown export while retaining all previous options.
 
+The profile wizard asks whether chapters are folders or notes, whether the manuscript uses Parts, whether separators and matter sections are included, whether a reference DOCX is available, and whether Vellum is the primary destination. It generates a normal editable profile rather than hiding wizard-only configuration.
+
 ## Export preview
 
 The expandable preview tree shows included, excluded, and warning-bearing nodes. Selecting a scene displays its filename, word count, metadata, and compile status without showing its full prose.
@@ -85,6 +120,8 @@ Stage 4 also displays:
 - Information, Warning, and Error groups
 
 Every existing output requires confirmation before replacement.
+
+Preview status uses text and symbols as well as colour. All controls are native keyboard-focusable elements, search fields have accessible labels, and forced-colour styles retain borders and status visibility.
 
 ## Validation mode
 
@@ -107,7 +144,11 @@ The settings tab provides **History** and **Logs** viewers.
 
 History records the timestamp, profile, manuscript, output files, word count, and success/failure state. Exported Markdown opens in Obsidian; other local exports open with the operating system’s default application. History can be cleared and is bounded by **Maximum export history entries**.
 
-When compile logging is enabled, logs additionally record requested formats, Pandoc version, duration, warnings, and captured diagnostics. Records are stored through Obsidian’s standard plugin data storage inside the plugin data folder. No logs are transmitted externally.
+When compile logging is enabled, logs additionally record requested formats, compiler/Pandoc versions, total duration, scan, parse, filter, generation and export durations, warnings, and captured diagnostics. Records are stored through Obsidian’s standard plugin data storage inside the plugin data folder. No logs are transmitted externally.
+
+## Diagnostics
+
+Run **Manuscript Compiler: Generate Diagnostics Report** to create a support-safe Markdown report. It includes plugin/Obsidian environment details, operating system, active-profile summary, Pandoc status, latest timings, warning counts, and export-history totals. It intentionally excludes note text and manuscript contents. The dialog can copy the report or save it under `Manuscript Compiler Diagnostics/` in the vault.
 
 ## Templates and metadata
 
@@ -135,6 +176,8 @@ Common ebook/print front- and back-matter names are recognised case-insensitivel
 
 - **Manuscript Compiler: Compile Current Book** uses the active profile’s root, falling back to detection above the active note.
 - **Manuscript Compiler: Compile Selected Folder** compiles a selected vault folder with the active profile.
+- **Manuscript Compiler: Validate Manuscript** performs a read-only validation pass.
+- **Manuscript Compiler: Generate Diagnostics Report** creates a copyable/saveable support report without prose content.
 
 Stage 1–3 command IDs, profile behavior, Markdown cleaning, metadata ordering/filtering, overwrite protection, preview, statistics, and warnings remain supported.
 
@@ -203,14 +246,41 @@ UI classes select settings, invoke services, and render results; they do not sca
 - **Output included on a later compile:** move the export folder outside the manuscript root. Validation reports this unsafe configuration.
 - **Non-Markdown export does not open:** use the operating system's file manager. External opening uses an isolated Electron compatibility bridge and fails gracefully when unavailable.
 
+## FAQ
+
+### Does Manuscript Compiler modify source notes?
+
+No. Scanning, validation, preview, and compilation only read manuscript notes. Exporters write exclusively to configured output paths.
+
+### Is Pandoc required?
+
+No. Markdown export works without Pandoc. Pandoc is required only for DOCX.
+
+### Are Dataview or other plugins required?
+
+No. Optional plugin syntax is processed as text. No community-plugin API is called.
+
+### Can chapters be individual notes?
+
+Yes. Choose **Chapter source: Individual chapter notes**. For a short story or no-Parts novel, also turn **Use Parts** off.
+
+### Why is metadata reported as unused?
+
+A field is unused when it is neither structural metadata nor referenced by an active profile filter. It remains in the source note and can safely be retained.
+
+### Where are diagnostics and exports saved?
+
+Exports use the active profile’s export folder. Saved diagnostics use `Manuscript Compiler Diagnostics/`. Compile logs and history use standard plugin data storage.
+
 ## API and dependency audit
 
 The plugin uses documented Obsidian `Plugin`, `Vault`, `Workspace`, `TFile`, `TFolder`, `FileSystemAdapter`, `Modal`, `FuzzySuggestModal`, `PluginSettingTab`, `Setting`, `Notice`, `Platform`, `normalizePath`, and `parseYaml` exports.
 
-Two capabilities have no documented cross-platform Obsidian equivalent and are isolated in `platform-compat.ts`:
+Three capabilities have no documented cross-platform Obsidian equivalent and are isolated in `platform-compat.ts`:
 
 1. Electron's `shell.openPath` for reopening non-Markdown exports.
 2. Electron's desktop file-input `File.path` extension for choosing an absolute reference/template file.
+3. Electron's application-version bridge for diagnostics; the report states “Unavailable through documented API” when this bridge is absent.
 
 Both are optional, desktop-only conveniences with safe failure behavior; text path entry and file-manager opening remain available. Node built-ins (`child_process`, `fs/promises`, `os`, and `path`) are isolated in `pandoc.ts`, used only on desktop for local DOCX conversion, and never execute through a shell.
 

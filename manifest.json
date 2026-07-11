@@ -1,9 +1,9 @@
 {
   "id": "manuscript-compiler",
   "name": "Manuscript Compiler",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "minAppVersion": "1.5.0",
-  "description": "Compile a book folder into a single Markdown manuscript.",
+  "description": "Validate, preview, and compile book manuscripts to Markdown or DOCX.",
   "author": "Anthony Fitzpatrick",
   "isDesktopOnly": false
 }

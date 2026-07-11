@@ -1,6 +1,6 @@
 {
   "name": "obsidian-manuscript-compiler",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Compile an Obsidian book folder into a single Markdown manuscript.",
   "main": "main.js",
   "scripts": {

@@ -14,7 +14,7 @@ export class MarkdownGenerator {
     const add = (text: string, blankLines = profile.blankLinesBetweenSections): void => { if (text.trim()) blocks.push({ text: text.trim(), blankLines }); };
     if (profile.includeFrontMatter) this.addDocuments(add, book.frontMatter.documents, profile, false);
     for (const part of book.parts) {
-      add(`# ${this.heading(profile.partHeadingTemplate, part, variables)}`);
+      if (profile.useParts) add(`# ${this.heading(profile.partHeadingTemplate, part, variables)}`);
       this.addDocuments(add, part.orphanScenes, profile, true);
       for (const chapter of part.chapters) {
         add(`## ${this.heading(profile.chapterHeadingTemplate, chapter, variables)}`, profile.blankLinesBetweenChapters);
@@ -23,9 +23,8 @@ export class MarkdownGenerator {
     }
     this.addDocuments(add, book.orphanScenes, profile, true);
     if (profile.includeBackMatter) this.addDocuments(add, book.backMatter.documents, profile, false);
-    let output = "";
-    blocks.forEach((block, index) => { if (index > 0) output += "\n".repeat(Math.max(1, block.blankLines + 1)); output += block.text; });
-    return `${output.replace(/[\t ]+$/gm, "").replace(/\n+$/g, "")}\n`;
+    const chunks: string[] = []; blocks.forEach((block, index) => { if (index > 0) chunks.push("\n".repeat(Math.max(1, block.blankLines + 1))); chunks.push(block.text); });
+    return `${chunks.join("").replace(/[\t ]+$/gm, "").replace(/\n+$/g, "")}\n`;
   }
   private addDocuments(add: (text: string, blankLines?: number) => void, documents: ManuscriptDocument[], profile: CompileProfile, scenes: boolean): void {
     const included = documents.filter((document) => !document.excluded && document.content.trim());
