@@ -6,3 +6,26 @@
 
 .manuscript-compiler-report dt { font-weight: var(--font-semibold); }
 .manuscript-compiler-report dd { margin: 0; overflow-wrap: anywhere; }
+
+.modal-content:has(.manuscript-compiler-report) {
+  max-height: 75vh;
+  overflow-y: auto;
+}
+
+.manuscript-compiler-warnings { color: var(--text-warning); }
+
+.manuscript-compiler-preview { width: min(1100px, 90vw); }
+.manuscript-compiler-preview-layout { display: grid; grid-template-columns: minmax(260px, 1fr) minmax(300px, 1fr); gap: var(--size-4-4); }
+.manuscript-compiler-tree, .manuscript-compiler-inspector { border: 1px solid var(--background-modifier-border); border-radius: var(--radius-m); padding: var(--size-4-3); min-height: 240px; }
+.manuscript-tree-children { margin-inline-start: var(--size-4-4); }
+.manuscript-tree-scene { display: flex; align-items: center; gap: var(--size-4-2); }
+.manuscript-scene-button { width: auto; justify-content: flex-start; font: inherit; }
+.manuscript-status { display: inline-flex; width: 1.4em; margin-inline-end: var(--size-4-1); font-weight: var(--font-bold); }
+.manuscript-status-included { color: var(--text-success); }
+.manuscript-status-excluded { color: var(--text-muted); }
+.manuscript-status-warning, .manuscript-issue-warning, .manuscript-issues-warning { color: var(--text-warning); }
+.manuscript-issue-error, .manuscript-issues-error { color: var(--text-error); }
+.manuscript-issue-information, .manuscript-issues-information { color: var(--text-muted); }
+.manuscript-profile-json { width: 100%; min-height: 360px; font-family: var(--font-monospace); }
+
+@media (max-width: 700px) { .manuscript-compiler-preview-layout { grid-template-columns: 1fr; } }

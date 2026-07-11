@@ -1,5 +1,9 @@
-import { App, FuzzySuggestModal, Modal, Notice, PluginSettingTab, Setting, TFolder } from "obsidian";
+import { App, FuzzySuggestModal, Modal, Notice, PluginSettingTab, Setting, TextAreaComponent, TFolder } from "obsidian";
 import type ManuscriptCompilerPlugin from "./main";
+import type { Chapter, CompilePreview, CompileResult, CompileWarning, ManuscriptDocument, Part } from "./model";
+import { createDefaultProfiles, duplicateProfile, profileId, validateProfile } from "./profiles";
+import { DEFAULT_OPTIONS, type CompileProfile, type MetadataFilterRule, type WarningLevel } from "./settings";
+import { documentWordCount } from "./statistics";
 
 export class FolderSuggestModal extends FuzzySuggestModal<TFolder> {
   constructor(app: App, private readonly onChoose: (folder: TFolder) => void) { super(app); }
@@ -8,58 +12,98 @@ export class FolderSuggestModal extends FuzzySuggestModal<TFolder> {
   onChooseItem(folder: TFolder): void { this.onChoose(folder); }
 }
 
+export class CompilePreviewModal extends Modal {
+  constructor(app: App, private readonly preview: CompilePreview, private readonly expanded: boolean, private readonly showStatistics: boolean, private readonly resolve: (compile: boolean) => void) { super(app); }
+  onOpen(): void {
+    this.modalEl.addClass("manuscript-compiler-preview"); this.titleEl.setText("Compile preview");
+    const summary = this.contentEl.createEl("dl", { cls: "manuscript-compiler-report" });
+    this.row(summary, "Manuscript root", this.preview.book.root.path); this.row(summary, "Output", this.preview.outputPath);
+    const layout = this.contentEl.createDiv({ cls: "manuscript-compiler-preview-layout" });
+    const tree = layout.createDiv({ cls: "manuscript-compiler-tree" }); const inspector = layout.createDiv({ cls: "manuscript-compiler-inspector" });
+    inspector.createEl("p", { text: "Select a scene to inspect its filename, word count, metadata, and compile status." });
+    const root = this.branch(tree, this.preview.book.title, true, this.statusForPath(this.preview.book.root.path));
+    this.documentBranch(root, "Front Matter", this.preview.book.frontMatter.documents, inspector);
+    this.preview.book.parts.forEach((part) => this.partBranch(root, part, inspector));
+    this.preview.book.orphanScenes.forEach((scene) => this.sceneNode(root, scene, inspector));
+    this.documentBranch(root, "Back Matter", this.preview.book.backMatter.documents, inspector);
+    if (this.showStatistics) this.renderStatistics(this.contentEl, this.preview.statistics);
+    this.renderWarnings(this.contentEl, this.preview.issues);
+    new Setting(this.contentEl).addButton((button) => button.setButtonText("Cancel").onClick(() => { this.resolve(false); this.close(); })).addButton((button) => button.setButtonText("Compile").setCta().onClick(() => { this.resolve(true); this.close(); }));
+  }
+  private branch(parent: HTMLElement, label: string, root = false, status = "included"): HTMLElement { const details = parent.createEl("details"); details.open = root || this.expanded; const summary = details.createEl("summary"); summary.createSpan({ cls: `manuscript-status manuscript-status-${status}`, text: status === "included" ? "✓" : status === "excluded" ? "−" : "!" }); summary.createSpan({ text: label }); return details.createDiv({ cls: "manuscript-tree-children" }); }
+  private documentBranch(parent: HTMLElement, label: string, documents: ManuscriptDocument[], inspector: HTMLElement): void { const branch = this.branch(parent, label, false, documents.some((item) => item.excluded) ? "warning" : "included"); documents.forEach((document) => this.sceneNode(branch, document, inspector)); }
+  private partBranch(parent: HTMLElement, part: Part, inspector: HTMLElement): void { const branch = this.branch(parent, part.title, false, this.statusForPath(part.path)); part.orphanScenes.forEach((scene) => this.sceneNode(branch, scene, inspector)); part.chapters.forEach((chapter) => this.chapterBranch(branch, chapter, inspector)); }
+  private chapterBranch(parent: HTMLElement, chapter: Chapter, inspector: HTMLElement): void { const branch = this.branch(parent, chapter.title, false, this.statusForPath(chapter.path)); chapter.scenes.forEach((scene) => this.sceneNode(branch, scene, inspector)); }
+  private sceneNode(parent: HTMLElement, document: ManuscriptDocument, inspector: HTMLElement): void {
+    const row = parent.createDiv({ cls: "manuscript-tree-scene" }); const status = document.excluded ? "excluded" : this.statusForPath(document.file.path);
+    row.createSpan({ cls: `manuscript-status manuscript-status-${status}`, text: status === "included" ? "✓" : status === "excluded" ? "−" : "!" });
+    const button = row.createEl("button", { cls: "clickable-icon manuscript-scene-button", text: document.title }); button.addEventListener("click", () => this.inspect(document, inspector));
+  }
+  private inspect(document: ManuscriptDocument, inspector: HTMLElement): void {
+    inspector.empty(); inspector.createEl("h3", { text: document.title }); const list = inspector.createEl("dl", { cls: "manuscript-compiler-report" });
+    this.row(list, "Filename", document.file.path); this.row(list, "Word count", documentWordCount(document.content).toLocaleString()); this.row(list, "Compile status", document.excluded ? `Excluded — ${document.exclusionReason ?? "Profile rule"}` : "Included");
+    inspector.createEl("h4", { text: "Metadata" }); const values = Object.entries(document.metadata.values); if (!values.length) inspector.createEl("p", { text: "None" }); else { const metadata = inspector.createEl("dl", { cls: "manuscript-compiler-report" }); values.forEach(([key, value]) => this.row(metadata, key, typeof value === "string" ? value : JSON.stringify(value))); }
+  }
+  private statusForPath(path: string): "included" | "warning" { return this.preview.issues.some((issue) => issue.path?.includes(path)) ? "warning" : "included"; }
+  private renderStatistics(parent: HTMLElement, stats: CompileResult["statistics"]): void {
+    parent.createEl("h3", { text: "Statistics" }); const list = parent.createEl("dl", { cls: "manuscript-compiler-report manuscript-statistics" });
+    const named = (value?: { name: string; words: number }): string => value ? `${value.name} (${value.words.toLocaleString()} words)` : "—";
+    [["Total words", stats.totalWordCount.toLocaleString()], ["Chapters", String(stats.chapterCount)], ["Scenes", String(stats.sceneCount)], ["Average chapter", `${stats.averageChapterLength.toLocaleString()} words`], ["Average scene", `${stats.averageSceneLength.toLocaleString()} words`], ["Longest chapter", named(stats.longestChapter)], ["Shortest chapter", named(stats.shortestChapter)], ["Longest scene", named(stats.longestScene)], ["Shortest scene", named(stats.shortestScene)], ["Reading time", `${stats.readingTimeMinutes} min`]].forEach(([label, value]) => this.row(list, label, value));
+  }
+  private renderWarnings(parent: HTMLElement, issues: CompileWarning[]): void {
+    parent.createEl("h3", { text: `Issues (${issues.length})` });
+    for (const severity of ["error", "warning", "information"] as const) { const matches = issues.filter((issue) => issue.severity === severity); if (!matches.length) continue; const details = parent.createEl("details", { cls: `manuscript-issues manuscript-issues-${severity}` }); details.open = severity !== "information"; details.createEl("summary", { text: `${severity[0].toUpperCase()}${severity.slice(1)} (${matches.length})` }); const list = details.createEl("ul"); matches.forEach((issue) => list.createEl("li", { text: issue.message })); }
+  }
+  private row(list: HTMLElement, label: string, value: string): void { list.createEl("dt", { text: label }); list.createEl("dd", { text: value }); }
+  onClose(): void { this.contentEl.empty(); }
+}
+
 export class ConfirmOverwriteModal extends Modal {
   constructor(app: App, private readonly path: string, private readonly resolve: (confirmed: boolean) => void) { super(app); }
-  onOpen(): void {
-    this.titleEl.setText("Overwrite manuscript?");
-    this.contentEl.createEl("p", { text: `The file “${this.path}” already exists. Replace it?` });
-    new Setting(this.contentEl)
-      .addButton((button) => button.setButtonText("Cancel").onClick(() => { this.resolve(false); this.close(); }))
-      .addButton((button) => button.setButtonText("Overwrite").setWarning().onClick(() => { this.resolve(true); this.close(); }));
-  }
+  onOpen(): void { this.titleEl.setText("Overwrite manuscript?"); this.contentEl.createEl("p", { text: `The file “${this.path}” already exists. Replace it?` }); new Setting(this.contentEl).addButton((button) => button.setButtonText("Cancel").onClick(() => { this.resolve(false); this.close(); })).addButton((button) => button.setButtonText("Overwrite").setWarning().onClick(() => { this.resolve(true); this.close(); })); }
   onClose(): void { this.contentEl.empty(); }
 }
 
 export class CompileReportModal extends Modal {
-  constructor(app: App, private readonly report: { output: string; parts: number; chapters: number; scenes: number; wordCount: number; warnings: string[] }) { super(app); }
-  onOpen(): void {
-    this.titleEl.setText("Compilation complete");
-    const list = this.contentEl.createEl("dl", { cls: "manuscript-compiler-report" });
-    this.addRow(list, "Output file", this.report.output);
-    this.addRow(list, "Parts", String(this.report.parts));
-    this.addRow(list, "Chapters", String(this.report.chapters));
-    this.addRow(list, "Scenes", String(this.report.scenes));
-    this.addRow(list, "Word count", this.report.wordCount.toLocaleString());
-    this.contentEl.createEl("h3", { text: "Warnings" });
-    if (this.report.warnings.length === 0) this.contentEl.createEl("p", { text: "None" });
-    else {
-      const warnings = this.contentEl.createEl("ul");
-      this.report.warnings.forEach((warning) => warnings.createEl("li", { text: warning }));
-    }
-  }
-  private addRow(list: HTMLElement, label: string, value: string): void { list.createEl("dt", { text: label }); list.createEl("dd", { text: value }); }
+  constructor(app: App, private readonly output: string, private readonly report: CompileResult, private readonly showStatistics: boolean) { super(app); }
+  onOpen(): void { this.titleEl.setText("Compilation complete"); const list = this.contentEl.createEl("dl", { cls: "manuscript-compiler-report" }); [["Output file", this.output], ["Parts", String(this.report.parts)], ["Chapters", String(this.report.chapters)], ["Scenes", String(this.report.scenes)], ["Word count", this.report.wordCount.toLocaleString()], ["Reading time", `${this.report.readingTimeMinutes} min`]].forEach(([label, value]) => { list.createEl("dt", { text: label }); list.createEl("dd", { text: value }); }); if (this.showStatistics) this.statistics(); this.contentEl.createEl("h3", { text: `Issues (${this.report.issues.length})` }); this.report.issues.forEach((issue) => this.contentEl.createEl("p", { cls: `manuscript-issue-${issue.severity}`, text: `${issue.severity.toUpperCase()}: ${issue.message}` })); }
+  private statistics(): void { const stats = this.report.statistics; const section = this.contentEl.createEl("details"); section.createEl("summary", { text: "Detailed statistics" }); const list = section.createEl("ul"); list.createEl("li", { text: `Average chapter: ${stats.averageChapterLength.toLocaleString()} words` }); list.createEl("li", { text: `Average scene: ${stats.averageSceneLength.toLocaleString()} words` }); for (const [label, value] of [["Longest chapter", stats.longestChapter], ["Shortest chapter", stats.shortestChapter], ["Longest scene", stats.longestScene], ["Shortest scene", stats.shortestScene]] as const) list.createEl("li", { text: `${label}: ${value ? `${value.name} (${value.words.toLocaleString()} words)` : "—"}` }); }
+}
+
+class TextPromptModal extends Modal {
+  private value: string;
+  constructor(app: App, private readonly heading: string, initial: string, private readonly done: (value?: string) => void) { super(app); this.value = initial; }
+  onOpen(): void { this.titleEl.setText(this.heading); new Setting(this.contentEl).addText((text) => { text.setValue(this.value); text.onChange((value) => { this.value = value; }); text.inputEl.addEventListener("keydown", (event) => { if (event.key === "Enter") { this.done(this.value.trim()); this.close(); } }); }); new Setting(this.contentEl).addButton((button) => button.setButtonText("Cancel").onClick(() => { this.done(); this.close(); })).addButton((button) => button.setButtonText("Save").setCta().onClick(() => { this.done(this.value.trim()); this.close(); })); }
+}
+class ProfileJsonModal extends Modal {
+  private value: string; constructor(app: App, private readonly mode: "import" | "export", profile: CompileProfile, private readonly done: (value?: string) => void) { super(app); this.value = mode === "export" ? JSON.stringify(profile, null, 2) : ""; }
+  onOpen(): void { this.titleEl.setText(`${this.mode === "import" ? "Import" : "Export"} compile profile`); this.contentEl.createEl("p", { text: this.mode === "import" ? "Paste a profile JSON object. It will be validated before saving." : "Copy this JSON to share or back up the profile." }); const area = new TextAreaComponent(this.contentEl); area.setValue(this.value).onChange((value) => { this.value = value; }); area.inputEl.addClass("manuscript-profile-json"); new Setting(this.contentEl).addButton((button) => button.setButtonText("Close").onClick(() => { this.done(); this.close(); })); if (this.mode === "import") new Setting(this.contentEl).addButton((button) => button.setButtonText("Import").setCta().onClick(() => { this.done(this.value); this.close(); })); }
 }
 
 export class ManuscriptCompilerSettingTab extends PluginSettingTab {
   constructor(app: App, private readonly plugin: ManuscriptCompilerPlugin) { super(app, plugin); }
   display(): void {
-    const { containerEl } = this;
-    containerEl.empty();
-    new Setting(containerEl).setName("Default manuscript folder").setDesc("Vault-relative path to the book folder used by Compile Current Book.").addText((text) => text.setPlaceholder("Books/My Book").setValue(this.plugin.settings.defaultManuscriptFolder).onChange(async (value) => { this.plugin.settings.defaultManuscriptFolder = value.trim(); await this.plugin.saveSettings(); }));
-    new Setting(containerEl).setName("Default export folder").setDesc("Vault-relative folder where compiled manuscripts are written.").addText((text) => text.setPlaceholder("Manuscript Exports").setValue(this.plugin.settings.defaultExportFolder).onChange(async (value) => { this.plugin.settings.defaultExportFolder = value.trim(); await this.plugin.saveSettings(); }));
-    this.addToggle(containerEl, "Include front matter", "Include Markdown files under Ebook Front Matter.", "includeFrontMatter");
-    this.addToggle(containerEl, "Include back matter", "Include Markdown files under Ebook Back Matter.", "includeBackMatter");
-    this.addToggle(containerEl, "Strip YAML frontmatter", "Remove leading YAML frontmatter from every source note.", "stripYamlFrontmatter");
-    this.addToggle(containerEl, "Include scene titles", "Add each scene filename as a level-three heading.", "includeSceneTitles");
-    new Setting(containerEl).setName("Scene separator").setDesc("Markdown inserted between consecutive scenes. The default is #.").addText((text) => text.setValue(this.plugin.settings.sceneSeparator).onChange(async (value) => { this.plugin.settings.sceneSeparator = value; await this.plugin.saveSettings(); }));
+    const c = this.containerEl; c.empty(); const profile = this.plugin.getActiveProfile(); c.createEl("h2", { text: "Compile profiles" });
+    new Setting(c).setName("Active profile").addDropdown((dropdown) => { this.plugin.settings.profiles.forEach((item) => dropdown.addOption(item.id, item.name)); dropdown.setValue(profile.id).onChange(async (id) => { this.plugin.settings.activeProfileId = id; await this.plugin.saveSettings(); this.display(); }); });
+    new Setting(c).setName("Profile actions").addButton((b) => b.setButtonText("New").onClick(() => this.prompt("New profile name", "New Profile", async (name) => { const created: CompileProfile = { ...DEFAULT_OPTIONS, metadataFilters: [], id: profileId(), name, manuscriptRoot: "", exportFolder: "Manuscript Exports", outputFilename: "{BookTitle} Manuscript.md", variables: { BookTitle: "", Series: "", Author: "" } }; this.plugin.settings.profiles.push(created); this.plugin.settings.activeProfileId = created.id; await this.saveRefresh(); }))).addButton((b) => b.setButtonText("Rename").onClick(() => this.prompt("Rename profile", profile.name, async (name) => { profile.name = name; await this.saveRefresh(); }))).addButton((b) => b.setButtonText("Duplicate").onClick(async () => { const copy = duplicateProfile(profile); this.plugin.settings.profiles.push(copy); this.plugin.settings.activeProfileId = copy.id; await this.saveRefresh(); })).addButton((b) => b.setButtonText("Delete").setWarning().onClick(async () => { if (this.plugin.settings.profiles.length === 1) { new Notice("At least one profile is required."); return; } this.plugin.settings.profiles = this.plugin.settings.profiles.filter((item) => item.id !== profile.id); this.plugin.settings.activeProfileId = this.plugin.settings.profiles[0].id; if (this.plugin.settings.defaultProfileId === profile.id) this.plugin.settings.defaultProfileId = this.plugin.settings.profiles[0].id; await this.saveRefresh(); }));
+    new Setting(c).setName("Profile JSON").addButton((b) => b.setButtonText("Export").onClick(() => new ProfileJsonModal(this.app, "export", profile, () => undefined).open())).addButton((b) => b.setButtonText("Import").onClick(() => new ProfileJsonModal(this.app, "import", profile, (json) => { if (json) void this.importProfile(json); }).open())).addButton((b) => b.setButtonText("Restore defaults").onClick(async () => { const defaults = createDefaultProfiles(); this.plugin.settings.profiles = defaults; this.plugin.settings.activeProfileId = defaults[0].id; this.plugin.settings.defaultProfileId = defaults[0].id; await this.saveRefresh(); }));
+    new Setting(c).setName("Default profile").addDropdown((dropdown) => { this.plugin.settings.profiles.forEach((item) => dropdown.addOption(item.id, item.name)); dropdown.setValue(this.plugin.settings.defaultProfileId).onChange(async (id) => { this.plugin.settings.defaultProfileId = id; await this.plugin.saveSettings(); }); });
+    c.createEl("h3", { text: "Profile destinations" }); this.text(c, profile, "Manuscript root", "manuscriptRoot", "Books/My Book"); this.text(c, profile, "Export folder", "exportFolder", "Manuscript Exports"); this.text(c, profile, "Output filename", "outputFilename", "{BookTitle} Manuscript.md");
+    c.createEl("h3", { text: "Variables" }); this.variable(c, profile, "Book title", "BookTitle"); this.variable(c, profile, "Series", "Series"); this.variable(c, profile, "Author", "Author");
+    c.createEl("h3", { text: "Structure" }); this.toggle(c, profile, "Include front matter", "includeFrontMatter"); this.toggle(c, profile, "Include back matter", "includeBackMatter"); this.toggle(c, profile, "Include scene titles", "includeSceneTitles"); this.text(c, profile, "Part heading template", "partHeadingTemplate", "Part {number}: {name}"); this.text(c, profile, "Chapter heading template", "chapterHeadingTemplate", "Chapter {number}: {name}"); this.text(c, profile, "Scene separator", "sceneSeparator", "#"); this.number(c, profile, "Blank lines between sections", "blankLinesBetweenSections", 0, 5); this.number(c, profile, "Blank lines before chapters", "blankLinesBetweenChapters", 0, 5);
+    new Setting(c).setName("Ordering method").addDropdown((d) => d.addOption("filename", "Filename").addOption("metadata", "Metadata").setValue(profile.orderingMethod).onChange(async (value) => { profile.orderingMethod = value === "metadata" ? "metadata" : "filename"; profile.metadataOrdering = profile.orderingMethod === "metadata"; await this.plugin.saveSettings(); }));
+    c.createEl("h3", { text: "Content cleaning" }); for (const [name, key] of [["Strip YAML frontmatter", "stripYamlFrontmatter"], ["Remove Obsidian comments", "removeObsidianComments"], ["Remove HTML comments", "removeHtmlComments"], ["Remove Dataview blocks", "removeDataviewBlocks"], ["Remove callouts", "removeCallouts"], ["Strip internal links", "stripInternalLinks"]] as const) this.toggle(c, profile, name, key);
+    c.createEl("h3", { text: "Metadata filters" }); profile.metadataFilters.forEach((rule) => this.filterRow(c, profile, rule)); new Setting(c).addButton((b) => b.setButtonText("Add filter").onClick(async () => { profile.metadataFilters.push({ id: profileId(), field: "Editing Status", operator: "not-equals", value: "Excluded" }); await this.saveRefresh(); }));
+    c.createEl("h3", { text: "Preview and reporting" }); this.globalToggle(c, "Show compile preview", "showPreview"); this.globalToggle(c, "Expand preview tree", "expandPreviewTree"); this.globalToggle(c, "Show statistics", "showStatistics"); new Setting(c).setName("Minimum warning level").addDropdown((d) => d.addOption("information", "Information").addOption("warning", "Warning").addOption("error", "Error").setValue(this.plugin.settings.minimumWarningLevel).onChange(async (value) => { this.plugin.settings.minimumWarningLevel = value as WarningLevel; await this.plugin.saveSettings(); })); new Setting(c).setName("Reading speed").setDesc("Words per minute used for reading-time estimates.").addText((t) => t.setValue(String(this.plugin.settings.readingWordsPerMinute)).onChange(async (value) => { const parsed = Number(value); if (Number.isFinite(parsed) && parsed > 0) { this.plugin.settings.readingWordsPerMinute = parsed; await this.plugin.saveSettings(); } }));
   }
-  private addToggle(container: HTMLElement, name: string, description: string, key: "includeFrontMatter" | "includeBackMatter" | "stripYamlFrontmatter" | "includeSceneTitles"): void {
-    new Setting(container).setName(name).setDesc(description).addToggle((toggle) => toggle.setValue(this.plugin.settings[key]).onChange(async (value) => { this.plugin.settings[key] = value; await this.plugin.saveSettings(); }));
-  }
+  private text(c: HTMLElement, p: CompileProfile, name: string, key: "manuscriptRoot" | "exportFolder" | "outputFilename" | "partHeadingTemplate" | "chapterHeadingTemplate" | "sceneSeparator", placeholder: string): void { new Setting(c).setName(name).addText((t) => t.setPlaceholder(placeholder).setValue(p[key]).onChange(async (value) => { p[key] = value.trim(); await this.plugin.saveSettings(); })); }
+  private variable(c: HTMLElement, p: CompileProfile, name: string, key: keyof CompileProfile["variables"]): void { new Setting(c).setName(name).addText((t) => t.setValue(p.variables[key]).onChange(async (value) => { p.variables[key] = value.trim(); await this.plugin.saveSettings(); })); }
+  private toggle(c: HTMLElement, p: CompileProfile, name: string, key: "includeFrontMatter" | "includeBackMatter" | "includeSceneTitles" | "stripYamlFrontmatter" | "removeObsidianComments" | "removeHtmlComments" | "removeDataviewBlocks" | "removeCallouts" | "stripInternalLinks"): void { new Setting(c).setName(name).addToggle((t) => t.setValue(p[key]).onChange(async (value) => { p[key] = value; await this.plugin.saveSettings(); })); }
+  private globalToggle(c: HTMLElement, name: string, key: "showPreview" | "expandPreviewTree" | "showStatistics"): void { new Setting(c).setName(name).addToggle((t) => t.setValue(this.plugin.settings[key]).onChange(async (value) => { this.plugin.settings[key] = value; await this.plugin.saveSettings(); })); }
+  private number(c: HTMLElement, p: CompileProfile, name: string, key: "blankLinesBetweenSections" | "blankLinesBetweenChapters", min: number, max: number): void { new Setting(c).setName(name).addSlider((s) => s.setLimits(min, max, 1).setDynamicTooltip().setValue(p[key]).onChange(async (value) => { p[key] = value; await this.plugin.saveSettings(); })); }
+  private filterRow(c: HTMLElement, p: CompileProfile, rule: MetadataFilterRule): void { new Setting(c).setName("Filter rule").addText((t) => t.setPlaceholder("POV").setValue(rule.field).onChange(async (value) => { rule.field = value.trim(); await this.plugin.saveSettings(); })).addDropdown((d) => d.addOption("equals", "equals").addOption("not-equals", "does not equal").setValue(rule.operator).onChange(async (value) => { rule.operator = value === "equals" ? "equals" : "not-equals"; await this.plugin.saveSettings(); })).addText((t) => t.setPlaceholder("Elin").setValue(rule.value).onChange(async (value) => { rule.value = value; await this.plugin.saveSettings(); })).addExtraButton((b) => b.setIcon("trash").setTooltip("Remove filter").onClick(async () => { p.metadataFilters = p.metadataFilters.filter((item) => item.id !== rule.id); await this.saveRefresh(); })); }
+  private prompt(title: string, initial: string, action: (value: string) => Promise<void>): void { new TextPromptModal(this.app, title, initial, (value) => { if (value) void action(value); }).open(); }
+  private async importProfile(json: string): Promise<void> { try { const result = validateProfile(JSON.parse(json)); if (!result.profile) { new Notice(`Invalid profile: ${result.errors.join(" ")}`, 8000); return; } this.plugin.settings.profiles.push(result.profile); this.plugin.settings.activeProfileId = result.profile.id; await this.saveRefresh(); } catch (error) { new Notice(`Invalid JSON: ${error instanceof Error ? error.message : String(error)}`, 8000); } }
+  private async saveRefresh(): Promise<void> { await this.plugin.saveSettings(); this.display(); }
 }
-
-export function showError(error: unknown): void {
-  const message = error instanceof Error ? error.message : String(error);
-  new Notice(`Manuscript Compiler: ${message}`, 8000);
-  console.error("Manuscript Compiler", error);
-}
+export function showError(error: unknown): void { const message = error instanceof Error ? error.message : String(error); new Notice(`Manuscript Compiler: ${message}`, 8000); console.error("Manuscript Compiler", error); }
