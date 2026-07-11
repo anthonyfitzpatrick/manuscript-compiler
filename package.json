@@ -1,18 +1,23 @@
 {
   "name": "obsidian-manuscript-compiler",
-  "version": "0.6.0",
-  "description": "Compile an Obsidian book folder into a single Markdown manuscript.",
+  "version": "0.7.0",
+  "description": "Validate, preview, and compile Obsidian book manuscripts to Markdown or DOCX.",
   "main": "main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",
     "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
     "typecheck": "tsc -noEmit -skipLibCheck",
-    "test": "node esbuild.test.mjs"
+    "test": "node esbuild.test.mjs",
+    "test:docx": "node tests/docx-integration.mjs",
+    "package": "npm run build && node scripts/package.mjs",
+    "package:validate": "node scripts/package.mjs --validate"
   },
   "keywords": [
     "obsidian",
     "manuscript",
-    "markdown"
+    "markdown",
+    "docx",
+    "publishing"
   ],
   "license": "MIT",
   "devDependencies": {

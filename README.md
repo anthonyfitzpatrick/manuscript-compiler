@@ -1,6 +1,6 @@
 # Manuscript Compiler
 
-Manuscript Compiler is a self-contained Obsidian publishing-workflow plugin that turns a folder-based book into deterministic Markdown and professional DOCX files. Source notes are read-only and are never modified.
+Manuscript Compiler 0.7.0 is a self-contained public beta of an Obsidian publishing-workflow plugin that turns a folder-based book into deterministic Markdown and professional DOCX files. Source notes are read-only and are never modified.
 
 ## Quick Start
 
@@ -121,6 +121,8 @@ Stage 4 also displays:
 
 Every existing output requires confirmation before replacement.
 
+Compilation displays throttled stage progress for scanning, parsing/filtering, Markdown generation, Pandoc/DOCX generation, and export. Cancel or Escape aborts queued parsing work and terminates Pandoc. Cancellation before the atomic commit point removes temporary files and creates no history/log record. Final destination replacement is deliberately non-cancellable for its brief atomic commit window so an existing export cannot be left missing or partially replaced.
+
 Preview status uses text and symbols as well as colour. All controls are native keyboard-focusable elements, search fields have accessible labels, and forced-colour styles retain borders and status visibility.
 
 ## Validation mode
@@ -148,7 +150,7 @@ When compile logging is enabled, logs additionally record requested formats, com
 
 ## Diagnostics
 
-Run **Manuscript Compiler: Generate Diagnostics Report** to create a support-safe Markdown report. It includes plugin/Obsidian environment details, operating system, active-profile summary, Pandoc status, latest timings, warning counts, and export-history totals. It intentionally excludes note text and manuscript contents. The dialog can copy the report or save it under `Manuscript Compiler Diagnostics/` in the vault.
+Run **Manuscript Compiler: Generate Diagnostics Report** to create a support-safe Markdown report. It includes plugin/Obsidian environment details, operating system, active-profile summary, Pandoc status, latest timings, warning counts, and export-history totals. It excludes note text, manuscript contents, absolute paths, reference-template paths, metadata/filter values, environment variables, and the Pandoc executable path. The dialog can copy the report or save it under `Manuscript Compiler Diagnostics/` in the vault.
 
 ## Templates and metadata
 
@@ -172,6 +174,17 @@ Book/
 
 Common ebook/print front- and back-matter names are recognised case-insensitively. Unknown visible folders are traversed, hidden items are ignored, and only Markdown source files are compiled.
 
+## Supported manuscript layouts
+
+- Parts → chapter folders → scene notes
+- Chapter folders → scene notes, with Parts disabled
+- Parts → individual chapter notes
+- Individual chapter notes, with Parts disabled
+- Anthology-style Parts containing story/chapter notes
+- Mixed and nested folders; unexpected Markdown is included or explicitly warned about rather than silently discarded
+
+Numeric ordering recognises padded digits (`Chapter 01`), ordinary digits (`Chapter 10`), and English word numbers through ninety-nine (`Chapter One`). Metadata `Order`, `Part`, `Chapter`, and `Scene` values remain the preferred ordering source when enabled.
+
 ## Commands
 
 - **Manuscript Compiler: Compile Current Book** uses the active profile’s root, falling back to detection above the active note.
@@ -188,9 +201,39 @@ npm install
 npm run typecheck
 npm run build
 npm test
+npm run test:docx
+npm run package
+npm run package:validate
 ```
 
 Copy `manifest.json`, `main.js`, and `styles.css` to `.obsidian/plugins/manuscript-compiler/`, then enable the plugin. Tests use Node's built-in assertions and the existing esbuild toolchain; no test framework dependency is installed. The repository includes `samples/Complete Sample Book`, which exercises the entire content pipeline and intentional validation warnings.
+
+## Migration guarantees
+
+Automated tests cover persisted configurations originating from versions 0.1 through 0.6. Migration is repeatable: running repair again produces the same settings, profile identifiers remain stable after the first migration, existing manuscript/export paths survive, missing modern fields receive safe defaults, and invalid values are recorded in configuration repair history rather than discarded silently.
+
+## Testing strategy and measurements
+
+- Unit/regression tests cover parsing, scanning, ordering, metadata filters, every cleaner, templates, statistics, validation, migrations, diagnostics privacy, path safety, cancellation, and Pandoc argument safety.
+- Golden tests compile every sample project and compare byte-for-byte approved Markdown, detecting heading, ordering, separator, spacing, placeholder, YAML-leak, and duplication regressions.
+- DOCX integration uses local Pandoc when available, validates the ZIP archive, requires `word/document.xml`, verifies expected Part/Chapter headings, and rejects YAML leakage. It skips explicitly when Pandoc is absent.
+- The synthetic benchmark contains 500 chapters, 2,000 scenes, and 2,000,000 words. On the Stage 7 development machine, the in-memory parse/filter/model/statistics plus two deterministic Markdown generations complete below the enforced one-second ceiling. Performance varies by hardware; physical vault I/O and DOCX conversion are measured separately in compile logs.
+
+## Release packaging
+
+`npm run package` first creates the production bundle, verifies that `package.json`, `manifest.json`, and `versions.json` agree, then creates `release/manuscript-compiler-<version>.zip`. The ZIP writer includes exactly `main.js`, `manifest.json`, and `styles.css`. `npm run package:validate` rejects missing or extra archive entries.
+
+## Public beta release checklist
+
+- [x] Stable plugin ID: `manuscript-compiler`
+- [x] Version metadata synchronized at 0.7.0
+- [x] MIT `LICENSE` included
+- [x] No community-plugin API calls, telemetry, cloud, or network runtime
+- [x] Clean-install Markdown path remains mobile-compatible
+- [x] DOCX remains guarded behind Desktop, local filesystem, and Pandoc detection
+- [x] Type-check, automated tests, production build, dependency audit, package validation, and DOCX integration available
+- [ ] Real beta-user feedback across diverse vaults and operating systems
+- [ ] Obsidian Community Plugins submission review by the Obsidian maintainers
 
 ## Architecture
 
@@ -235,6 +278,14 @@ UI classes select settings, invoke services, and render results; they do not sca
 - DOCX export: Obsidian Desktop on macOS, Windows, or Linux with a local filesystem vault.
 - Pandoc: version 3.x is supported; automated production validation uses Pandoc 3.9.
 - Mobile: Markdown compilation remains available. Pandoc/DOCX and opening non-Markdown exports externally are desktop-only capabilities.
+
+## Known limitations
+
+- Pandoc cannot run on Obsidian Mobile. DOCX profiles are disabled there; Markdown remains available.
+- Cancelling during the final atomic destination swap is intentionally disabled to preserve output integrity.
+- English word-number parsing covers zero through ninety-nine; more complex written numbers should use numeric metadata.
+- Opening arbitrary DOCX files and selecting absolute reference paths rely on isolated Electron conveniences that may be unavailable on some future Desktop builds; manual file-manager opening and text path entry remain available.
+- Golden fixtures model common folder conventions but cannot represent every custom vault taxonomy. Unknown Markdown is surfaced rather than silently dropped.
 
 ## Troubleshooting
 

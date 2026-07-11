@@ -10,3 +10,5 @@ Additional release-candidate fixtures:
 - `Novel with Parts`: a compact Parts/chapters/scenes structure.
 - `Short Story`: one chapter stored as a note; use `Chapter source = notes` and `Use Parts = off`.
 - `Anthology`: chapter notes inside a Part with author/order metadata.
+- `Mixed and Malformed`: orphan notes, unexpected/nested folders, Unicode, word/padded numbers, invalid numeric metadata, and malformed YAML.
+- The automated synthetic fixture generates 500 chapters, 2,000 scenes, and 2 million words without committing a multi-megabyte prose file.

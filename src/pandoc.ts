@@ -17,21 +17,22 @@ export class PandocService {
     }
     return { available: false, explanation: this.settings.automaticallyDetectPandoc ? "Pandoc was not found. Install Pandoc or configure its executable path." : "Pandoc automatic detection is disabled and the configured executable is unavailable." };
   }
-  async convert(executable: string, input: string, output: string, profile: CompileProfile, title: string, author: string): Promise<PandocRunResult> {
+  async convert(executable: string, input: string, output: string, profile: CompileProfile, title: string, author: string, signal?: AbortSignal): Promise<PandocRunResult> {
     const args = [input, "--from=markdown", "--to=docx", "--output", output, "--metadata", `title=${title}`, "--metadata", `author=${author}`];
     if (profile.generateTableOfContents) args.push("--toc");
     if (profile.referenceDocx) args.push(`--reference-doc=${profile.referenceDocx}`);
     if (profile.pandocMetadataFile) args.push(`--metadata-file=${profile.pandocMetadataFile}`);
     const additional = parseArguments(profile.additionalPandocArguments); validatePandocArguments(additional);
     args.push(...additional);
-    return this.run(executable, args);
+    return this.run(executable, args, signal);
   }
-  private run(executable: string, args: string[]): Promise<PandocRunResult> {
+  private run(executable: string, args: string[], signal?: AbortSignal): Promise<PandocRunResult> {
     return new Promise((resolve, reject) => {
       let child: ChildProcessWithoutNullStreams;
       try { child = nodeRequire()("child_process").spawn(executable, args, { shell: false, windowsHide: true }); } catch (error) { reject(error); return; }
+      let closed = false; let forceTimer: ReturnType<typeof setTimeout> | undefined; const abort = (): void => { child.kill(); forceTimer = setTimeout(() => { if (!closed) child.kill("SIGKILL"); }, 2000); }; if (signal?.aborted) abort(); else signal?.addEventListener("abort", abort, { once: true });
       let stdout = ""; let stderr = ""; child.stdout.on("data", (data: Buffer) => { stdout += data.toString(); }); child.stderr.on("data", (data: Buffer) => { stderr += data.toString(); });
-      child.on("error", reject); child.on("close", (code) => { if (code === 0) resolve({ stdout, stderr }); else reject(new PandocError(`Pandoc exited with code ${code ?? "unknown"}.`, stdout, stderr)); });
+      child.on("error", (error) => { signal?.removeEventListener("abort", abort); if (forceTimer) clearTimeout(forceTimer); reject(error); }); child.on("close", (code) => { closed = true; signal?.removeEventListener("abort", abort); if (forceTimer) clearTimeout(forceTimer); if (signal?.aborted) reject(new Error("Compilation cancelled.")); else if (code === 0) resolve({ stdout, stderr }); else reject(new PandocError(`Pandoc exited with code ${code ?? "unknown"}.`, stdout, stderr)); });
     });
   }
 }

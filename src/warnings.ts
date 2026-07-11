@@ -18,7 +18,7 @@ export class WarningEngine {
     chapters.filter((chapter) => chapter.scenes.length > 0 && chapter.scenes.every((scene) => scene.excluded || !scene.content.trim())).forEach((chapter) => issues.push(this.warning("empty-chapter", `Chapter has no included content: “${chapter.title}”.`, chapter.path)));
     if (book.frontMatter.documents.length === 0) issues.push(this.info("missing-front-matter", "No front matter was detected."));
     if (book.backMatter.documents.length === 0) issues.push(this.info("missing-back-matter", "No back matter was detected."));
-    if (outputPath === book.root.path || outputPath.startsWith(`${book.root.path}/`)) issues.push({ severity: "error", code: "output-inside-root", message: "The output file is inside the manuscript folder and may be compiled on a later run.", path: outputPath });
+    const rootPath = book.root.path.replace(/\/+$/g, "") || "/"; const outputInsideRoot = rootPath === "/" ? Boolean(outputPath) : outputPath === rootPath || outputPath.startsWith(`${rootPath}/`); if (outputInsideRoot) issues.push({ severity: "error", code: "output-inside-root", message: "The output file is inside the manuscript folder and may be compiled on a later run.", path: outputPath, suggestion: "Choose an export folder outside the manuscript root." });
     if (!profile.name.trim()) issues.push({ severity: "error", code: "invalid-profile", message: "The active profile has no name." });
     if (!profile.outputFilename.trim()) issues.push({ severity: "error", code: "invalid-output", message: "The active profile has no output filename." });
     if (!profile.partHeadingTemplate.trim() || !profile.chapterHeadingTemplate.trim()) issues.push(this.warning("invalid-template", "A heading template is empty; folder titles will be used."));

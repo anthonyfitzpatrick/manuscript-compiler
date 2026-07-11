@@ -5,6 +5,7 @@ import type { Book, Chapter, DocumentMetadata, ManuscriptDocument, Part, Scene }
 import { extractNumber, sortDocuments, sortParts, titleName } from "./ordering";
 import type { CompileOptions } from "./settings";
 import type { ScannedBook, ScannedChapter, ScannedPart } from "./types";
+import { throwIfCancelled } from "./cancellation";
 
 export class ManuscriptParser {
   private readonly cleaner = new ContentCleaningPipeline();
@@ -12,12 +13,12 @@ export class ManuscriptParser {
   filterDurationMs = 0;
   constructor(private readonly vault: Vault) {}
 
-  async parse(scan: ScannedBook, settings: CompileOptions): Promise<Book> {
+  async parse(scan: ScannedBook, settings: CompileOptions, signal?: AbortSignal): Promise<Book> {
     const warnings = [...scan.warnings];
     const unreadable = new Map<string, string>();
     const cache = new Map<string, ManuscriptDocument>();
     this.filterDurationMs = 0;
-    await mapConcurrent(scan.allMarkdown, 16, async (file) => { try { cache.set(file.path, await this.parseDocument(file, settings)); } catch (error) { const message = error instanceof Error ? error.message : String(error); unreadable.set(file.path, message); warnings.push(`Unreadable file “${file.path}”: ${message}`); } });
+    await mapConcurrent(scan.allMarkdown, 16, async (file) => { throwIfCancelled(signal); try { cache.set(file.path, await this.parseDocument(file, settings)); } catch (error) { if (signal?.aborted) throw error; const message = error instanceof Error ? error.message : String(error); unreadable.set(file.path, message); warnings.push(`Unreadable file “${file.path}”: ${message}`); } }, signal);
     const documents = (files: TFile[]): ManuscriptDocument[] => files.map((file) => cache.get(file.path)).filter((document): document is ManuscriptDocument => document !== undefined);
     const frontDocuments = documents(scan.frontMatter);
     const backDocuments = documents(scan.backMatter);
@@ -121,7 +122,7 @@ export class ManuscriptParser {
   }
 }
 
-export async function mapConcurrent<T>(items: T[], concurrency: number, action: (item: T) => Promise<void>): Promise<void> {
-  let next = 0; const worker = async (): Promise<void> => { while (next < items.length) { const index = next; next += 1; await action(items[index]); } };
+export async function mapConcurrent<T>(items: T[], concurrency: number, action: (item: T) => Promise<void>, signal?: AbortSignal): Promise<void> {
+  let next = 0; const worker = async (): Promise<void> => { while (next < items.length) { throwIfCancelled(signal); const index = next; next += 1; await action(items[index]); } };
   await Promise.all(Array.from({ length: Math.min(Math.max(1, concurrency), items.length) }, () => worker()));
 }

@@ -34,6 +34,6 @@ export class MarkdownGenerator {
     });
   }
   private heading(template: string, item: Part | Chapter, variables: TemplateVariables): string {
-    return this.templates.render(template, { ...variables, title: item.title, number: item.number, name: item.name }) || item.title;
+    return this.templates.render(template, { ...variables, title: item.title, number: item.number, name: item.name }).replace(/[\s:—-]+$/g, "").trim() || item.title;
   }
 }

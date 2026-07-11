@@ -73,6 +73,16 @@ export class ConfirmOverwriteModal extends Modal {
   onClose(): void { this.contentEl.empty(); }
 }
 
+export class CompilationProgressModal extends Modal {
+  private statusEl?: HTMLElement; private cancelButton?: HTMLButtonElement; private cancelled = false; private completed = false;
+  constructor(app: App, private readonly cancel: () => void) { super(app); }
+  onOpen(): void { this.titleEl.setText("Compiling manuscript"); this.statusEl = this.contentEl.createEl("p", { text: "Preparing…" }); this.statusEl.setAttribute("role", "status"); this.statusEl.setAttribute("aria-live", "polite"); new Setting(this.contentEl).addButton((button) => { this.cancelButton = button.buttonEl; button.setButtonText("Cancel compilation").setWarning().onClick(() => { if (this.cancelled) return; this.cancelled = true; button.setDisabled(true).setButtonText("Cancelling…"); this.cancel(); }); }); }
+  update(stage: string): void { if (!this.cancelled) this.statusEl?.setText(stage); }
+  lock(stage: string): void { this.completed = true; this.statusEl?.setText(stage); if (this.cancelButton) { this.cancelButton.disabled = true; this.cancelButton.setText("Finalizing…"); } }
+  finish(): void { this.completed = true; this.close(); }
+  onClose(): void { if (!this.completed && !this.cancelled) { this.cancelled = true; this.cancel(); } this.contentEl.empty(); }
+}
+
 export class ValidationReportModal extends Modal {
   constructor(app: App, private readonly root: string, private readonly report: ValidationResult) { super(app); }
   onOpen(): void { this.titleEl.setText("Manuscript validation report"); const counts = { information: 0, warning: 0, error: 0 }; this.report.issues.forEach((issue) => { counts[issue.severity] += 1; }); const summary = this.contentEl.createEl("dl", { cls: "manuscript-compiler-report" }); [["Manuscript", this.root], ["Files checked", String(this.report.book.includedFiles.length + this.report.book.excludedFiles.length)], ["Errors", String(counts.error)], ["Warnings", String(counts.warning)], ["Information", String(counts.information)], ["Validation duration", `${Math.round(this.report.durationMs)} ms`], ["Pandoc", this.report.pandoc.available ? `Available (${this.report.pandoc.version ?? "version unknown"})` : this.report.pandoc.explanation ?? "Not required"]].forEach(([label, value]) => { summary.createEl("dt", { text: label }); summary.createEl("dd", { text: value }); }); for (const severity of ["error", "warning", "information"] as const) { const issues = this.report.issues.filter((issue) => issue.severity === severity); const section = this.contentEl.createEl("details", { cls: `manuscript-issues manuscript-issues-${severity}` }); section.open = severity !== "information"; section.createEl("summary", { text: `${severity[0].toUpperCase()}${severity.slice(1)} (${issues.length})` }); if (!issues.length) section.createEl("p", { text: "None" }); else { const list = section.createEl("ul"); issues.forEach((issue) => list.createEl("li", { text: `${issue.message}${issue.path ? ` — ${issue.path}` : ""}${issue.suggestion ? ` Suggested fix: ${issue.suggestion}` : ""}` })); } } new Setting(this.contentEl).addButton((button) => button.setButtonText("Close").setCta().onClick(() => this.close())); }
