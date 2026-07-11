@@ -96,4 +96,12 @@ export interface CompilePreview extends CompileStatistics {
   warnings: string[];
   issues: CompileWarning[];
   statistics: ManuscriptStatistics;
+  outputFormats: string[];
+  outputPaths: string[];
+  pandocAvailable: boolean;
+  pandocVersion?: string;
+  pandocExplanation?: string;
+  referenceDocx?: string;
+  estimatedPages: number;
+  canExport: boolean;
 }

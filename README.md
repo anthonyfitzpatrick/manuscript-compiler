@@ -1,70 +1,96 @@
 # Manuscript Compiler
 
-Manuscript Compiler is an Obsidian publishing-workflow plugin that turns a folder-based book into deterministic, clean Markdown for Vellum and other publishing tools. Source notes are read-only and are never modified.
+Manuscript Compiler is an Obsidian publishing-workflow plugin that turns a folder-based book into deterministic Markdown and professional DOCX files. Source notes are read-only and are never modified.
 
-## Stage 3
+## Export formats
 
-### Compile profiles
+Each compile profile can export:
 
-Every compile option now belongs to a named profile. Profiles independently store the manuscript root, export folder, output filename template, headings, scene separator, spacing, ordering method, front/back matter choices, cleaning options, variables, and metadata filters.
+- Markdown
+- DOCX
+- Markdown + DOCX
 
-The settings tab supports creating, renaming, duplicating, deleting, selecting, and choosing a default profile. Profiles can be exported as JSON, validated and imported from JSON, or reset to the built-in Default and Vellum profiles. Existing Stage 2 settings are automatically migrated into a profile the first time version 0.3 loads.
+Markdown remains the canonical intermediate representation. The scanner, parser, manuscript model, filters, ordering, cleaning pipeline, statistics, warnings, and Markdown generator run identically for every target. Format exporters receive the generated Markdown afterward.
 
-### Interactive preview
+The exporter interface currently has complete Markdown and DOCX implementations. HTML and JSON debug exporter placeholders establish extension points for future formats.
 
-Before writing output, the preview displays an expandable tree of front matter, parts, chapters, scenes, and back matter. Status markers identify included, excluded, and warning-bearing nodes. Selecting a scene displays its vault path, cleaned word count, normalized YAML metadata, and compile status without displaying manuscript prose.
+## Installing Pandoc
 
-The preview and compile report include:
+DOCX export requires a local [Pandoc](https://pandoc.org/installing.html) installation. Pandoc is optional, is never downloaded or bundled by this plugin, and is not required for Markdown export.
 
-- Total words, chapters, and scenes
-- Average chapter and scene length
-- Longest and shortest chapters
-- Longest and shortest scenes
-- Estimated reading time
-- Issues grouped as Information, Warning, or Error
+After installing Pandoc:
 
-Preview visibility, initial tree expansion, statistics, reading speed, and minimum warning level are configurable globally.
+1. Open **Settings → Manuscript Compiler**.
+2. Leave **Automatically detect Pandoc** enabled and select **Detect**.
+3. If detection fails, enter the full executable path, such as `/opt/homebrew/bin/pandoc`, `/usr/local/bin/pandoc`, or the corresponding Windows path.
 
-### Metadata filters
+The plugin safely invokes the executable directly with an explicit argument array and `shell: false`. It never constructs or runs a shell command. DOCX export requires Obsidian Desktop and a local filesystem vault.
 
-Profiles can contain multiple simple metadata rules. All rules must match for a document to compile. Supported operators are:
+If Pandoc is unavailable, Markdown export continues working. A DOCX-only profile is disabled in preview with a clear explanation; a combined profile can still produce its Markdown output.
 
-- `equals` (`==`)
-- `not-equals` (`!=`)
+## Configuring DOCX export
 
-Field matching is case-insensitive and ignores spaces, underscores, and hyphens. Example rules include `Editing Status != Excluded`, `Editing Status == Complete`, `POV == Elin`, and `Plotline == First Contact`. The existing special handling for `Editing Status: Excluded` remains active for backward compatibility.
+In a compile profile, select **DOCX** or **Markdown + DOCX**, then optionally configure:
 
-### Templates and variables
+- Reference DOCX template
+- Pandoc YAML/JSON metadata file
+- Additional Pandoc arguments
+- Table of contents generation
+- Intermediate Markdown retention
+- Title and author variables
 
-A shared template engine is used for headings and output filenames. It supports structural placeholders and compile variables:
+Output paths are managed by the plugin. Additional arguments cannot override Pandoc’s output path. Pandoc stdout and stderr are captured for diagnostics without showing stack traces to users.
 
-- `{title}`, `{name}`, `{number}`
-- `{BookTitle}`, `{Series}`, `{Author}`
-- `{Date}`, `{Year}`, `{WordCount}`, `{ChapterCount}`
+## Reference DOCX templates
 
-Placeholder names are matched case-insensitively. Unknown variables resolve to an empty string.
+A reference DOCX controls the Word styles Pandoc applies. Enter an absolute path or a vault-relative path, or use the profile’s **Browse** button. The preview validates that the template exists before export. Templates are never modified.
 
-### Warnings
+Pandoc metadata files work the same way and are also validated before compilation.
 
-Stage 3 detects duplicate titles and numbers, missing metadata and numbering, empty scenes/chapters/parts, chapters without scenes, orphan scenes, missing matter folders, unreadable files, duplicate filenames, invalid profile/filter settings, and output paths inside the manuscript root. Issues are deduplicated and assigned a severity.
+## Compile profiles
 
-## Compilation pipeline
+Profiles independently store:
 
-```text
-Vault
-  → Scanner
-  → Parser
-  → Manuscript Model
-  → Metadata Filters
-  → Ordering
-  → Content Cleaners
-  → Statistics and Warnings
-  → Template Engine
-  → Markdown Generator
-  → Exporter
-```
+- Manuscript root, export folder, and filename template
+- Export target and DOCX options
+- Heading templates, spacing, and scene separator
+- Filename or metadata ordering
+- Front/back matter inclusion
+- Content cleaning options
+- Metadata equality/inequality filters
+- Book, series, and author variables
 
-The exporter contract is format-neutral. Only `MarkdownExporter` is implemented; future DOCX, HTML, EPUB, and PDF exporters can implement the same interface without changing compiler logic.
+Profiles can be created, renamed, duplicated, deleted, imported/exported as validated JSON, and reset to the built-in Default and Vellum profiles. Stage 3 profiles migrate automatically to Markdown export while retaining all previous options.
+
+## Export preview
+
+The expandable preview tree shows included, excluded, and warning-bearing nodes. Selecting a scene displays its filename, word count, metadata, and compile status without showing its full prose.
+
+Stage 4 also displays:
+
+- Requested output formats and filenames
+- Pandoc availability and version
+- Reference template
+- Existing-output warnings
+- Word count and estimated page count
+- Detailed manuscript statistics
+- Information, Warning, and Error groups
+
+Every existing output requires confirmation before replacement.
+
+## Export history and compile logs
+
+The settings tab provides **History** and **Logs** viewers.
+
+History records the timestamp, profile, manuscript, output files, word count, and success/failure state. Exported Markdown opens in Obsidian; other local exports open with the operating system’s default application. History can be cleared and is bounded by **Maximum export history entries**.
+
+When compile logging is enabled, logs additionally record requested formats, Pandoc version, duration, warnings, and captured diagnostics. Records are stored through Obsidian’s standard plugin data storage inside the plugin data folder. No logs are transmitted externally.
+
+## Templates and metadata
+
+The shared template engine supports `{title}`, `{name}`, `{number}`, `{BookTitle}`, `{Series}`, `{Author}`, `{Date}`, `{Year}`, `{WordCount}`, and `{ChapterCount}`. Unknown variables become empty strings.
+
+Metadata filters support `equals` and `not-equals`, with case-insensitive field matching. `Editing Status: Excluded` remains a built-in exclusion for backward compatibility.
 
 ## Book structure
 
@@ -80,34 +106,14 @@ Book/
 └── Ebook Back Matter/
 ```
 
-Front Matter, Ebook Front Matter, Print Front Matter, Back Matter, Ebook Back Matter, and Print Back Matter are recognised case-insensitively. Unknown visible folders are traversed, hidden items are ignored, and only Markdown files are compiled.
-
-## Metadata example
-
-```yaml
----
-Part: 1
-Chapter: 2
-Scene: 3
-Order: 10
-Editing Status: Complete
-POV: Elin
-Plotline: First Contact
----
-```
+Common ebook/print front- and back-matter names are recognised case-insensitively. Unknown visible folders are traversed, hidden items are ignored, and only Markdown source files are compiled.
 
 ## Commands
 
-- **Manuscript Compiler: Compile Current Book** uses the active profile’s root, falling back to book detection above the active note.
-- **Manuscript Compiler: Compile Selected Folder** compiles a folder selected from the vault using the active profile.
+- **Manuscript Compiler: Compile Current Book** uses the active profile’s root, falling back to detection above the active note.
+- **Manuscript Compiler: Compile Selected Folder** compiles a selected vault folder with the active profile.
 
-The original Stage 1 command IDs and overwrite protection remain unchanged.
-
-## Markdown generation
-
-Profiles configure scene separators, section blank lines, chapter blank lines, scene headings, and heading templates. Generation removes trailing whitespace, uses exact configured spacing, emits one final newline, and uses stable model ordering so identical source, profile, and date variables produce identical output.
-
-Optional independent cleaners remove YAML frontmatter, Obsidian comments, HTML comments, Dataview and DataviewJS blocks, callout syntax, and Obsidian internal links. Ordinary Markdown links and ordinary blockquotes are retained.
+Stage 1–3 command IDs, profile behavior, Markdown cleaning, metadata ordering/filtering, overwrite protection, preview, statistics, and warnings remain supported.
 
 ## Development
 
@@ -117,6 +123,4 @@ npm run typecheck
 npm run build
 ```
 
-Copy `manifest.json`, `main.js`, and `styles.css` to `.obsidian/plugins/manuscript-compiler/` in a test vault, then enable the plugin.
-
-DOCX, Pandoc, EPUB, PDF, live editing, cloud sync, AI editing, and collaboration are intentionally reserved for later stages.
+Copy `manifest.json`, `main.js`, and `styles.css` to `.obsidian/plugins/manuscript-compiler/`, then enable the plugin. The project currently defines build and type-check scripts; no lint or test scripts are configured.
