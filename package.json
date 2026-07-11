@@ -1,0 +1,20 @@
+{
+  "name": "obsidian-manuscript-compiler",
+  "version": "0.1.0",
+  "description": "Compile an Obsidian book folder into a single Markdown manuscript.",
+  "main": "main.js",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+    "typecheck": "tsc -noEmit -skipLibCheck"
+  },
+  "keywords": ["obsidian", "manuscript", "markdown"],
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "builtin-modules": "^4.0.0",
+    "esbuild": "^0.24.2",
+    "obsidian": "^1.8.7",
+    "typescript": "^5.7.2"
+  }
+}

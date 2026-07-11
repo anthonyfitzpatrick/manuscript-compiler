@@ -1,0 +1,8 @@
+.manuscript-compiler-report {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--size-4-2) var(--size-4-4);
+}
+
+.manuscript-compiler-report dt { font-weight: var(--font-semibold); }
+.manuscript-compiler-report dd { margin: 0; overflow-wrap: anywhere; }
