@@ -22,8 +22,7 @@ export class PandocService {
     if (profile.generateTableOfContents) args.push("--toc");
     if (profile.referenceDocx) args.push(`--reference-doc=${profile.referenceDocx}`);
     if (profile.pandocMetadataFile) args.push(`--metadata-file=${profile.pandocMetadataFile}`);
-    const additional = parseArguments(profile.additionalPandocArguments);
-    if (additional.some((argument) => argument === "-o" || argument === "--output" || argument.startsWith("--output="))) throw new Error("Additional Pandoc arguments may not override the managed output path.");
+    const additional = parseArguments(profile.additionalPandocArguments); validatePandocArguments(additional);
     args.push(...additional);
     return this.run(executable, args);
   }
@@ -38,10 +37,11 @@ export class PandocService {
 }
 export class PandocError extends Error { constructor(message: string, readonly stdout = "", readonly stderr = "") { super(message); } }
 export function parseArguments(value: string): string[] {
-  const args: string[] = []; let current = ""; let quote: "'" | '"' | null = null; let escaped = false;
-  for (const char of value.trim()) { if (escaped) { current += char; escaped = false; } else if (char === "\\" && quote === '"') escaped = true; else if (quote) { if (char === quote) quote = null; else current += char; } else if (char === "'" || char === '"') quote = char; else if (/\s/.test(char)) { if (current) { args.push(current); current = ""; } } else current += char; }
-  if (quote) throw new Error("Additional Pandoc arguments contain an unclosed quote."); if (escaped) current += "\\"; if (current) args.push(current); return args;
+  const args: string[] = []; let current = ""; let quote: "'" | '"' | null = null;
+  for (const char of value.trim()) { if (quote) { if (char === quote) quote = null; else current += char; } else if (char === "'" || char === '"') quote = char; else if (/\s/.test(char)) { if (current) { args.push(current); current = ""; } } else current += char; }
+  if (quote) throw new Error("Additional Pandoc arguments contain an unclosed quote."); if (current) args.push(current); return args;
 }
+export function validatePandocArguments(args: string[]): void { if (args.some((argument) => argument === "-o" || argument === "--output" || argument.startsWith("--output="))) throw new Error("Additional Pandoc arguments may not override the managed output path."); }
 export function resolveVaultOrAbsolutePath(vault: Vault, value: string): string {
   if (!value.trim()) return ""; const path = nodeRequire()("path"); if (path.isAbsolute(value)) return value;
   if (!(vault.adapter instanceof FileSystemAdapter)) throw new Error("DOCX export requires a local filesystem vault."); return vault.adapter.getFullPath(normalizePath(value));

@@ -20,6 +20,29 @@ export function migrateSettings(settings: ManuscriptCompilerSettings): Manuscrip
   });
   return { ...settings, profiles, activeProfileId: active.id, defaultProfileId: active.id };
 }
+export function repairSettings(settings: ManuscriptCompilerSettings): ManuscriptCompilerSettings {
+  const warnings: string[] = []; if (!Array.isArray(settings.profiles)) { settings.profiles = []; warnings.push("Invalid profile storage was recovered with default profiles."); } const repaired = migrateSettings(settings);
+  if (!Array.isArray(repaired.exportHistory)) { repaired.exportHistory = []; warnings.push("Invalid export history was reset."); }
+  if (!Array.isArray(repaired.compileLogs)) { repaired.compileLogs = []; warnings.push("Invalid compile logs were reset."); }
+  if (!Number.isFinite(repaired.readingWordsPerMinute) || repaired.readingWordsPerMinute <= 0) { repaired.readingWordsPerMinute = 250; warnings.push("Reading speed was repaired to 250 words per minute."); }
+  if (!Number.isInteger(repaired.maximumExportHistoryEntries) || repaired.maximumExportHistoryEntries <= 0) { repaired.maximumExportHistoryEntries = 50; warnings.push("Maximum export history was repaired to 50 entries."); }
+  repaired.profiles = repaired.profiles.map((candidate, index) => {
+    const item = candidate && typeof candidate === "object" ? candidate : createDefaultProfiles()[0]; if (item !== candidate) warnings.push(`Invalid profile entry ${index + 1} was recovered.`);
+    const defaults = createDefaultProfiles()[0]; const merged = { ...defaults, ...item, variables: { ...defaults.variables, ...(item.variables ?? {}) }, metadataFilters: Array.isArray(item.metadataFilters) ? item.metadataFilters : [] };
+    const validation = validateProfile(merged); if (validation.errors.length) warnings.push(`Profile “${item.name || index + 1}” has configuration issues: ${validation.errors.join(" ")}`);
+    if (!merged.id) { merged.id = profileId(); warnings.push(`Profile ${index + 1} was assigned a new identifier.`); }
+    if (!merged.name?.trim()) { merged.name = `Recovered Profile ${index + 1}`; warnings.push(`Profile ${index + 1} was assigned a recovery name.`); }
+    if (!["markdown", "docx", "markdown-docx"].includes(merged.exportTarget)) { merged.exportTarget = "markdown"; warnings.push(`Profile “${merged.name}” export target was repaired to Markdown.`); }
+    for (const key of ["includeFrontMatter", "includeBackMatter", "includeSceneTitles", "metadataOrdering", "stripYamlFrontmatter", "removeObsidianComments", "removeHtmlComments", "removeDataviewBlocks", "removeCallouts", "stripInternalLinks", "generateTableOfContents", "keepIntermediateMarkdown"] as const) if (typeof merged[key] !== "boolean") { (merged[key] as boolean) = defaults[key]; warnings.push(`Profile “${merged.name}” setting ${key} was repaired.`); }
+    for (const key of ["manuscriptRoot", "exportFolder", "outputFilename", "partHeadingTemplate", "chapterHeadingTemplate", "sceneSeparator", "referenceDocx", "pandocMetadataFile", "additionalPandocArguments"] as const) if (typeof merged[key] !== "string") { (merged[key] as string) = defaults[key]; warnings.push(`Profile “${merged.name}” setting ${key} was repaired.`); }
+    for (const key of ["blankLinesBetweenSections", "blankLinesBetweenChapters"] as const) if (!Number.isInteger(merged[key]) || merged[key] < 0) { merged[key] = defaults[key]; warnings.push(`Profile “${merged.name}” setting ${key} was repaired.`); }
+    return merged;
+  });
+  if (!repaired.profiles.some((item) => item.id === repaired.activeProfileId)) { repaired.activeProfileId = repaired.profiles[0].id; warnings.push("Active profile selection was repaired."); }
+  if (!repaired.profiles.some((item) => item.id === repaired.defaultProfileId)) { repaired.defaultProfileId = repaired.profiles[0].id; warnings.push("Default profile selection was repaired."); }
+  repaired.configurationWarnings = [...(Array.isArray(repaired.configurationWarnings) ? repaired.configurationWarnings : []), ...warnings].slice(-100);
+  return repaired;
+}
 export function activeProfile(settings: ManuscriptCompilerSettings): CompileProfile {
   return settings.profiles.find((item) => item.id === settings.activeProfileId) ?? settings.profiles.find((item) => item.id === settings.defaultProfileId) ?? settings.profiles[0];
 }

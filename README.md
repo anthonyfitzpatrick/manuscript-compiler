@@ -1,6 +1,14 @@
 # Manuscript Compiler
 
-Manuscript Compiler is an Obsidian publishing-workflow plugin that turns a folder-based book into deterministic Markdown and professional DOCX files. Source notes are read-only and are never modified.
+Manuscript Compiler is a self-contained Obsidian publishing-workflow plugin that turns a folder-based book into deterministic Markdown and professional DOCX files. Source notes are read-only and are never modified.
+
+## Plugin independence
+
+Manuscript Compiler has zero runtime dependency on community plugins. It does not call another plugin's API, read another plugin's settings, invoke another plugin's commands, or access Obsidian's community-plugin registry.
+
+Dataview/DataviewJS fences, callouts, wikilinks, and Obsidian comments are recognised as optional text syntax. Cleaning them requires no Dataview, Callout Manager, or other plugin. Content produced by Tasks, Kanban, Excalidraw, Templater, Metadata Menu, Banner, and similar plugins is treated as ordinary files or Markdown unless a documented cleaner explicitly handles its text syntax.
+
+The production bundle has no third-party runtime npm dependencies. Obsidian supplies the documented plugin API. DOCX export optionally invokes a user-installed Pandoc executable; Markdown compilation does not require Pandoc.
 
 ## Export formats
 
@@ -78,6 +86,21 @@ Stage 4 also displays:
 
 Every existing output requires confirmation before replacement.
 
+## Validation mode
+
+Run **Manuscript Compiler: Validate Manuscript** to perform a read-only audit without generating Markdown, creating temporary files, invoking an exporter, or changing source notes. The report groups Information, Warning, and Error findings and checks:
+
+- Duplicate chapter/scene titles and numbers
+- Missing chapter/scene numbers
+- Empty chapters, scenes, and parts
+- Orphan scenes and unreadable files
+- Missing or malformed YAML metadata
+- Missing front/back matter
+- Invalid or repaired profile/settings values
+- Pandoc availability, reference DOCX, metadata file, and output configuration
+
+One unreadable or malformed note is recorded and skipped; it does not terminate validation or compilation.
+
 ## Export history and compile logs
 
 The settings tab provides **History** and **Logs** viewers.
@@ -121,6 +144,74 @@ Stage 1–3 command IDs, profile behavior, Markdown cleaning, metadata ordering/
 npm install
 npm run typecheck
 npm run build
+npm test
 ```
 
-Copy `manifest.json`, `main.js`, and `styles.css` to `.obsidian/plugins/manuscript-compiler/`, then enable the plugin. The project currently defines build and type-check scripts; no lint or test scripts are configured.
+Copy `manifest.json`, `main.js`, and `styles.css` to `.obsidian/plugins/manuscript-compiler/`, then enable the plugin. Tests use Node's built-in assertions and the existing esbuild toolchain; no test framework dependency is installed. The repository includes `samples/Complete Sample Book`, which exercises the entire content pipeline and intentional validation warnings.
+
+## Architecture
+
+```text
+Documented Obsidian Vault APIs
+              │
+              ▼
+          VaultScanner
+              │
+              ▼
+      ManuscriptParser ── bounded concurrent reads
+              │
+              ▼
+          Book Model
+              │
+              ├── MetadataFilterEngine
+              ├── Ordering
+              ├── ContentCleaningPipeline
+              └── ManuscriptValidationService
+              │
+              ▼
+       MarkdownGenerator
+              │ canonical Markdown
+              ▼
+           Exporter
+          ┌───┴────────┐
+          ▼            ▼
+ MarkdownExporter   DocxExporter → optional Pandoc
+          │            │
+          └─────┬──────┘
+                ▼
+       History / Compile Logs
+```
+
+UI classes select settings, invoke services, and render results; they do not scan, parse, filter, validate, generate, or export. Exporters never access scanner/parser behavior, and the parser has no exporter knowledge.
+
+## Compatibility
+
+- Minimum Obsidian version: 1.5.0, as declared in `manifest.json`.
+- API type-check baseline: Obsidian API package 1.13.1.
+- Markdown export: all operating systems supported by Obsidian, including non-filesystem adapters.
+- DOCX export: Obsidian Desktop on macOS, Windows, or Linux with a local filesystem vault.
+- Pandoc: version 3.x is supported; automated production validation uses Pandoc 3.9.
+- Mobile: Markdown compilation remains available. Pandoc/DOCX and opening non-Markdown exports externally are desktop-only capabilities.
+
+## Troubleshooting
+
+- **Pandoc not found:** use the Detect button, then configure the absolute executable path if needed. Run `pandoc --version` outside Obsidian to confirm the installation.
+- **Reference DOCX missing:** use Browse or enter a valid absolute or vault-relative path. Validation reports the exact missing path.
+- **Permission denied:** choose an export folder writable by the vault and verify template/metadata-file read permissions.
+- **Invalid YAML:** run Validate Manuscript. The affected note is reported and compilation continues with empty metadata for that note.
+- **Unexpected exclusions:** inspect the scene in preview and review every metadata filter in the active profile; all filter rules must match.
+- **Output included on a later compile:** move the export folder outside the manuscript root. Validation reports this unsafe configuration.
+- **Non-Markdown export does not open:** use the operating system's file manager. External opening uses an isolated Electron compatibility bridge and fails gracefully when unavailable.
+
+## API and dependency audit
+
+The plugin uses documented Obsidian `Plugin`, `Vault`, `Workspace`, `TFile`, `TFolder`, `FileSystemAdapter`, `Modal`, `FuzzySuggestModal`, `PluginSettingTab`, `Setting`, `Notice`, `Platform`, `normalizePath`, and `parseYaml` exports.
+
+Two capabilities have no documented cross-platform Obsidian equivalent and are isolated in `platform-compat.ts`:
+
+1. Electron's `shell.openPath` for reopening non-Markdown exports.
+2. Electron's desktop file-input `File.path` extension for choosing an absolute reference/template file.
+
+Both are optional, desktop-only conveniences with safe failure behavior; text path entry and file-manager opening remain available. Node built-ins (`child_process`, `fs/promises`, `os`, and `path`) are isolated in `pandoc.ts`, used only on desktop for local DOCX conversion, and never execute through a shell.
+
+Development-only dependencies are TypeScript, esbuild, Obsidian API typings, and Node typings. Transitive CodeMirror/moment packages come only from the Obsidian development package and are not bundled into `main.js`.

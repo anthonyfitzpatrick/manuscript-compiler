@@ -17,13 +17,14 @@ export interface CompileProfile extends CompileOptions {
   generateTableOfContents: boolean; keepIntermediateMarkdown: boolean;
 }
 export interface ExportHistoryEntry { id: string; timestamp: string; profile: string; manuscript: string; outputFiles: string[]; wordCount: number; success: boolean; message?: string; }
-export interface CompileLogEntry extends ExportHistoryEntry { exportFormats: ExportTarget; pandocVersion?: string; durationMs: number; warnings: string[]; diagnostics?: string; }
+export interface CompileLogEntry extends ExportHistoryEntry { exportFormats: ExportTarget; compilerVersion: string; pandocVersion?: string; durationMs: number; scanDurationMs: number; filterDurationMs: number; generationDurationMs: number; exportDurationMs: number; warnings: string[]; diagnostics?: string; }
 export interface ManuscriptCompilerSettings extends CompileOptions {
   profiles: CompileProfile[]; activeProfileId: string; defaultProfileId: string;
   showPreview: boolean; expandPreviewTree: boolean; showStatistics: boolean; readingWordsPerMinute: number; minimumWarningLevel: WarningLevel;
   pandocExecutablePath: string; automaticallyDetectPandoc: boolean; defaultExportFormat: ExportTarget; defaultReferenceDocx: string;
   keepTemporaryMarkdown: boolean; enableCompileLogs: boolean; maximumExportHistoryEntries: number;
   exportHistory: ExportHistoryEntry[]; compileLogs: CompileLogEntry[];
+  configurationWarnings: string[];
   /* Stage 1/2 migration fields. */
   defaultManuscriptFolder: string; defaultExportFolder: string; defaultCompilePreset: "default" | "vellum";
 }
@@ -38,6 +39,6 @@ export const DEFAULT_SETTINGS: ManuscriptCompilerSettings = {
   ...DEFAULT_OPTIONS, profiles: [], activeProfileId: "", defaultProfileId: "", showPreview: true, expandPreviewTree: true,
   showStatistics: true, readingWordsPerMinute: 250, minimumWarningLevel: "information",
   pandocExecutablePath: "", automaticallyDetectPandoc: true, defaultExportFormat: "markdown", defaultReferenceDocx: "",
-  keepTemporaryMarkdown: false, enableCompileLogs: true, maximumExportHistoryEntries: 50, exportHistory: [], compileLogs: [],
+  keepTemporaryMarkdown: false, enableCompileLogs: true, maximumExportHistoryEntries: 50, exportHistory: [], compileLogs: [], configurationWarnings: [],
   defaultManuscriptFolder: "", defaultExportFolder: "Manuscript Exports", defaultCompilePreset: "default"
 };

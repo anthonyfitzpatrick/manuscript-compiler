@@ -20,6 +20,7 @@ export interface ManuscriptDocument {
   content: string;
   excluded: boolean;
   exclusionReason?: string;
+  metadataError?: string;
 }
 
 export interface MatterSection {

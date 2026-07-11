@@ -3,3 +3,4 @@ main.js
 *.map
 Icon?
 .DS_Store
+.test-build/
