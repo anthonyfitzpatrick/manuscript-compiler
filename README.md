@@ -5,7 +5,7 @@ Manuscript Compiler 0.7.0 is a self-contained public beta of an Obsidian publish
 ## Quick Start
 
 1. Install and enable Manuscript Compiler.
-2. Complete the first-run wizard: choose manuscript and export folders, detect Pandoc if desired, and choose Standard or Vellum.
+2. Complete the first-run wizard: choose manuscript and export folders, then choose Standard or Vellum.
 3. Open the Command Palette and run **Manuscript Compiler: Validate Manuscript**.
 4. Resolve any Errors, review Warnings, then run **Compile Current Book**.
 5. Review the searchable compile preview and select **Compile**.
@@ -20,7 +20,7 @@ For a manual Release Candidate installation, copy `manifest.json`, `main.js`, an
 <your vault>/.obsidian/plugins/manuscript-compiler/
 ```
 
-Restart or reload Obsidian, enable **Community plugins**, then enable **Manuscript Compiler**. Manuscript Compiler itself does not require any other community plugin. Pandoc is optional and only needed for DOCX.
+Restart or reload Obsidian, enable **Community plugins**, then enable **Manuscript Compiler**. Manuscript Compiler does not require another community plugin or an external document converter.
 
 ## First Compile
 
@@ -33,7 +33,7 @@ Before export, the preview lets you:
 - Inspect scene metadata and inclusion status
 - Filter issues by severity
 - Sort issues with Errors or Information first
-- Review output paths, Pandoc state, statistics, and estimated pages
+- Review output paths, DOCX status, statistics, and estimated pages
 
 ## Plugin independence
 
@@ -41,7 +41,7 @@ Manuscript Compiler has zero runtime dependency on community plugins. It does no
 
 Dataview/DataviewJS fences, callouts, wikilinks, and Obsidian comments are recognised as optional text syntax. Cleaning them requires no Dataview, Callout Manager, or other plugin. Content produced by Tasks, Kanban, Excalidraw, Templater, Metadata Menu, Banner, and similar plugins is treated as ordinary files or Markdown unless a documented cleaner explicitly handles its text syntax.
 
-The production bundle has no third-party runtime npm dependencies. Obsidian supplies the documented plugin API. DOCX export optionally invokes a user-installed Pandoc executable; Markdown compilation does not require Pandoc.
+The production bundle includes the small pure-JavaScript `fflate` ZIP implementation used to create DOCX packages. Obsidian supplies the plugin and binary-vault APIs. No external executable, network service, or document-conversion application is required.
 
 ## Export formats
 
@@ -55,38 +55,15 @@ Markdown remains the canonical intermediate representation. The scanner, parser,
 
 The exporter interface currently has complete Markdown and DOCX implementations and remains open to future formats without changing compiler logic.
 
-## Installing Pandoc
+## Built-in DOCX
 
-DOCX export requires a local [Pandoc](https://pandoc.org/installing.html) installation. Pandoc is optional, is never downloaded or bundled by this plugin, and is not required for Markdown export.
+DOCX export is generated locally by the plugin as a standards-compliant Office Open XML package. It uses semantic Word styles for Parts and Chapters, normal manuscript paragraphs, scene breaks, lists, quotations, basic inline emphasis, title/author metadata, and an optional updateable table of contents. It is designed as a clean import document for Vellum and Word.
 
-After installing Pandoc:
-
-1. Open **Settings → Manuscript Compiler**.
-2. Leave **Automatically detect Pandoc** enabled and select **Detect**.
-3. If detection fails, enter the full executable path, such as `/opt/homebrew/bin/pandoc`, `/usr/local/bin/pandoc`, or the corresponding Windows path.
-
-The plugin safely invokes the executable directly with an explicit argument array and `shell: false`. It never constructs or runs a shell command. DOCX export requires Obsidian Desktop and a local filesystem vault.
-
-If Pandoc is unavailable, Markdown export continues working. A DOCX-only profile is disabled in preview with a clear explanation; a combined profile can still produce its Markdown output.
+Pandoc is not installed, detected, invoked, or required. Binary output is written through Obsidian's vault APIs, including on non-filesystem adapters.
 
 ## Configuring DOCX export
 
-In a compile profile, select **DOCX** or **Markdown + DOCX**, then optionally configure:
-
-- Reference DOCX template
-- Pandoc YAML/JSON metadata file
-- Additional Pandoc arguments
-- Table of contents generation
-- Intermediate Markdown retention
-- Title and author variables
-
-Output paths are managed by the plugin. Additional arguments cannot override Pandoc’s output path. Pandoc stdout and stderr are captured for diagnostics without showing stack traces to users.
-
-## Reference DOCX templates
-
-A reference DOCX controls the Word styles Pandoc applies. Enter an absolute path or a vault-relative path, or use the profile’s **Browse** button. The preview validates that the template exists before export. Templates are never modified.
-
-Pandoc metadata files work the same way and are also validated before compilation.
+In a compile profile, select **DOCX** or **Markdown + DOCX**, then optionally enable table-of-contents generation or intermediate Markdown retention and configure title and author variables. Legacy Pandoc and reference-template fields are retained when old settings are migrated, but the built-in exporter does not use them.
 
 ## Compile profiles
 
@@ -103,7 +80,7 @@ Profiles independently store:
 
 Profiles can be created, renamed, duplicated, deleted, imported/exported as validated JSON, and reset to the built-in Default and Vellum profiles. Stage 3 profiles migrate automatically to Markdown export while retaining all previous options.
 
-The profile wizard asks whether chapters are folders or notes, whether the manuscript uses Parts, whether separators and matter sections are included, whether a reference DOCX is available, and whether Vellum is the primary destination. It generates a normal editable profile rather than hiding wizard-only configuration.
+The profile wizard asks whether chapters are folders or notes, whether the manuscript uses Parts, whether separators and matter sections are included, and whether Vellum is the primary destination. It generates a normal editable profile rather than hiding wizard-only configuration.
 
 ## Export preview
 
@@ -112,7 +89,7 @@ The expandable preview tree shows included, excluded, and warning-bearing nodes.
 Stage 4 also displays:
 
 - Requested output formats and filenames
-- Pandoc availability and version
+- Built-in DOCX engine status
 - Reference template
 - Existing-output warnings
 - Word count and estimated page count
@@ -121,7 +98,7 @@ Stage 4 also displays:
 
 Every existing output requires confirmation before replacement.
 
-Compilation displays throttled stage progress for scanning, parsing/filtering, Markdown generation, Pandoc/DOCX generation, and export. Cancel or Escape aborts queued parsing work and terminates Pandoc. Cancellation before the atomic commit point removes temporary files and creates no history/log record. Final destination replacement is deliberately non-cancellable for its brief atomic commit window so an existing export cannot be left missing or partially replaced.
+Compilation displays throttled stage progress for scanning, parsing/filtering, Markdown generation, DOCX packaging, and export. Cancel or Escape aborts queued work. Cancellation before the commit point creates no history/log record; final destination writes are deliberately non-cancellable so an existing export cannot be left partially replaced.
 
 Preview status uses text and symbols as well as colour. All controls are native keyboard-focusable elements, search fields have accessible labels, and forced-colour styles retain borders and status visibility.
 
@@ -136,7 +113,7 @@ Run **Manuscript Compiler: Validate Manuscript** to perform a read-only audit wi
 - Missing or malformed YAML metadata
 - Missing front/back matter
 - Invalid or repaired profile/settings values
-- Pandoc availability, reference DOCX, metadata file, and output configuration
+- Built-in DOCX availability and output configuration
 
 One unreadable or malformed note is recorded and skipped; it does not terminate validation or compilation.
 
@@ -146,11 +123,11 @@ The settings tab provides **History** and **Logs** viewers.
 
 History records the timestamp, profile, manuscript, output files, word count, and success/failure state. Exported Markdown opens in Obsidian; other local exports open with the operating system’s default application. History can be cleared and is bounded by **Maximum export history entries**.
 
-When compile logging is enabled, logs additionally record requested formats, compiler/Pandoc versions, total duration, scan, parse, filter, generation and export durations, warnings, and captured diagnostics. Records are stored through Obsidian’s standard plugin data storage inside the plugin data folder. No logs are transmitted externally.
+When compile logging is enabled, logs additionally record requested formats, compiler/DOCX-engine versions, total duration, scan, parse, filter, generation and export durations, warnings, and captured diagnostics. Records are stored through Obsidian’s standard plugin data storage inside the plugin data folder. No logs are transmitted externally.
 
 ## Diagnostics
 
-Run **Manuscript Compiler: Generate Diagnostics Report** to create a support-safe Markdown report. It includes plugin/Obsidian environment details, operating system, active-profile summary, Pandoc status, latest timings, warning counts, and export-history totals. It excludes note text, manuscript contents, absolute paths, reference-template paths, metadata/filter values, environment variables, and the Pandoc executable path. The dialog can copy the report or save it under `Manuscript Compiler Diagnostics/` in the vault.
+Run **Manuscript Compiler: Generate Diagnostics Report** to create a support-safe Markdown report. It includes plugin/Obsidian environment details, operating system, active-profile summary, DOCX-engine status, latest timings, warning counts, and export-history totals. It excludes note text, manuscript contents, absolute paths, legacy reference paths, metadata/filter values, and environment variables. The dialog can copy the report or save it under `Manuscript Compiler Diagnostics/` in the vault.
 
 ## Templates and metadata
 
@@ -214,9 +191,9 @@ Automated tests cover persisted configurations originating from versions 0.1 thr
 
 ## Testing strategy and measurements
 
-- Unit/regression tests cover parsing, scanning, ordering, metadata filters, every cleaner, templates, statistics, validation, migrations, diagnostics privacy, path safety, cancellation, and Pandoc argument safety.
+- Unit/regression tests cover parsing, scanning, ordering, metadata filters, every cleaner, templates, statistics, validation, migrations, diagnostics privacy, path safety, and cancellation.
 - Golden tests compile every sample project and compare byte-for-byte approved Markdown, detecting heading, ordering, separator, spacing, placeholder, YAML-leak, and duplication regressions.
-- DOCX integration uses local Pandoc when available, validates the ZIP archive, requires `word/document.xml`, verifies expected Part/Chapter headings, and rejects YAML leakage. It skips explicitly when Pandoc is absent.
+- DOCX integration generates a document with the built-in engine, validates the ZIP archive and required OOXML parts, verifies styles and expected Part/Chapter headings, and rejects YAML leakage.
 - The synthetic benchmark contains 500 chapters, 2,000 scenes, and 2,000,000 words. On the Stage 7 development machine, the in-memory parse/filter/model/statistics plus two deterministic Markdown generations complete below the enforced one-second ceiling. Performance varies by hardware; physical vault I/O and DOCX conversion are measured separately in compile logs.
 
 ## Release packaging
@@ -230,7 +207,7 @@ Automated tests cover persisted configurations originating from versions 0.1 thr
 - [x] MIT `LICENSE` included
 - [x] No community-plugin API calls, telemetry, cloud, or network runtime
 - [x] Clean-install Markdown path remains mobile-compatible
-- [x] DOCX remains guarded behind Desktop, local filesystem, and Pandoc detection
+- [x] DOCX is generated locally without Pandoc or another external converter
 - [x] Type-check, automated tests, production build, dependency audit, package validation, and DOCX integration available
 - [ ] Real beta-user feedback across diverse vaults and operating systems
 - [ ] Obsidian Community Plugins submission review by the Obsidian maintainers
@@ -261,7 +238,7 @@ Documented Obsidian Vault APIs
            Exporter
           ┌───┴────────┐
           ▼            ▼
- MarkdownExporter   DocxExporter → optional Pandoc
+ MarkdownExporter   DocxExporter → built-in OOXML
           │            │
           └─────┬──────┘
                 ▼
@@ -275,13 +252,11 @@ UI classes select settings, invoke services, and render results; they do not sca
 - Minimum Obsidian version: 1.5.0, as declared in `manifest.json`.
 - API type-check baseline: Obsidian API package 1.13.1.
 - Markdown export: all operating systems supported by Obsidian, including non-filesystem adapters.
-- DOCX export: Obsidian Desktop on macOS, Windows, or Linux with a local filesystem vault.
-- Pandoc: version 3.x is supported; automated production validation uses Pandoc 3.9.
-- Mobile: Markdown compilation remains available. Pandoc/DOCX and opening non-Markdown exports externally are desktop-only capabilities.
+- DOCX export: generated through Obsidian's binary vault APIs without an external executable.
+- Mobile: Markdown and DOCX generation use cross-platform APIs; opening DOCX externally depends on the platform.
 
 ## Known limitations
 
-- Pandoc cannot run on Obsidian Mobile. DOCX profiles are disabled there; Markdown remains available.
 - Cancelling during the final atomic destination swap is intentionally disabled to preserve output integrity.
 - English word-number parsing covers zero through ninety-nine; more complex written numbers should use numeric metadata.
 - Opening arbitrary DOCX files and selecting absolute reference paths rely on isolated Electron conveniences that may be unavailable on some future Desktop builds; manual file-manager opening and text path entry remain available.
@@ -289,9 +264,7 @@ UI classes select settings, invoke services, and render results; they do not sca
 
 ## Troubleshooting
 
-- **Pandoc not found:** use the Detect button, then configure the absolute executable path if needed. Run `pandoc --version` outside Obsidian to confirm the installation.
-- **Reference DOCX missing:** use Browse or enter a valid absolute or vault-relative path. Validation reports the exact missing path.
-- **Permission denied:** choose an export folder writable by the vault and verify template/metadata-file read permissions.
+- **Permission denied:** choose an export folder writable by the vault.
 - **Invalid YAML:** run Validate Manuscript. The affected note is reported and compilation continues with empty metadata for that note.
 - **Unexpected exclusions:** inspect the scene in preview and review every metadata filter in the active profile; all filter rules must match.
 - **Output included on a later compile:** move the export folder outside the manuscript root. Validation reports this unsafe configuration.
@@ -305,7 +278,7 @@ No. Scanning, validation, preview, and compilation only read manuscript notes. E
 
 ### Is Pandoc required?
 
-No. Markdown export works without Pandoc. Pandoc is required only for DOCX.
+No. Both Markdown and DOCX exports are created directly by the plugin.
 
 ### Are Dataview or other plugins required?
 
@@ -333,6 +306,6 @@ Three capabilities have no documented cross-platform Obsidian equivalent and are
 2. Electron's desktop file-input `File.path` extension for choosing an absolute reference/template file.
 3. Electron's application-version bridge for diagnostics; the report states “Unavailable through documented API” when this bridge is absent.
 
-Both are optional, desktop-only conveniences with safe failure behavior; text path entry and file-manager opening remain available. Node built-ins (`child_process`, `fs/promises`, `os`, and `path`) are isolated in `pandoc.ts`, used only on desktop for local DOCX conversion, and never execute through a shell.
+These are optional desktop conveniences with safe failure behavior; file-manager opening remains available. DOCX creation itself uses bundled JavaScript and Obsidian's binary vault APIs.
 
-Development-only dependencies are TypeScript, esbuild, Obsidian API typings, and Node typings. Transitive CodeMirror/moment packages come only from the Obsidian development package and are not bundled into `main.js`.
+The only production dependency is `fflate`, which is bundled for ZIP packaging. Development-only dependencies are TypeScript, esbuild, Obsidian API typings, and Node typings. Transitive CodeMirror/moment packages come only from the Obsidian development package and are not bundled into `main.js`.

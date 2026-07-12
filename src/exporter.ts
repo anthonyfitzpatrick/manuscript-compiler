@@ -1,6 +1,7 @@
 import { FileSystemAdapter, normalizePath, TFile, Vault } from "obsidian";
 import type { Book } from "./model";
-import { nodeFs, PandocError, PandocService, pathExists, resolveVaultOrAbsolutePath, type PandocStatus } from "./pandoc";
+import { createDocx } from "./docx";
+import { nodeFs, pathExists, type PandocStatus } from "./pandoc";
 import type { CompileProfile } from "./settings";
 import { TemplateEngine, type TemplateVariables } from "./template-engine";
 
@@ -23,25 +24,16 @@ export class MarkdownExporter implements Exporter {
 
 export class DocxExporter implements Exporter {
   readonly format = "docx";
-  constructor(private readonly vault: Vault, private readonly pandocService: PandocService, private readonly markdownExporter: MarkdownExporter) {}
+  constructor(private readonly vault: Vault, private readonly markdownExporter: MarkdownExporter) {}
   async export(request: ExportRequest): Promise<ExportResult> {
-    if (!request.pandoc?.available || !request.pandoc.executable) throw new Error(request.pandoc?.explanation ?? "Pandoc is unavailable.");
-    if (!(this.vault.adapter instanceof FileSystemAdapter)) throw new Error("DOCX export requires a local filesystem vault.");
     const slash = request.outputPath.lastIndexOf("/"); if (slash >= 0) await this.markdownExporter.ensureFolder(request.outputPath.slice(0, slash));
-    const referenceDocx = resolveVaultOrAbsolutePath(this.vault, request.profile.referenceDocx); const metadataFile = resolveVaultOrAbsolutePath(this.vault, request.profile.pandocMetadataFile);
-    if (referenceDocx && !await pathExists(referenceDocx)) throw new Error(`Reference DOCX does not exist: ${request.profile.referenceDocx}`);
-    if (metadataFile && !await pathExists(metadataFile)) throw new Error(`Pandoc metadata file does not exist: ${request.profile.pandocMetadataFile}`);
-    const { fs, os, path } = nodeFs(); const temporaryDirectory = await fs.mkdtemp(path.join(os.tmpdir(), "manuscript-compiler-")); const temporaryMarkdown = path.join(temporaryDirectory, "manuscript.md");
-    const outputAbsolute = this.vault.adapter.getFullPath(request.outputPath); const temporaryDocx = path.join(temporaryDirectory, "manuscript.docx"); const profile = { ...request.profile, referenceDocx, pandocMetadataFile: metadataFile };
-    try {
-      await fs.writeFile(temporaryMarkdown, request.markdown, "utf8");
-      const result = await this.pandocService.convert(request.pandoc.executable, temporaryMarkdown, temporaryDocx, profile, String(request.variables.BookTitle ?? request.book.title), String(request.variables.Author ?? ""), request.signal);
-      if (!await pathExists(temporaryDocx)) throw new PandocError("Pandoc completed without creating the DOCX output.", result.stdout, result.stderr);
-      request.onCommit?.(); await atomicReplace(temporaryDocx, outputAbsolute);
-      if (request.keepTemporaryMarkdown) await this.markdownExporter.write(request.outputPath.replace(/\.docx$/i, ".md"), request.markdown);
-      return { format: this.format, path: request.outputPath, stdout: result.stdout, stderr: result.stderr };
-    } finally { await fs.rm(temporaryDirectory, { recursive: true, force: true }); }
+    if (request.signal?.aborted) throw new Error("Compilation cancelled.");
+    const bytes = createDocx(request.markdown, { title: String(request.variables.BookTitle ?? request.book.title), author: String(request.variables.Author ?? ""), tableOfContents: request.profile.generateTableOfContents });
+    request.onCommit?.(); const file = await this.writeBinary(request.outputPath, bytes);
+    if (request.keepTemporaryMarkdown) await this.markdownExporter.write(request.outputPath.replace(/\.docx$/i, ".md"), request.markdown);
+    return { format: this.format, path: request.outputPath, file };
   }
+  private async writeBinary(path: string, bytes: Uint8Array): Promise<TFile | undefined> { const safePath = validateVaultPath(path); const existing = this.vault.getAbstractFileByPath(safePath); const data = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer; if (existing instanceof TFile) { await this.vault.modifyBinary(existing, data); return existing; } return this.vault.createBinary(safePath, data); }
 }
 
 async function atomicReplace(source: string, destination: string): Promise<void> { const { fs } = nodeFs(); const suffix = `${Date.now()}-${Math.random().toString(36).slice(2)}`; const staged = `${destination}.manuscript-compiler-${suffix}.tmp`; const backup = `${destination}.manuscript-compiler-${suffix}.backup`; let backedUp = false; try { await fs.copyFile(source, staged); if (await pathExists(destination)) { await fs.rename(destination, backup); backedUp = true; } await fs.rename(staged, destination); if (backedUp) await fs.rm(backup, { force: true }).catch(() => undefined); } catch (error) { await fs.rm(staged, { force: true }); if (backedUp && !await pathExists(destination)) await fs.rename(backup, destination); throw error; } }

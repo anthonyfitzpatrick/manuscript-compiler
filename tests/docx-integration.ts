@@ -1,0 +1,21 @@
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import { strFromU8, unzipSync } from "fflate";
+import { createDocx } from "../src/docx";
+
+const markdown = await readFile("tests/golden/complete-sample.md", "utf8");
+const bytes = createDocx(markdown, { title: "The Lighthouse Between Worlds", author: "Anthony Example", tableOfContents: true });
+assert.equal(String.fromCharCode(...bytes.slice(0, 2)), "PK");
+const entries = unzipSync(bytes);
+for (const required of ["[Content_Types].xml", "_rels/.rels", "word/document.xml", "word/styles.xml", "docProps/core.xml"]) assert.ok(entries[required], `Missing ${required}`);
+const document = strFromU8(entries["word/document.xml"]);
+const styles = strFromU8(entries["word/styles.xml"]);
+const core = strFromU8(entries["docProps/core.xml"]);
+assert.match(document, /Part 1: The Signal/);
+assert.match(document, /Chapter 1: Arrival/);
+assert.match(document, /TOC/);
+assert.doesNotMatch(document, /Editing Status|^---$/m);
+assert.match(styles, /Heading1/);
+assert.match(styles, /SceneBreak/);
+assert.match(core, /The Lighthouse Between Worlds/);
+process.stdout.write(`Built-in DOCX integration passed (${bytes.length.toLocaleString()} bytes).\n`);
