@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.8.0 Simplified Beta
+
+- Added a single author-oriented Compile Manuscript window with folder, structure, output, and format choices.
+- Added six book-structure presets plus Vellum and Standard DOCX presets.
+- Made the built-in DOCX generator the default and removed the obsolete Pandoc runtime implementation.
+- Simplified settings, first-run setup, preview, and compile results with progressive disclosure for expert controls.
+- Added idempotent migration for 0.7 settings and regression coverage for the simplified workflow.
+
 ## 0.7.0 Beta
 
 - Added cancellable, stage-aware compilation and Pandoc termination.

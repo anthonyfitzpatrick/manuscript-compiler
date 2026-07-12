@@ -102,10 +102,7 @@ export interface CompilePreview extends CompileStatistics {
   statistics: ManuscriptStatistics;
   outputFormats: string[];
   outputPaths: string[];
-  pandocAvailable: boolean;
-  pandocVersion?: string;
-  pandocExplanation?: string;
-  referenceDocx?: string;
+  docxEngine: "built-in";
   estimatedPages: number;
   canExport: boolean;
 }

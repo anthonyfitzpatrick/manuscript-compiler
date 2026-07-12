@@ -1,11 +1,11 @@
 import { FileSystemAdapter, normalizePath, TFile, Vault } from "obsidian";
 import type { Book } from "./model";
 import { createDocx } from "./docx";
-import { nodeFs, pathExists, type PandocStatus } from "./pandoc";
+import { nodeFs, pathExists } from "./filesystem";
 import type { CompileProfile } from "./settings";
 import { TemplateEngine, type TemplateVariables } from "./template-engine";
 
-export interface ExportRequest { book: Book; profile: CompileProfile; markdown: string; outputPath: string; variables: TemplateVariables; pandoc?: PandocStatus; keepTemporaryMarkdown?: boolean; signal?: AbortSignal; onCommit?: () => void; }
+export interface ExportRequest { book: Book; profile: CompileProfile; markdown: string; outputPath: string; variables: TemplateVariables; keepTemporaryMarkdown?: boolean; signal?: AbortSignal; onCommit?: () => void; }
 export interface ExportResult { format: string; path: string; file?: TFile; stdout?: string; stderr?: string; }
 export interface Exporter { readonly format: string; export(request: ExportRequest): Promise<ExportResult>; }
 

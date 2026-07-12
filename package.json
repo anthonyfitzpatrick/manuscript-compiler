@@ -1,6 +1,6 @@
 {
   "name": "obsidian-manuscript-compiler",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Validate, preview, and compile Obsidian book manuscripts to Markdown or DOCX.",
   "main": "main.js",
   "scripts": {

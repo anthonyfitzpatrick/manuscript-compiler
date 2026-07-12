@@ -1,9 +1,9 @@
 {
   "id": "manuscript-compiler",
   "name": "Manuscript Compiler",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "minAppVersion": "1.5.0",
-  "description": "Validate, preview, and compile book manuscripts to Markdown or DOCX. Public beta.",
+  "description": "Compile Obsidian book manuscripts directly to DOCX with a simple author workflow. Simplified beta.",
   "author": "Anthony Fitzpatrick",
   "isDesktopOnly": false
 }

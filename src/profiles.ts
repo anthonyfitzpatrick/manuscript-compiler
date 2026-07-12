@@ -3,7 +3,7 @@ import { DEFAULT_OPTIONS } from "./settings";
 
 const VELLUM_OPTIONS = { ...DEFAULT_OPTIONS, orderingMethod: "metadata" as const, metadataOrdering: true, partHeadingTemplate: "Part {number}: {name}", chapterHeadingTemplate: "Chapter {number}: {name}", removeHtmlComments: true, removeDataviewBlocks: true, removeCallouts: true, stripInternalLinks: true };
 export function profileId(): string { return `profile-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`; }
-function profile(name: string, options = DEFAULT_OPTIONS): CompileProfile { return { ...options, metadataFilters: options.metadataFilters.map((rule) => ({ ...rule })), id: profileId(), name, manuscriptRoot: "", exportFolder: "Manuscript Exports", outputFilename: "{BookTitle} Manuscript.md", variables: { BookTitle: "", Series: "", Author: "" }, exportTarget: "markdown", referenceDocx: "", pandocMetadataFile: "", additionalPandocArguments: "", generateTableOfContents: false, keepIntermediateMarkdown: false }; }
+function profile(name: string, options = DEFAULT_OPTIONS): CompileProfile { return { ...options, metadataFilters: options.metadataFilters.map((rule) => ({ ...rule })), id: profileId(), name, manuscriptRoot: "", exportFolder: "Manuscript Exports", outputFilename: "{BookTitle}.docx", variables: { BookTitle: "", Series: "", Author: "" }, exportTarget: "docx", referenceDocx: "", pandocMetadataFile: "", additionalPandocArguments: "", generateTableOfContents: false, keepIntermediateMarkdown: false }; }
 export function createDefaultProfiles(): CompileProfile[] { return [profile("Default"), profile("Vellum", VELLUM_OPTIONS)]; }
 export function duplicateProfile(source: CompileProfile, name = `${source.name} Copy`): CompileProfile { return { ...source, id: profileId(), name, metadataFilters: source.metadataFilters.map((rule) => ({ ...rule })), variables: { ...source.variables } }; }
 export function migrateSettings(settings: ManuscriptCompilerSettings): ManuscriptCompilerSettings {
@@ -22,6 +22,10 @@ export function migrateSettings(settings: ManuscriptCompilerSettings): Manuscrip
 }
 export function repairSettings(settings: ManuscriptCompilerSettings): ManuscriptCompilerSettings {
   const warnings: string[] = []; if (!Array.isArray(settings.profiles)) { settings.profiles = []; warnings.push("Invalid profile storage was recovered with default profiles."); } const repaired = migrateSettings(settings);
+  const activeForMigration = repaired.profiles.find((item) => item.id === repaired.activeProfileId) ?? repaired.profiles[0];
+  repaired.defaultStructurePreset ??= activeForMigration ? (activeForMigration.useParts ? (activeForMigration.chapterSource === "notes" ? "anthology" : "novel-parts") : activeForMigration.chapterSource === "notes" ? "chapter-notes" : "novel") : "novel-parts";
+  repaired.defaultDocxStyle ??= repaired.defaultCompilePreset === "vellum" || /vellum/i.test(activeForMigration?.name ?? "") ? "vellum" : "standard";
+  repaired.defaultExportFormat ??= "docx"; repaired.warnBeforeOverwrite ??= true; repaired.openAfterCompile ??= false; repaired.includeTitlePageByDefault ??= false; repaired.includeTableOfContentsByDefault ??= activeForMigration?.generateTableOfContents ?? false; repaired.showAdvancedOptions ??= false;
   if (!Array.isArray(repaired.exportHistory)) { repaired.exportHistory = []; warnings.push("Invalid export history was reset."); }
   if (!Array.isArray(repaired.compileLogs)) { repaired.compileLogs = []; warnings.push("Invalid compile logs were reset."); }
   if (!Number.isFinite(repaired.readingWordsPerMinute) || repaired.readingWordsPerMinute <= 0) { repaired.readingWordsPerMinute = 250; warnings.push("Reading speed was repaired to 250 words per minute."); }

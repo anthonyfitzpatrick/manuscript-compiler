@@ -2,6 +2,8 @@ import { App, FuzzySuggestModal, Modal, Notice, Setting, TFolder } from "obsidia
 import type ManuscriptCompilerPlugin from "./main";
 import { createDefaultProfiles, profileId } from "./profiles";
 import type { ChapterSource, CompileProfile } from "./settings";
+import type { StructurePreset } from "./settings";
+import { STRUCTURE_PRESET_NAMES } from "./simple-workflow";
 
 class WizardFolderPicker extends FuzzySuggestModal<TFolder> {
   constructor(app: App, private readonly choose: (folder: TFolder) => void) { super(app); this.setPlaceholder("Search vault folders…"); }
@@ -10,8 +12,8 @@ class WizardFolderPicker extends FuzzySuggestModal<TFolder> {
   onChooseItem(item: TFolder): void { this.choose(item); }
 }
 
-interface WizardChoices { name: string; manuscriptRoot: string; exportFolder: string; chapterSource: ChapterSource; useParts: boolean; sceneSeparators: boolean; includeFrontMatter: boolean; includeBackMatter: boolean; referenceDocx: string; vellum: boolean; }
-const initialChoices = (): WizardChoices => ({ name: "My Book", manuscriptRoot: "", exportFolder: "Manuscript Exports", chapterSource: "folders", useParts: true, sceneSeparators: true, includeFrontMatter: true, includeBackMatter: true, referenceDocx: "", vellum: false });
+interface WizardChoices { name: string; manuscriptRoot: string; exportFolder: string; chapterSource: ChapterSource; useParts: boolean; sceneSeparators: boolean; includeFrontMatter: boolean; includeBackMatter: boolean; referenceDocx: string; vellum: boolean; structurePreset?: StructurePreset; }
+const initialChoices = (): WizardChoices => ({ name: "My Book", manuscriptRoot: "", exportFolder: "Manuscript Exports", chapterSource: "folders", useParts: true, sceneSeparators: true, includeFrontMatter: true, includeBackMatter: true, referenceDocx: "", vellum: true, structurePreset: "novel-parts" });
 
 export function profileFromWizard(choices: WizardChoices): CompileProfile {
   const base = createDefaultProfiles()[choices.vellum ? 1 : 0];
@@ -32,7 +34,7 @@ export class ProfileWizardModal extends Modal {
 }
 
 export class FirstRunWizardModal extends Modal {
-  private choices = initialChoices(); private compileSample = false; private pandocText = "Built-in DOCX is ready; Pandoc is not required";
+  private choices = initialChoices(); private compileSample = false;
   constructor(app: App, private readonly plugin: ManuscriptCompilerPlugin) { super(app); }
   onOpen(): void { this.modalEl.addClass("manuscript-wizard"); this.render(); }
   private render(): void {
@@ -40,8 +42,9 @@ export class FirstRunWizardModal extends Modal {
     new Setting(this.contentEl).setName("Manuscript folder").setDesc(this.choices.manuscriptRoot || "Not selected").addButton((button) => button.setButtonText("Choose").setCta().onClick(() => new WizardFolderPicker(this.app, (folder) => { this.choices.manuscriptRoot = folder.path; this.render(); }).open()));
     new Setting(this.contentEl).setName("Export folder").setDesc(this.choices.exportFolder).addButton((button) => button.setButtonText("Choose existing").onClick(() => new WizardFolderPicker(this.app, (folder) => { this.choices.exportFolder = folder.path; this.render(); }).open())).addText((text) => text.setValue(this.choices.exportFolder).onChange((value) => { this.choices.exportFolder = value.trim(); }));
     new Setting(this.contentEl).setName("Profile style").addDropdown((dropdown) => dropdown.addOption("standard", "Standard").addOption("vellum", "Vellum").setValue(this.choices.vellum ? "vellum" : "standard").onChange((value) => { this.choices.vellum = value === "vellum"; }));
-    new Setting(this.contentEl).setName("DOCX export").setDesc(this.pandocText);
+    new Setting(this.contentEl).setName("Book structure").addDropdown((dropdown) => { for (const [value, label] of Object.entries(STRUCTURE_PRESET_NAMES)) if (value !== "custom") dropdown.addOption(value, label); dropdown.setValue(this.choices.structurePreset ?? "novel-parts").onChange((value) => { this.choices.structurePreset = value as StructurePreset; this.choices.useParts = value === "novel-parts" || value === "anthology"; this.choices.chapterSource = value === "chapter-notes" || value === "short-story" || value === "anthology" ? "notes" : "folders"; }); });
+    new Setting(this.contentEl).setName("DOCX export").setDesc("Built-in DOCX is ready; no external converter is required.");
     new Setting(this.contentEl).setName("Compile sample after setup").setDesc("Available when samples/Complete Sample Book exists in this vault.").addToggle((toggle) => toggle.setValue(this.compileSample).onChange((value) => { this.compileSample = value; }));
-    new Setting(this.contentEl).addButton((button) => button.setButtonText("Skip for now").onClick(async () => { this.plugin.settings.onboardingCompleted = true; await this.plugin.saveSettings(); this.close(); })).addButton((button) => button.setButtonText("Finish setup").setCta().onClick(async () => { const profile = profileFromWizard({ ...this.choices, name: this.choices.vellum ? "Vellum" : "Standard" }); this.plugin.settings.profiles.push(profile); this.plugin.settings.activeProfileId = profile.id; this.plugin.settings.defaultProfileId = profile.id; this.plugin.settings.onboardingCompleted = true; await this.plugin.saveSettings(); this.close(); if (this.compileSample) await this.plugin.compileSampleManuscript(); }));
+    new Setting(this.contentEl).addButton((button) => button.setButtonText("Skip for now").onClick(async () => { this.plugin.settings.onboardingCompleted = true; await this.plugin.saveSettings(); this.close(); })).addButton((button) => button.setButtonText("Finish setup").setCta().onClick(async () => { const profile = profileFromWizard({ ...this.choices, name: this.choices.vellum ? "Vellum" : "Standard DOCX" }); this.plugin.settings.profiles.push(profile); this.plugin.settings.activeProfileId = profile.id; this.plugin.settings.defaultProfileId = profile.id; this.plugin.settings.defaultManuscriptFolder = this.choices.manuscriptRoot; this.plugin.settings.defaultExportFolder = this.choices.exportFolder; this.plugin.settings.defaultStructurePreset = this.choices.structurePreset ?? "novel-parts"; this.plugin.settings.defaultDocxStyle = this.choices.vellum ? "vellum" : "standard"; this.plugin.settings.defaultExportFormat = "docx"; this.plugin.settings.onboardingCompleted = true; await this.plugin.saveSettings(); this.close(); if (this.compileSample) await this.plugin.compileSampleManuscript(); }));
   }
 }

@@ -3,6 +3,8 @@ export type WarningLevel = "information" | "warning" | "error";
 export type MetadataOperator = "equals" | "not-equals";
 export type ExportTarget = "markdown" | "docx" | "markdown-docx";
 export type ChapterSource = "folders" | "notes";
+export type StructurePreset = "novel-parts" | "novel" | "chapter-notes" | "short-story" | "anthology" | "custom";
+export type DocxStylePreset = "vellum" | "standard";
 
 export interface MetadataFilterRule { id: string; field: string; operator: MetadataOperator; value: string; }
 export interface CleaningSettings { stripYamlFrontmatter: boolean; removeObsidianComments: boolean; removeHtmlComments: boolean; removeDataviewBlocks: boolean; removeCallouts: boolean; stripInternalLinks: boolean; }
@@ -28,6 +30,8 @@ export interface ManuscriptCompilerSettings extends CompileOptions {
   exportHistory: ExportHistoryEntry[]; compileLogs: CompileLogEntry[];
   configurationWarnings: string[];
   onboardingCompleted: boolean;
+  defaultStructurePreset: StructurePreset; defaultDocxStyle: DocxStylePreset; warnBeforeOverwrite: boolean;
+  openAfterCompile: boolean; includeTitlePageByDefault: boolean; includeTableOfContentsByDefault: boolean; showAdvancedOptions: boolean;
   /* Stage 1/2 migration fields. */
   defaultManuscriptFolder: string; defaultExportFolder: string; defaultCompilePreset: "default" | "vellum";
 }
@@ -40,9 +44,11 @@ export const DEFAULT_OPTIONS: CompileOptions = {
   stripYamlFrontmatter: true, removeObsidianComments: true, removeHtmlComments: false, removeDataviewBlocks: false, removeCallouts: false, stripInternalLinks: false
 };
 export const DEFAULT_SETTINGS: ManuscriptCompilerSettings = {
-  ...DEFAULT_OPTIONS, profiles: [], activeProfileId: "", defaultProfileId: "", showPreview: true, expandPreviewTree: true,
+  ...DEFAULT_OPTIONS, profiles: [], activeProfileId: "", defaultProfileId: "", showPreview: true, expandPreviewTree: false,
   showStatistics: true, readingWordsPerMinute: 250, minimumWarningLevel: "information",
-  pandocExecutablePath: "", automaticallyDetectPandoc: true, defaultExportFormat: "markdown", defaultReferenceDocx: "",
+  pandocExecutablePath: "", automaticallyDetectPandoc: false, defaultExportFormat: "docx", defaultReferenceDocx: "",
   keepTemporaryMarkdown: false, enableCompileLogs: true, maximumExportHistoryEntries: 50, exportHistory: [], compileLogs: [], configurationWarnings: [], onboardingCompleted: false,
-  defaultManuscriptFolder: "", defaultExportFolder: "Manuscript Exports", defaultCompilePreset: "default"
+  defaultManuscriptFolder: "", defaultExportFolder: "Manuscript Exports", defaultCompilePreset: "default",
+  defaultStructurePreset: "novel-parts", defaultDocxStyle: "vellum", warnBeforeOverwrite: true, openAfterCompile: false,
+  includeTitlePageByDefault: false, includeTableOfContentsByDefault: false, showAdvancedOptions: false
 };

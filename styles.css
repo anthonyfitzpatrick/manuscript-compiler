@@ -31,6 +31,9 @@
 @media (max-width: 700px) { .manuscript-compiler-preview-layout { grid-template-columns: 1fr; } }
 
 .manuscript-wizard { width: min(720px, 92vw); }
+.manuscript-simple-compile { width: min(720px, 92vw); }
+.manuscript-simple-compile > h3 { margin-top: var(--size-4-5); margin-bottom: var(--size-4-1); }
+.manuscript-simple-compile > details { margin: var(--size-4-4) 0; padding: var(--size-4-3); border: 1px solid var(--background-modifier-border); border-radius: var(--radius-m); }
 .manuscript-wizard .setting-item { align-items: flex-start; }
 .manuscript-compiler-preview button:focus-visible,
 .manuscript-wizard button:focus-visible,
