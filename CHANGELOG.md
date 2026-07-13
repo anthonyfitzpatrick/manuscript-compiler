@@ -10,6 +10,7 @@
 - Changed the Export preview to use the exact prepared semantic manuscript model passed to DOCX/Markdown export; included source changes now require **Refresh Preview** before export.
 - Added structural DOCX validation plus staged, verified saving with same-folder replacement on local vaults, adapter-compatible recovery, rollback of existing outputs, and conservative stale-temporary cleanup.
 - Unified guided, current-book, selected-folder, sample, legacy-profile, validation, Markdown, and DOCX routes behind the authoritative prepared-manuscript service. Existing command IDs are retained, and validation now reports the same final semantic model used by export.
+- Separated plugin composition, command orchestration, workspace state, step rendering, export coordination, operation state, history, and platform result actions; removed unregistered legacy settings classes and their unreachable post-return block.
 
 Central export rule: **Only explicitly included publishable content is exported. Vault organisation and project metadata are never manuscript content.**
 

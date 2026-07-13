@@ -19,6 +19,8 @@ If an included source note changes after the final preview is prepared, export i
 
 All compile routes use this same preparation pipeline. **Compile Current Book**, **Compile Selected Folder**, profile-compatible compilation, the first-run sample, Markdown export, DOCX export, and **Validate Manuscript** all construct or consume one prepared semantic manuscript. Older command IDs remain available for hotkeys, but their former permissive scanner-to-export path no longer exists. Validation reports the exact semantic content that would be exported and writes no file.
 
+Internally, workspace state, command preparation, export execution, history, and platform result actions use separate focused services. This keeps the final semantic model and safe save guarantees unchanged while making cancellation and session invalidation consistent across the UI.
+
 ## Safe Manuscript Discovery
 
 Folders named `Manuscript`, `Draft`, `Drafts`, `Book`, `Content`, or `Chapters` are suggested as **Transparent container**. Their children remain available, but the container contributes no heading.
