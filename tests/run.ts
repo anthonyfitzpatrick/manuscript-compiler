@@ -24,7 +24,7 @@ import { CompilationCancelledError } from "../src/cancellation";
 import { DOCX_FORMATTING_PRESETS, docxFormattingForPreset, inferStructurePreset, resolveSimpleCompileRequest, validateSimpleCompileRequest } from "../src/simple-workflow";
 import type { SimpleCompileRequest } from "../src/simple-workflow";
 import { canProceedWithExport } from "../src/export-safety";
-import { applyContentPlan, classifyContentPlan, createContentPlan } from "../src/content-plan";
+import { applyContentPlan, classifyContentPlan, createContentPlan, type ContentPlanItem } from "../src/content-plan";
 import { calculateSourceFingerprint, compileInputSignature, CompilePreparationService, createPreparedExportRequest, preparedSessionMatchesInputs, sessionMatchesBook } from "../src/compile-preparation";
 import { createManuscriptDocx } from "../src/docx";
 import { strFromU8, unzipSync } from "fflate";
@@ -33,16 +33,20 @@ import { BookRootResolver } from "../src/book-root-resolver";
 import { CompileWorkspaceController } from "../src/workspace/compile-workspace-controller";
 import { buildExportPreviewViewModel } from "../src/workspace/export-preview";
 import { isEffectivelyIncluded, moveSibling, setItemIncluded } from "../src/workspace/content-tree";
+import { changedRowPaths, snapshotRows } from "../src/workspace/contents-step";
+import { ContentsTreeViewState } from "../src/workspace/contents-tree-view-state";
 import { OperationStateController } from "../src/operation-state";
 import { CompileHistoryService } from "../src/compile-history";
 import { ResultActionService } from "../src/result-actions";
 import { createTestDocx } from "./docx-test-fixture";
+import { centimetresToInches, centimetresToTwips, clampCentimetres, inchesToCentimetres, twipsToCentimetres } from "../src/measurements";
+import { addCompileFolderMenuItem, COMPILE_FOLDER_MENU_TITLE } from "../src/folder-context-menu";
 
 const tests: Array<[string, () => void | Promise<void>]> = [];
 const test = (name: string, action: () => void | Promise<void>): void => { tests.push([name, action]); };
 async function sourceFiles(folder: string): Promise<string[]> { const entries = await readdir(folder, { withFileTypes: true }); const nested = await Promise.all(entries.map((entry) => entry.isDirectory() ? sourceFiles(path.join(folder, entry.name)) : Promise.resolve(entry.name.endsWith(".ts") ? [path.join(folder, entry.name)] : []))); return nested.flat(); }
 const file = (name: string, content: string, metadata: Record<string, unknown> = {}): ManuscriptDocument => ({ file: { name: `${name}.md`, basename: name, path: `Book/${name}.md` } as never, title: name, number: extractNumber(name), metadata: { values: metadata }, rawContent: content, content, excluded: false });
-const preparedRequest = (root: string, plan: ReturnType<typeof createContentPlan>): SimpleCompileRequest => ({ manuscriptRoot: root, structurePreset: "novel-parts", includeFrontMatter: true, includeBackMatter: true, exportFolder: "Manuscript Exports", outputFilename: "Warden of Silence.docx", outputFormat: "docx", docxPreset: "vellum", contentPlan: plan, formatting: { font: "Times New Roman", fontSize: 12, lineSpacing: 2, firstLineIndent: 0.5, pageSize: "letter", chapterPageBreak: true, titlePage: true }, tableOfContents: false, partDisplay: "word-title", chapterDisplay: "word-title", custom: { variables: { BookTitle: "Warden of Silence", Author: "Anthony Fitzpatrick" }, bodySectionAliases: ["Scene", "Manuscript", "Text", "Draft", "Body"] } });
+const preparedRequest = (root: string, plan: ReturnType<typeof createContentPlan>): SimpleCompileRequest => ({ manuscriptRoot: root, structurePreset: "novel-parts", includeFrontMatter: true, includeBackMatter: true, exportFolder: "Manuscript Exports", outputFilename: "Warden of Silence.docx", outputFormat: "docx", docxPreset: "vellum", contentPlan: plan, formatting: { font: "Times New Roman", fontSize: 12, lineSpacing: 2, firstLineIndentCm: 1.27, pageSize: "a4", chapterPageBreak: true, titlePage: true }, tableOfContents: false, partDisplay: "word-title", chapterDisplay: "word-title", custom: { variables: { BookTitle: "Warden of Silence", Author: "Anthony Fitzpatrick" }, bodySectionAliases: ["Scene", "Manuscript", "Text", "Draft", "Body"] } });
 
 test("template engine resolves known and unknown variables", () => assert.equal(new TemplateEngine().render("{BookTitle} — {Unknown}", { BookTitle: "North" }), "North —"));
 test("internal links retain visible text", () => assert.equal(stripInternalLinks("[[People/Elin|Elin Andersson]] met [[Noah]]."), "Elin Andersson met Noah."));
@@ -67,22 +71,33 @@ test("output paths reject traversal, absolute paths, and nonportable characters"
 test("blocking output safety errors disable export", () => { assert.equal(canProceedWithExport([{ severity: "error", code: "output-inside-root", message: "unsafe" }], "markdown", true), false); assert.equal(canProceedWithExport([{ severity: "warning", code: "output-exists", message: "confirm" }], "markdown", true), true); assert.equal(canProceedWithExport([], "docx", false), false); });
 test("native DOCX defaults require no desktop or Pandoc state", () => { assert.equal(DEFAULT_SETTINGS.defaultExportFormat, "docx"); assert.equal(DEFAULT_SETTINGS.defaultDocxStyle, "vellum"); assert.equal(DEFAULT_SETTINGS.automaticallyDetectPandoc, false); });
 for (const preset of ["novel-parts", "novel", "chapter-notes", "short-story", "anthology", "custom"] as const) test(`simple workflow resolves ${preset}`, () => { const base = createDefaultProfiles()[0]; const profile = resolveSimpleCompileRequest({ manuscriptRoot: "Books/Test", structurePreset: preset, includeFrontMatter: true, includeBackMatter: false, exportFolder: "Exports", outputFilename: "Test.docx", outputFormat: "docx", docxPreset: "vellum", custom: { useParts: false, chapterSource: "folders" } }, base); assert.equal(profile.manuscriptRoot, "Books/Test"); assert.equal(profile.exportFolder, "Exports"); assert.equal(profile.exportTarget, "docx"); assert.equal(profile.referenceDocx, ""); });
-test("Vellum preset applies safe cleaning and readable links", () => { const profile = resolveSimpleCompileRequest({ manuscriptRoot: "Book", structurePreset: "novel-parts", includeFrontMatter: true, includeBackMatter: true, exportFolder: "Exports", outputFilename: "Book.docx", outputFormat: "docx", docxPreset: "vellum" }, createDefaultProfiles()[0]); assert.equal(profile.removeDataviewBlocks, true); assert.equal(profile.removeCallouts, true); assert.equal(profile.stripInternalLinks, true); assert.equal(profile.generateTableOfContents, false); });
+test("Vellum preset applies safe cleaning and readable links", () => { const profile = resolveSimpleCompileRequest({ manuscriptRoot: "Book", structurePreset: "novel-parts", includeFrontMatter: true, includeBackMatter: true, exportFolder: "Exports", outputFilename: "Book.docx", outputFormat: "docx", docxPreset: "vellum" }, createDefaultProfiles()[0]); assert.equal(profile.removeDataviewBlocks, true); assert.equal(profile.removeCallouts, true); assert.equal(profile.stripInternalLinks, true); assert.equal(profile.generateTableOfContents, false); assert.equal(profile.sceneSeparator, "#"); assert.equal(profile.docxPageSize, "a4"); assert.equal(profile.docxFirstLineIndentCm, 0.75); });
 test("TOC selection survives preset resolution as a real compile-request choice", () => { const profile = resolveSimpleCompileRequest({ manuscriptRoot: "Book", structurePreset: "novel-parts", includeFrontMatter: true, includeBackMatter: true, exportFolder: "Exports", outputFilename: "Book.docx", outputFormat: "docx", docxPreset: "vellum", tableOfContents: true }, createDefaultProfiles()[0]); assert.equal(profile.generateTableOfContents, true); });
-test("Standard DOCX preset uses conventional filename ordering", () => { const profile = resolveSimpleCompileRequest({ manuscriptRoot: "Book", structurePreset: "novel", includeFrontMatter: true, includeBackMatter: true, exportFolder: "Exports", outputFilename: "Book.docx", outputFormat: "docx", docxPreset: "standard" }, createDefaultProfiles()[0]); assert.equal(profile.orderingMethod, "filename"); assert.equal(profile.stripYamlFrontmatter, true); });
+test("Standard DOCX preset uses conventional filename ordering", () => { const profile = resolveSimpleCompileRequest({ manuscriptRoot: "Book", structurePreset: "novel", includeFrontMatter: true, includeBackMatter: true, exportFolder: "Exports", outputFilename: "Book.docx", outputFormat: "docx", docxPreset: "standard" }, createDefaultProfiles()[0]); assert.equal(profile.orderingMethod, "filename"); assert.equal(profile.stripYamlFrontmatter, true); assert.equal(profile.sceneSeparator, "* * *"); assert.equal(profile.docxPageSize, "a4"); });
 test("Vellum, Standard, and Custom DOCX formatting resolve deterministically", () => {
   assert.deepEqual(docxFormattingForPreset("vellum"), DOCX_FORMATTING_PRESETS.vellum);
   assert.deepEqual(docxFormattingForPreset("standard"), DOCX_FORMATTING_PRESETS.standard);
   assert.deepEqual(docxFormattingForPreset("vellum"), docxFormattingForPreset("vellum"));
-  const custom = { font: "Georgia", fontSize: 13, lineSpacing: 1.5, firstLineIndent: 0.25, pageSize: "a4" as const, chapterPageBreak: false, titlePage: true };
+  const custom = { font: "Georgia", fontSize: 13, lineSpacing: 1.5, firstLineIndentCm: 0.75, pageSize: "a4" as const, chapterPageBreak: false, titlePage: true };
   assert.deepEqual(docxFormattingForPreset("custom", true, custom), custom);
   assert.equal(DOCX_FORMATTING_PRESETS.vellum.chapterPageBreak, true);
   assert.equal(DOCX_FORMATTING_PRESETS.standard.chapterPageBreak, true);
   assert.equal(DOCX_FORMATTING_PRESETS.standard.fontSize, 12);
   assert.equal(DOCX_FORMATTING_PRESETS.standard.lineSpacing, 2);
+  assert.equal(DOCX_FORMATTING_PRESETS.vellum.pageSize, "a4"); assert.equal(DOCX_FORMATTING_PRESETS.standard.pageSize, "a4");
+});
+
+test("metric formatting conversions are stable and constrained", () => {
+  assert.equal(centimetresToTwips(0.75), 425); assert.equal(centimetresToTwips(1.27), 720); assert.equal(centimetresToTwips(2.54), 1440);
+  assert.equal(inchesToCentimetres(0.5), 1.27); assert.equal(centimetresToInches(2.54), 1); assert.equal(twipsToCentimetres(720), 1.27);
+  assert.equal(clampCentimetres(-1, 0, 3.81, 1.27), 0); assert.equal(clampCentimetres(99, 0, 3.81, 1.27), 3.81); assert.equal(clampCentimetres(Number.NaN, 0, 3.81, 1.27), 1.27);
+});
+test("scene-break preset selection is distinct and Custom retains its choice", () => {
+  const root = "Book"; const plan: ContentPlanItem[] = [{ path: `${root}/Scene.md`, parentPath: root, name: "Scene", kind: "note", role: "scene", included: true, order: 0 }]; const request = preparedRequest(root, plan); request.custom!.sceneSeparator = "§";
+  const controller = new CompileWorkspaceController(request, request.formatting!, { prepare: async () => { throw new Error(); }, sessionIsCurrent: async () => true, export: async () => undefined }); controller.setDocxPreset("vellum"); assert.equal(request.custom?.sceneSeparator, "§"); controller.setDocxPreset("standard"); assert.equal(request.custom?.sceneSeparator, "§"); controller.setDocxPreset("custom"); assert.equal(request.custom?.sceneSeparator, "§");
 });
 test("simple workflow validates missing folders and invalid filenames", () => { const request = { manuscriptRoot: "", structurePreset: "novel" as const, includeFrontMatter: true, includeBackMatter: true, exportFolder: "Exports", outputFilename: "bad/name.docx", outputFormat: "docx" as const, docxPreset: "standard" as const }; const errors = validateSimpleCompileRequest(request); assert.ok(errors.some((item) => /folder/i.test(item))); assert.ok(errors.some((item) => /filename/i.test(item))); });
-test("custom workflow preserves advanced profile options", () => { const base = createDefaultProfiles()[0]; base.metadataFilters = [{ id: "1", field: "POV", operator: "equals", value: "Elin" }]; const profile = resolveSimpleCompileRequest({ manuscriptRoot: "Book", structurePreset: "custom", includeFrontMatter: true, includeBackMatter: true, exportFolder: "Exports", outputFilename: "Book.docx", outputFormat: "docx", docxPreset: "standard", custom: { sceneSeparator: "***" } }, base); assert.equal(profile.sceneSeparator, "***"); assert.equal(profile.metadataFilters.length, 1); });
+test("custom workflow preserves advanced profile options", () => { const base = createDefaultProfiles()[0]; base.metadataFilters = [{ id: "1", field: "POV", operator: "equals", value: "Elin" }]; const profile = resolveSimpleCompileRequest({ manuscriptRoot: "Book", structurePreset: "custom", includeFrontMatter: true, includeBackMatter: true, exportFolder: "Exports", outputFilename: "Book.docx", outputFormat: "docx", docxPreset: "custom", custom: { sceneSeparator: "***" } }, base); assert.equal(profile.sceneSeparator, "***"); assert.equal(profile.metadataFilters.length, 1); });
 test("structure inference preserves existing layout", () => { const profile = createDefaultProfiles()[0]; profile.useParts = false; profile.chapterSource = "notes"; assert.equal(inferStructurePreset(profile), "chapter-notes"); });
 test("Markdown export uses documented vault APIs on non-filesystem adapters", async () => { const entries = new Map<string, unknown>(); const vault = { adapter: {}, getAbstractFileByPath: (value: string) => entries.get(value) ?? null, createFolder: async (value: string) => { entries.set(value, { path: value }); }, create: async (value: string, content: string) => { const created = Object.assign(new TFile(), { path: value, extension: "md", content }); entries.set(value, created); return created; }, modify: async (item: { content: string }, content: string) => { item.content = content; } } as never; const file = await new MarkdownExporter(vault).write("Exports/Test.md", "Body\n"); assert.equal((file as unknown as { content: string }).content, "Body\n"); });
 test("content cleaners cover YAML, comments, Dataview, callouts, links, embeds, blocks, and line endings", () => { assert.equal(stripYamlFrontmatter("---\r\ntitle: Test\r\n---\r\nBody"), "Body"); assert.equal(removeHtmlComments("A<!-- x -->B"), "AB"); assert.equal(removeObsidianComments("A%% x %%B"), "AB"); assert.equal(removeDataviewBlocks("A\n```dataviewjs\nx\n```\nB"), "A\nB"); assert.equal(removeCallouts("> [!note] Title\n> Body\n\n> Ordinary"), "Body\n\n> Ordinary"); assert.equal(stripInternalLinks("[[Note]] [[Folder/Note|Alias]] [[Note#^block]] ![[image.png]] ![[Embedded Note]]"), "Note Alias Note image.png Embedded Note"); });
@@ -110,15 +125,29 @@ for (const fixture of [
 test("0.7 settings migrate idempotently into the simplified model", () => { const profile = createDefaultProfiles()[0]; profile.manuscriptRoot = "Books/Existing"; profile.exportFolder = "Exports/Existing"; profile.outputFilename = "Existing.docx"; const legacy = { ...DEFAULT_SETTINGS, profiles: [profile], activeProfileId: profile.id, defaultProfileId: profile.id } as Record<string, unknown>; delete legacy.defaultStructurePreset; delete legacy.defaultDocxStyle; delete legacy.warnBeforeOverwrite; delete legacy.openAfterCompile; delete legacy.showAdvancedOptions; const once = repairSettings(legacy as never); const snapshot = JSON.stringify(once); const twice = repairSettings(once); assert.equal(JSON.stringify(twice), snapshot); assert.equal(once.profiles[0].manuscriptRoot, "Books/Existing"); assert.equal(once.profiles[0].exportFolder, "Exports/Existing"); assert.equal(once.profiles[0].outputFilename, "Existing.docx"); assert.equal(once.defaultStructurePreset, "novel-parts"); });
 test("saved Chapter page-break compatibility values survive repair", () => { const profile = { ...createDefaultProfiles()[0], docxChapterPageBreak: false }; const settings = repairSettings({ ...DEFAULT_SETTINGS, profiles: [profile], activeProfileId: profile.id, defaultProfileId: profile.id } as never); assert.equal(settings.profiles[0].docxChapterPageBreak, false); });
 test("0.9.1 settings migrate to 0.9.2 idempotently without losing author choices", () => {
-  const profile = { ...createDefaultProfiles()[0], name: "My 0.9.1 Profile", manuscriptRoot: "Books/My Novel", exportFolder: "Exports/Books", outputFilename: "{BookTitle}.docx", variables: { BookTitle: "My Novel", Series: "My Series", Author: "A. Writer" }, metadataFilters: [{ id: "filter-1", field: "Status", operator: "not-equals" as const, value: "Excluded" }], stripInternalLinks: true, removeCallouts: false, bodySectionAliases: ["Scene", "Body"], docxFont: "Georgia", docxFontSize: 13, docxLineSpacing: 1.5, docxFirstLineIndent: 0.25, docxPageSize: "a4" as const, docxChapterPageBreak: false, docxTitlePage: true, generateTableOfContents: true };
+  const profile = { ...createDefaultProfiles()[0], name: "My 0.9.1 Profile", manuscriptRoot: "Books/My Novel", exportFolder: "Exports/Books", outputFilename: "{BookTitle}.docx", variables: { BookTitle: "My Novel", Series: "My Series", Author: "A. Writer" }, metadataFilters: [{ id: "filter-1", field: "Status", operator: "not-equals" as const, value: "Excluded" }], stripInternalLinks: true, removeCallouts: false, bodySectionAliases: ["Scene", "Body"], docxFont: "Georgia", docxFontSize: 13, docxLineSpacing: 1.5, docxFirstLineIndentCm: undefined, docxFirstLineIndent: 0.25, docxPageSize: "a4" as const, docxChapterPageBreak: false, docxTitlePage: true, generateTableOfContents: true };
   const history = [{ id: "history-1", timestamp: "2026-07-01T10:00:00.000Z", profile: profile.name, manuscript: profile.manuscriptRoot, outputFiles: ["Exports/Books/My Novel.docx"], wordCount: 1234, success: true }];
   const persisted = { ...DEFAULT_SETTINGS, profiles: [profile], activeProfileId: profile.id, defaultProfileId: profile.id, defaultManuscriptFolder: profile.manuscriptRoot, defaultExportFolder: profile.exportFolder, defaultStructurePreset: "novel-parts" as const, defaultDocxStyle: "standard" as const, includeTitlePageByDefault: true, includeTableOfContentsByDefault: true, exportHistory: history, compileLogs: [], showAdvancedOptions: true };
   const once = repairSettings(structuredClone(persisted)); const snapshot = JSON.stringify(once); const twice = repairSettings(once);
   assert.equal(JSON.stringify(twice), snapshot); const migrated = twice.profiles[0];
-  assert.deepEqual({ root: migrated.manuscriptRoot, folder: migrated.exportFolder, filename: migrated.outputFilename, variables: migrated.variables, filters: migrated.metadataFilters, font: migrated.docxFont, size: migrated.docxFontSize, spacing: migrated.docxLineSpacing, indent: migrated.docxFirstLineIndent, page: migrated.docxPageSize, chapterBreak: migrated.docxChapterPageBreak, titlePage: migrated.docxTitlePage, toc: migrated.generateTableOfContents }, { root: profile.manuscriptRoot, folder: profile.exportFolder, filename: profile.outputFilename, variables: profile.variables, filters: profile.metadataFilters, font: "Georgia", size: 13, spacing: 1.5, indent: 0.25, page: "a4", chapterBreak: false, titlePage: true, toc: true });
+  assert.deepEqual({ root: migrated.manuscriptRoot, folder: migrated.exportFolder, filename: migrated.outputFilename, variables: migrated.variables, filters: migrated.metadataFilters, font: migrated.docxFont, size: migrated.docxFontSize, spacing: migrated.docxLineSpacing, indentCm: migrated.docxFirstLineIndentCm, page: migrated.docxPageSize, chapterBreak: migrated.docxChapterPageBreak, titlePage: migrated.docxTitlePage, toc: migrated.generateTableOfContents }, { root: profile.manuscriptRoot, folder: profile.exportFolder, filename: profile.outputFilename, variables: profile.variables, filters: profile.metadataFilters, font: "Georgia", size: 13, spacing: 1.5, indentCm: 0.635, page: "a4", chapterBreak: false, titlePage: true, toc: true });
   assert.equal(twice.activeProfileId, profile.id); assert.equal(twice.defaultProfileId, profile.id); assert.equal(twice.exportHistory[0].id, "history-1"); assert.equal(twice.showAdvancedOptions, true);
 });
-test("first-run defaults are DOCX, Vellum, previewed, and overwrite-safe", () => { assert.equal(DEFAULT_SETTINGS.defaultExportFormat, "docx"); assert.equal(DEFAULT_SETTINGS.defaultDocxStyle, "vellum"); assert.equal(DEFAULT_SETTINGS.showPreview, true); assert.equal(DEFAULT_SETTINGS.warnBeforeOverwrite, true); assert.equal(DEFAULT_SETTINGS.showAdvancedOptions, false); });
+test("first-run defaults are DOCX, Vellum, A4, metric, previewed, and overwrite-safe", () => { assert.equal(DEFAULT_SETTINGS.defaultExportFormat, "docx"); assert.equal(DEFAULT_SETTINGS.defaultDocxStyle, "vellum"); assert.equal(DEFAULT_SETTINGS.defaultDocxPageSize, "a4"); assert.equal(DEFAULT_SETTINGS.defaultDocxFirstLineIndentCm, 0.75); assert.equal(DEFAULT_SETTINGS.showPreview, true); assert.equal(DEFAULT_SETTINGS.warnBeforeOverwrite, true); assert.equal(DEFAULT_SETTINGS.showAdvancedOptions, false); const profiles = createDefaultProfiles(); assert.deepEqual(profiles.map((profile) => profile.docxPageSize), ["a4", "a4"]); assert.deepEqual(profiles.map((profile) => profile.docxFirstLineIndentCm), [1.27, 0.75]); assert.deepEqual(profiles.map((profile) => profile.sceneSeparator), ["#", "#"]); });
+
+test("legacy inch indentation and explicit Letter page size migrate once without drift", () => {
+  const profile = createDefaultProfiles()[0]; delete profile.docxFirstLineIndentCm; profile.docxFirstLineIndent = 0.5; profile.docxPageSize = "letter";
+  const once = repairSettings({ ...DEFAULT_SETTINGS, profiles: [profile], activeProfileId: profile.id, defaultProfileId: profile.id } as never); const snapshot = JSON.stringify(once); const twice = repairSettings(once);
+  assert.equal(once.profiles[0].docxFirstLineIndentCm, 1.27); assert.equal(once.profiles[0].docxPageSize, "letter"); assert.equal(once.defaultDocxFirstLineIndentCm, 1.27); assert.equal(once.defaultDocxPageSize, "letter"); assert.equal(JSON.stringify(twice), snapshot);
+});
+test("older Vellum profiles without formatting fields receive metric A4 defaults", () => {
+  const profile = createDefaultProfiles()[1]; delete profile.docxFirstLineIndentCm; delete profile.docxFirstLineIndent; delete profile.docxPageSize;
+  const repaired = repairSettings({ ...DEFAULT_SETTINGS, defaultDocxStyle: "vellum", profiles: [profile], activeProfileId: profile.id, defaultProfileId: profile.id } as never); assert.equal(repaired.profiles[0].docxFirstLineIndentCm, 0.75); assert.equal(repaired.profiles[0].docxPageSize, "a4"); assert.equal(repaired.defaultDocxFirstLineIndentCm, 0.75); assert.equal(repaired.defaultDocxPageSize, "a4");
+});
+test("invalid metric indentation settings are repaired to supported bounds", () => {
+  const negative = createDefaultProfiles()[0]; negative.docxFirstLineIndentCm = -2; const repairedNegative = repairSettings({ ...DEFAULT_SETTINGS, profiles: [negative], activeProfileId: negative.id, defaultProfileId: negative.id } as never); assert.equal(repairedNegative.profiles[0].docxFirstLineIndentCm, 0);
+  const excessive = createDefaultProfiles()[0]; excessive.docxFirstLineIndentCm = 20; const repairedExcessive = repairSettings({ ...DEFAULT_SETTINGS, profiles: [excessive], activeProfileId: excessive.id, defaultProfileId: excessive.id } as never); assert.equal(repairedExcessive.profiles[0].docxFirstLineIndentCm, 3.81);
+});
 test("simple workflow output path uses the requested folder and filename", () => { const exporter = new MarkdownExporter({} as never); assert.equal(exporter.getOutputPath("Manuscript Exports", "Warden of Silence.docx", {}, ".docx"), "Manuscript Exports/Warden of Silence.docx"); });
 test("existing-output warnings do not block overwrite handling", () => { assert.equal(canProceedWithExport([{ severity: "warning", code: "output-exists", message: "Already exists" }], "docx", true), true); });
 test("native DOCX generation has no platform or executable prerequisite", () => { const bytes = createTestDocx("Text", "Book"); assert.equal(String.fromCharCode(bytes[0], bytes[1]), "PK"); });
@@ -157,7 +186,86 @@ test("guided preparation keeps explicit inclusion, role, and manual order author
 
 test("book-root resolution and command identifiers are central and stable", async () => {
   const root = Object.assign(new TFolder(), { name: "Book", path: "Books/Book", children: [] }); const vault = { getAbstractFileByPath: (value: string) => value === root.path ? root : null } as never;
-  assert.equal(new BookRootResolver(vault).require(root.path), root); assert.deepEqual(Object.values(COMMAND_IDS), ["compile-manuscript", "compile-current-book", "compile-selected-folder", "validate-manuscript", "generate-diagnostics-report"]); const main = await readFile(path.join("src", "main.ts"), "utf8"); for (const title of ["Compile Manuscript", "Compile Current Book", "Compile Selected Folder", "Validate Manuscript", "Generate Diagnostics Report"]) assert.match(main, new RegExp(`name: "${title}"`));
+  assert.equal(new BookRootResolver(vault).require(root.path), root); assert.equal(new BookRootResolver(vault).selected(root), root); assert.deepEqual(Object.values(COMMAND_IDS), ["compile-manuscript", "compile-current-book", "compile-selected-folder", "validate-manuscript", "generate-diagnostics-report"]); const main = await readFile(path.join("src", "main.ts"), "utf8"); for (const title of ["Compile Manuscript", "Compile Current Book", "Compile Selected Folder", "Validate Manuscript", "Generate Diagnostics Report"]) assert.match(main, new RegExp(`name: "${title}"`)); assert.match(main, /workspace\.on\("file-menu"/); assert.match(main, /openCompilerForFolder\(folder/);
+});
+
+test("File Explorer context action is folder-only and preserves the exact clicked root", () => {
+  const folder = Object.assign(new TFolder(), { name: "Book 1 - Warden of Silence", path: "Library/Book 1 - Warden of Silence", children: [] });
+  const note = Object.assign(new TFile(), { name: "Scene.md", path: `${folder.path}/Scene.md` });
+  let title = ""; let icon = ""; let click: (() => void) | undefined; let opened: TFolder | undefined;
+  const menu = { addItem: (build: (item: unknown) => void) => { const item = { setTitle: (value: string) => { title = value; return item; }, setIcon: (value: string) => { icon = value; return item; }, onClick: (value: () => void) => { click = value; return item; } }; build(item); } } as never;
+  assert.equal(addCompileFolderMenuItem(menu, note as never, (selected) => { opened = selected; }), false);
+  assert.equal(title, "");
+  assert.equal(addCompileFolderMenuItem(menu, folder as never, (selected) => { opened = selected; }), true);
+  assert.equal(title, COMPILE_FOLDER_MENU_TITLE); assert.equal(icon, "book-open"); click?.(); assert.equal(opened, folder);
+});
+
+test("mixed matter aliases and copyright containers never infer Chapter roles", () => {
+  const copyright = Object.assign(new TFile(), { name: "Copyright - eBook version - First Edition.md", basename: "Copyright - eBook version - First Edition", extension: "md", path: "Book/Font and back matter/Copyright notices/Copyright - eBook version - First Edition.md" });
+  const notices = Object.assign(new TFolder(), { name: "Copyright notices", path: "Book/Font and back matter/Copyright notices", children: [copyright] });
+  const about = Object.assign(new TFile(), { name: "About the Author.md", basename: "About the Author", extension: "md", path: "Book/Font and back matter/About the Author.md" });
+  const matter = Object.assign(new TFolder(), { name: "Font and back matter", path: "Book/Font and back matter", children: [about, notices] });
+  const root = Object.assign(new TFolder(), { name: "Book", path: "Book", children: [matter] });
+  const plan = createContentPlan(root, "novel-parts"); const role = (name: string) => plan.find((item) => item.name === name)?.role;
+  assert.equal(role("Font and back matter"), "transparent"); assert.equal(role("Copyright notices"), "transparent"); assert.equal(role("Copyright - eBook version - First Edition"), "front-matter"); assert.equal(role("About the Author"), "back-matter"); assert.ok(!plan.some((item) => item.role === "chapter"));
+});
+
+test("real-vault Warden hierarchy keeps transparent containers, chapters, scenes, and matter roles", async () => {
+  const loaded = await loadFixtureTree("tests/fixtures/real-vault/Book 1 - Warden of Silence");
+  const plan = await classifyContentPlan(loaded.vault as never, createContentPlan(loaded.root, "novel-parts"));
+  const role = (name: string) => plan.find((item) => item.name === name)?.role;
+  assert.equal(loaded.root.name, "Book 1 - Warden of Silence");
+  assert.equal(role("Manuscript"), "transparent");
+  assert.equal(plan.find((item) => item.kind === "folder" && item.name === "Book 1 - Warden of Silence")?.role, "transparent");
+  assert.equal(role("Front and back matter"), "transparent");
+  assert.equal(role("Copyright notices"), "transparent");
+  for (const name of ["Copyright - eBook version - First Edition", "Copyright - Hardcover version - First Edition", "Copyright - Paperback version - First Edition"]) assert.equal(role(name), "front-matter", name);
+  for (const name of ["A note from Elin", "About the Author", "Acknowledgments", "Also by Anthony Fitzpatrick", "Back Cover Blurb"]) assert.equal(role(name), "back-matter", name);
+  const profile = createDefaultProfiles()[1];
+  const session = await new CompilePreparationService(loaded.vault as never, profile, 250).prepare(preparedRequest(loaded.root.path, plan), plan);
+  assert.equal(session.book.root, loaded.root); assert.equal(session.book.parts.length, 1); assert.equal(session.statistics.chapterCount, 1); assert.equal(session.statistics.sceneCount, 3);
+  assert.equal(session.book.orphanScenes.filter((scene) => !scene.excluded).length, 0); assert.equal(session.book.parts[0].orphanScenes.filter((scene) => !scene.excluded).length, 0);
+  assert.equal(session.book.parts[0].chapters[0].scenes.length, 3);
+  assert.equal(new Set(session.scannedBook.allMarkdown.map((file) => file.path)).size, session.scannedBook.allMarkdown.length);
+  assert.ok(session.book.frontMatter.documents.every((item) => /Copyright/.test(item.title)));
+  assert.deepEqual(session.book.backMatter.documents.map((item) => item.title), ["A note from Elin", "About the Author", "Acknowledgments", "Also by Anthony Fitzpatrick", "Back Cover Blurb"]);
+  const document = strFromU8(unzipSync(createManuscriptDocx(session.book, session.profile, { title: "Warden of Silence", author: "Anthony Fitzpatrick" }))["word/document.xml"]);
+  assert.ok(document.indexOf("The Silence Breaks") < document.indexOf("About the Author"));
+  for (const matter of ["About the Author", "Acknowledgments", "Also by Anthony Fitzpatrick", "Back Cover Blurb"]) {
+    const paragraph = [...document.matchAll(/<w:p[\s\S]*?<\/w:p>/g)].find((match) => match[0].includes(matter))?.[0] ?? "";
+    assert.doesNotMatch(paragraph, /w:pStyle w:val="(?:PartNumber|ChapterNumber)"/, matter);
+  }
+  assert.doesNotMatch(document, />Manuscript<|>Front and back matter<|>Copyright notices</);
+});
+
+test("matter-role inheritance updates only non-overridden descendant notes", async () => {
+  const loaded = await loadFixtureTree("tests/fixtures/real-vault/Book 1 - Warden of Silence");
+  const plan = await classifyContentPlan(loaded.vault as never, createContentPlan(loaded.root, "novel-parts"));
+  const request = preparedRequest(loaded.root.path, plan); const controller = new CompileWorkspaceController(request, request.formatting!, { prepare: async () => { throw new Error(); }, sessionIsCurrent: async () => true, export: async () => undefined }); controller.setDetectedPlan(loaded.root.path, plan);
+  const container = plan.find((item) => item.name === "Front and back matter")!; const explicit = plan.find((item) => item.name === "About the Author")!; explicit.role = "scene"; explicit.userOverride = true;
+  const order = plan.map((item) => [item.path, item.order]); controller.setRole(container.path, "back-matter");
+  assert.equal(explicit.role, "scene");
+  assert.ok(plan.filter((item) => item.kind === "note" && item.path.startsWith(`${container.path}/`) && !item.userOverride).every((item) => item.role === "back-matter"));
+  assert.deepEqual(plan.map((item) => [item.path, item.order]), order);
+});
+
+test("manual Scene order survives multiple transparent ancestors", async () => {
+  const loaded = await loadFixtureTree("tests/fixtures/real-vault/Book 1 - Warden of Silence");
+  const plan = await classifyContentPlan(loaded.vault as never, createContentPlan(loaded.root, "novel-parts"));
+  const scenes = plan.filter((item) => item.kind === "note" && /^Scene 00/.test(item.name));
+  const desired = [scenes[2], scenes[0], scenes[1]]; desired.forEach((item, order) => { item.order = order; item.userOverride = true; });
+  const session = await new CompilePreparationService(loaded.vault as never, createDefaultProfiles()[1], 250).prepare(preparedRequest(loaded.root.path, plan), plan);
+  assert.deepEqual(session.book.parts[0].chapters[0].scenes.map((scene) => scene.title), desired.map((item) => item.name));
+});
+
+test("orphan hierarchy diagnostics are relative, structural, and prose-free", async () => {
+  const loaded = await loadFixtureTree("tests/fixtures/real-vault/Book 1 - Warden of Silence");
+  const plan = await classifyContentPlan(loaded.vault as never, createContentPlan(loaded.root, "novel-parts"));
+  const chapter = plan.find((item) => item.name === "Chapter 1 - The Silence of Östersund")!; chapter.role = "transparent"; chapter.userOverride = true;
+  const profile = createDefaultProfiles()[1]; profile.useParts = true; profile.chapterSource = "folders"; profile.contentOrder = plan.map((item) => item.path);
+  const scan = applyContentPlan(new VaultScanner().scan(loaded.root), plan, profile);
+  assert.equal(scan.hierarchyDiagnostics?.length, 3); const diagnostic = scan.hierarchyDiagnostics![0];
+  assert.match(diagnostic.scenePath, /^Manuscript\/Book 1 - Warden of Silence\/Part 1/); assert.equal(diagnostic.inferredRole, "scene"); assert.equal(diagnostic.parentRole, "transparent"); assert.match(diagnostic.nearestStructuralAncestor, /^Manuscript\/.*\/Part 1/); assert.equal(diagnostic.transparentReparenting, true); assert.equal(diagnostic.parentExcluded, false); assert.doesNotMatch(JSON.stringify(diagnostic), /Östersund was silent beneath/);
 });
 
 test("production preparation has one scanner-to-semantic boundary", async () => {
@@ -186,6 +294,65 @@ test("workspace controller deduplicates preparation/export and cancels on close"
 test("operation cancellation retains its lock until settled and finalisation disables cancellation", () => { const operations = new OperationStateController(); const operation = operations.begin("exporting")!; assert.equal(operation.cancel(), true); assert.equal(operations.begin("exporting"), undefined); operation.settle(); const next = operations.begin("exporting")!; next.finalise(); assert.equal(next.cancel(), false); next.complete(); assert.equal(operations.busy, false); });
 
 test("content-tree helpers preserve child choices and authoritative sibling order", () => { const root = "Book"; const plan = [{ path: "Book/Manuscript", parentPath: root, name: "Manuscript", kind: "folder", role: "transparent", included: true, order: 0 }, { path: "Book/Manuscript/A.md", parentPath: "Book/Manuscript", name: "A", kind: "note", role: "scene", included: false, order: 0 }, { path: "Book/Manuscript/B.md", parentPath: "Book/Manuscript", name: "B", kind: "note", role: "scene", included: true, order: 1 }] as never; const controller = new CompileWorkspaceController(preparedRequest(root, plan), preparedRequest(root, plan).formatting!, { prepare: async () => { throw new Error(); }, sessionIsCurrent: async () => true, export: async () => undefined }); controller.setDetectedPlan(root, plan); controller.setIncluded("Book/Manuscript", false); controller.setIncluded("Book/Manuscript", true); assert.equal(plan[1].included, false); assert.equal(plan[2].included, true); assert.equal(isEffectivelyIncluded(plan[2], plan, root), true); const moved = moveSibling(plan, root, plan[2].path, -1); assert.equal(moved.find((item) => item.path === plan[2].path)?.order, 0); });
+
+test("long Contents edits preserve scroll, focus, selection, and update only changed rows", () => {
+  const root = "Book"; const folder = "Book/Manuscript";
+  const plan: ContentPlanItem[] = [{ path: folder, parentPath: root, name: "Manuscript", kind: "folder", role: "transparent", included: true, order: 0 }];
+  for (let index = 0; index < 1_000; index += 1) plan.push({ path: `${folder}/Scene ${index + 1}.md`, parentPath: folder, name: `Scene ${index + 1}`, kind: "note", role: "scene", included: true, order: index });
+  const request = preparedRequest(root, plan); const controller = new CompileWorkspaceController(request, request.formatting!, { prepare: async () => { throw new Error(); }, sessionIsCurrent: async () => true, export: async () => undefined }); controller.setDetectedPlan(root, plan);
+  const view = new ContentsTreeViewState(); view.prepare(root, plan); view.setScrollTop(8_420); const halfway = plan[501].path; view.setFocus(halfway, "role");
+  const before = snapshotRows(controller.state.contentPlan, root); controller.setRole(halfway, "chapter"); const after = snapshotRows(controller.state.contentPlan, root);
+  assert.deepEqual(changedRowPaths(before, after), [halfway]); assert.equal(view.scrollTop, 8_420); assert.deepEqual(view.focus, { path: halfway, control: "role" }); assert.equal(controller.state.contentPlan.find((item) => item.path === halfway)?.role, "chapter");
+  for (let offset = 1; offset <= 20; offset += 1) { const path = plan[501 + offset].path; const prior = snapshotRows(controller.state.contentPlan, root); view.setFocus(path, "role"); controller.setRole(path, "chapter"); assert.deepEqual(changedRowPaths(prior, snapshotRows(controller.state.contentPlan, root)), [path]); }
+  assert.equal(view.scrollTop, 8_420); assert.equal(view.focus?.path, plan[521].path);
+});
+
+test("Contents include toggles remain local and stable after manual ordering", () => {
+  const root = "Book"; const folder = "Book/Manuscript"; const plan: ContentPlanItem[] = [
+    { path: folder, parentPath: root, name: "Manuscript", kind: "folder", role: "transparent", included: true, order: 0 },
+    ...["A", "B", "C", "D"].map((name, order): ContentPlanItem => ({ path: `${folder}/${name}.md`, parentPath: folder, name, kind: "note", role: "scene", included: true, order }))
+  ];
+  const request = preparedRequest(root, plan); const controller = new CompileWorkspaceController(request, request.formatting!, { prepare: async () => { throw new Error(); }, sessionIsCurrent: async () => true, export: async () => undefined }); controller.setDetectedPlan(root, plan); const view = new ContentsTreeViewState(); view.prepare(root, plan); view.setScrollTop(320);
+  const target = `${folder}/C.md`; controller.moveItem(target, -1); assert.deepEqual(controller.state.contentPlan.filter((item) => item.parentPath === folder).map((item) => item.name), ["A", "C", "B", "D"]);
+  for (let index = 0; index < 4; index += 1) { const before = snapshotRows(controller.state.contentPlan, root); view.setFocus(target, "include"); controller.setIncluded(target, index % 2 === 1); assert.deepEqual(changedRowPaths(before, snapshotRows(controller.state.contentPlan, root)), [target]); }
+  const orderBeforeRoleEdit = controller.state.contentPlan.filter((item) => item.parentPath === folder).map((item) => item.path); controller.setRole(target, "chapter"); assert.deepEqual(controller.state.contentPlan.filter((item) => item.parentPath === folder).map((item) => item.path), orderBeforeRoleEdit); assert.equal(view.scrollTop, 320); assert.deepEqual(view.focus, { path: target, control: "include" });
+});
+
+test("Contents folder expansion survives edits in expanded and collapsed branches", () => {
+  const root = "Book"; const expanded = `${root}/Expanded`; const collapsed = `${root}/Collapsed`;
+  const plan: ContentPlanItem[] = [
+    { path: expanded, parentPath: root, name: "Expanded", kind: "folder", role: "chapter", included: true, order: 0 },
+    { path: `${expanded}/Scene.md`, parentPath: expanded, name: "Scene", kind: "note", role: "scene", included: true, order: 0 },
+    { path: collapsed, parentPath: root, name: "Collapsed", kind: "folder", role: "chapter", included: true, order: 1 },
+    { path: `${collapsed}/Scene.md`, parentPath: collapsed, name: "Scene", kind: "note", role: "scene", included: true, order: 0 }
+  ];
+  const request = preparedRequest(root, plan); const controller = new CompileWorkspaceController(request, request.formatting!, { prepare: async () => { throw new Error(); }, sessionIsCurrent: async () => true, export: async () => undefined }); controller.setDetectedPlan(root, plan); const view = new ContentsTreeViewState(); view.prepare(root, plan); view.toggle(collapsed); view.setScrollTop(180); view.setFocus(collapsed, "role"); const indexed = new Map(plan.map((item) => [item.path, item]));
+  assert.equal(view.isExpanded(expanded), true); assert.equal(view.isExpanded(collapsed), false); assert.equal(view.isVisible(plan[1], indexed), true); assert.equal(view.isVisible(plan[3], indexed), false);
+  controller.setRole(expanded, "transparent"); controller.setRole(collapsed, "transparent"); controller.setIncluded(collapsed, false); controller.setIncluded(collapsed, true);
+  assert.equal(view.isExpanded(expanded), true); assert.equal(view.isExpanded(collapsed), false); assert.equal(view.isVisible(plan[1], indexed), true); assert.equal(view.isVisible(plan[3], indexed), false); assert.equal(view.scrollTop, 180); assert.deepEqual(view.focus, { path: collapsed, control: "role" });
+});
+
+test("excluding a folder collapses descendants without clearing child choices or order", () => {
+  const root = "Book"; const folder = `${root}/Chapter`; const plan: ContentPlanItem[] = [
+    { path: folder, parentPath: root, name: "Chapter", kind: "folder", role: "chapter", included: true, order: 0 },
+    { path: `${folder}/A.md`, parentPath: folder, name: "A", kind: "note", role: "scene", included: false, order: 1 },
+    { path: `${folder}/B.md`, parentPath: folder, name: "B", kind: "note", role: "scene", included: true, order: 0 }
+  ];
+  const request = preparedRequest(root, plan); const controller = new CompileWorkspaceController(request, request.formatting!, { prepare: async () => { throw new Error(); }, sessionIsCurrent: async () => true, export: async () => undefined }); controller.setDetectedPlan(root, plan); const view = new ContentsTreeViewState(); view.prepare(root, plan); const indexed = new Map(plan.map((item) => [item.path, item])); const childState = plan.slice(1).map((item) => [item.path, item.included, item.order]);
+  controller.setIncluded(folder, false); view.collapse(folder); assert.equal(view.isExpanded(folder), false); assert.equal(view.isVisible(plan[1], indexed), false); assert.deepEqual(plan.slice(1).map((item) => [item.path, item.included, item.order]), childState);
+  controller.setIncluded(folder, true); assert.equal(view.isExpanded(folder), false); assert.deepEqual(plan.slice(1).map((item) => [item.path, item.included, item.order]), childState);
+  controller.setRole(folder, "ignore"); view.collapse(folder); controller.setRole(folder, "chapter"); assert.equal(view.isExpanded(folder), false); assert.deepEqual(plan.slice(1).map((item) => [item.path, item.included, item.order]), childState);
+});
+
+test("Contents property handlers use persistent row state instead of rebuilding the modal", async () => {
+  const modal = await readFile(path.join("src", "compile-modal.ts"), "utf8"); const contents = await readFile(path.join("src", "workspace", "contents-step.ts"), "utf8");
+  assert.match(modal, /renderContentsStep\(body, this\.controller, this\.contentsViewState\)/); assert.doesNotMatch(modal, /renderContentsStep\(body, this\.controller, \(\) => this\.render\(\)\)/);
+  assert.match(contents, /refreshChangedRows\(before\)/); assert.match(contents, /element\.focus\(\{ preventScroll: true \}\)/); assert.doesNotMatch(contents, /controller\.set(?:Role|Included)[^\n]+changed\(\)/);
+});
+test("Formatting UI exposes metric indentation and every supported scene break distinctly", async () => {
+  const source = await readFile(path.join("src", "workspace", "formatting-step.ts"), "utf8"); assert.match(source, /First-line indent \(cm\)/); assert.doesNotMatch(source, /0\.25 in|0\.5 in|inch/i);
+  for (const option of ["#", "*", "***", "* * *", "", "custom"]) assert.match(source, new RegExp(`addOption\\(\\"${option.replace(/\*/g, "\\*")}\\"`));
+});
 
 test("export preview view model references the exact prepared Book", async () => { const loaded = await loadFixtureTree("samples/Book 1 - Warden of Silence"); const plan = await classifyContentPlan(loaded.vault as never, createContentPlan(loaded.root, "novel-parts")); const session = await new CompilePreparationService(loaded.vault as never, createDefaultProfiles()[1], 250).prepare(preparedRequest(loaded.root.path, plan), plan); const view = buildExportPreviewViewModel(session); assert.equal(view.book, session.book); assert.equal(createPreparedExportRequest(session, session.outputPaths[0], false).book, view.book); assert.deepEqual(view.parts.map((part) => part.chapters.map((chapter) => chapter.sceneCount)), [[2], [1]]); });
 

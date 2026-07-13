@@ -20,7 +20,11 @@ export interface CompileProfile extends CompileOptions {
   exportTarget: ExportTarget; referenceDocx: string; pandocMetadataFile: string; additionalPandocArguments: string;
   generateTableOfContents: boolean; keepIntermediateMarkdown: boolean;
   /** Session-level Compile Manuscript choices. These are not profile settings. */
-  contentOrder?: string[]; docxFont?: string; docxFontSize?: number; docxLineSpacing?: number; docxFirstLineIndent?: number;
+  contentOrder?: string[]; docxFont?: string; docxFontSize?: number; docxLineSpacing?: number;
+  /** Canonical first-line indentation unit for current settings. */
+  docxFirstLineIndentCm?: number;
+  /** Legacy pre-metric value in inches. Retained only for migration compatibility. */
+  docxFirstLineIndent?: number;
   docxPageSize?: "letter" | "a4"; docxChapterPageBreak?: boolean; docxTitlePage?: boolean; downloadAfterExport?: boolean;
   skipLegacyPreview?: boolean;
   partDisplay?: StructuralDisplay; chapterDisplay?: StructuralDisplay; explicitlyIncludedPaths?: string[];
@@ -37,6 +41,7 @@ export interface ManuscriptCompilerSettings extends CompileOptions {
   configurationWarnings: string[];
   onboardingCompleted: boolean;
   defaultStructurePreset: StructurePreset; defaultDocxStyle: DocxStylePreset; warnBeforeOverwrite: boolean;
+  defaultDocxPageSize: "letter" | "a4"; defaultDocxFirstLineIndentCm: number;
   openAfterCompile: boolean; includeTitlePageByDefault: boolean; includeTableOfContentsByDefault: boolean; showAdvancedOptions: boolean;
   /* Stage 1/2 migration fields. */
   defaultManuscriptFolder: string; defaultExportFolder: string; defaultCompilePreset: "default" | "vellum";
@@ -57,5 +62,6 @@ export const DEFAULT_SETTINGS: ManuscriptCompilerSettings = {
   keepTemporaryMarkdown: false, enableCompileLogs: true, maximumExportHistoryEntries: 50, exportHistory: [], compileLogs: [], configurationWarnings: [], onboardingCompleted: false,
   defaultManuscriptFolder: "", defaultExportFolder: "Manuscript Exports", defaultCompilePreset: "default",
   defaultStructurePreset: "novel-parts", defaultDocxStyle: "vellum", warnBeforeOverwrite: true, openAfterCompile: false,
+  defaultDocxPageSize: "a4", defaultDocxFirstLineIndentCm: 0.75,
   includeTitlePageByDefault: false, includeTableOfContentsByDefault: false, showAdvancedOptions: false
 };

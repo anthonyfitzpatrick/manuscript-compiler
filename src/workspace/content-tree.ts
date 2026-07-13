@@ -3,6 +3,11 @@ import type { ContentPlanItem, ContentRole } from "../content-plan";
 export function isEffectivelyIncluded(item: ContentPlanItem, plan: ContentPlanItem[], root: string): boolean {
   if (!item.included || item.role === "ignore") return false;
   const byPath = new Map(plan.map((candidate) => [candidate.path, candidate]));
+  return effectivelyIncluded(item, byPath, root);
+}
+
+function effectivelyIncluded(item: ContentPlanItem, byPath: ReadonlyMap<string, ContentPlanItem>, root: string): boolean {
+  if (!item.included || item.role === "ignore") return false;
   let parent = item.parentPath;
   while (parent !== root) {
     const ancestor = byPath.get(parent);
@@ -35,9 +40,9 @@ export function setItemRole(plan: ContentPlanItem[], root: string, path: string,
   if (!item) return;
   item.role = role;
   item.userOverride = true;
+  item.included = role !== "ignore";
   item.exclusionReason = role === "ignore" ? "Excluded by user." : undefined;
-  setItemIncluded(plan, root, path, role !== "ignore");
-  item.role = role;
+  if (item.included) enableAncestors(plan, root, item.parentPath);
 }
 
 export function moveSibling(plan: ContentPlanItem[], root: string, path: string, direction: -1 | 1): ContentPlanItem[] {
@@ -68,11 +73,13 @@ export function orderedPlan(plan: ContentPlanItem[], root: string): ContentPlanI
 }
 
 export function includedNoteCount(plan: ContentPlanItem[], root: string): number {
-  return plan.filter((item) => item.kind === "note" && isEffectivelyIncluded(item, plan, root)).length;
+  const byPath = new Map(plan.map((item) => [item.path, item]));
+  return plan.filter((item) => item.kind === "note" && effectivelyIncluded(item, byPath, root)).length;
 }
 
 export function visibleRows(plan: ContentPlanItem[], root: string): Array<{ item: ContentPlanItem; depth: number; included: boolean }> {
-  return orderedPlan(plan, root).map((item) => ({ item, depth: Math.max(0, item.path.slice(root.length + 1).split("/").length - 1), included: isEffectivelyIncluded(item, plan, root) }));
+  const byPath = new Map(plan.map((item) => [item.path, item]));
+  return orderedPlan(plan, root).map((item) => ({ item, depth: Math.max(0, item.path.slice(root.length + 1).split("/").length - 1), included: effectivelyIncluded(item, byPath, root) }));
 }
 
 function enableAncestors(plan: ContentPlanItem[], root: string, initial: string): void {

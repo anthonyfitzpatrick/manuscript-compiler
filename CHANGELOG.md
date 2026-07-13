@@ -4,6 +4,10 @@
 
 ### Fixed
 
+- Fixed a real-vault hierarchy failure where a nested folder repeating the book name became a second Part, leaving valid Chapter Scenes orphaned and producing a zero Chapter count.
+- Transparent containers now reparent descendants to their nearest included structural ancestor without losing hierarchy, order, source paths, or explicit choices.
+- Mixed front/back matter, copyright containers, and common back-matter note names no longer become manuscript Parts, Chapters, or Scenes.
+- Added a folder-only File Explorer action, **Compile manuscript from this folder**, which opens the existing workspace with the exact clicked folder as the authoritative root.
 - Preview, validation, Markdown, and DOCX export now consume one prepared semantic `Book`; export never rebuilds the manuscript after preview.
 - Source or compile-choice changes after preview block stale export and keep **Refresh Preview** available.
 - Every compile command uses the same authoritative content plan, transparent-container rules, project-folder exclusions, dashboard/revision classification, and body cleaning.
@@ -15,13 +19,18 @@
 - Callouts are described accurately as conversion to plain text, preserving body text while removing the marker and title.
 - Removed the unused Subtitle Word style and the unused generic Markdown-to-DOCX production compatibility route.
 - Separated orchestration, workspace state, history, result actions, operation state, and step rendering without changing command IDs.
+- Contents role and inclusion edits now preserve scroll position and keyboard focus by updating existing rows instead of rebuilding the tree.
+- Excluded folders collapse automatically without clearing descendant inclusion choices or manual order.
+- Native DOCX scene breaks preserve the selected `#`, `*`, `***`, `* * *`, blank-line, or custom value instead of normalising it to another separator.
 
 ### Improved
 
+- Added privacy-safe orphan hierarchy diagnostics and a realistic nested-container/mixed-matter Warden regression.
 - Final-model preview now shows the exact exported outline, statistics, warnings, exclusions, filename, and destination.
 - Output verification, rollback guidance, cancellation boundaries, partial-result handling, and history sequencing have stronger automated coverage.
 - Vellum, Standard Manuscript, and supported Custom formatting resolve deterministically and are inspected semantically in generated Word XML.
 - Architecture, release documentation, performance coverage, and the manual release checklist now describe the actual native-DOCX product.
+- New Vellum and Standard requests default to A4 and metric indentation; existing Letter and legacy inch-based choices migrate without visual formatting drift.
 
 ### Compatibility
 

@@ -14,6 +14,7 @@ import { SafeBinaryWriter } from "./safe-binary-writer";
 import { SimpleCompileModal } from "./compile-modal";
 import { FirstRunWizardModal } from "./wizards";
 import { FolderSuggestModal, ManuscriptCompilerSettingTab, showError } from "./ui";
+import { addCompileFolderMenuItem } from "./folder-context-menu";
 
 /** Plugin composition root: lifecycle, settings persistence, service construction, and command registration. */
 export default class ManuscriptCompilerPlugin extends Plugin {
@@ -30,6 +31,7 @@ export default class ManuscriptCompilerPlugin extends Plugin {
     await this.cleanupStaleOutputFiles();
     this.addSettingTab(new ManuscriptCompilerSettingTab(this.app, this));
     this.registerCommands();
+    this.registerFolderContextMenu();
     this.app.workspace.onLayoutReady(() => {
       if (!this.settings.onboardingCompleted) new FirstRunWizardModal(this.app, this).open();
     });
@@ -51,6 +53,7 @@ export default class ManuscriptCompilerPlugin extends Plugin {
   async saveSettings(): Promise<void> { await this.saveData(this.settings); }
   getActiveProfile(): CompileProfile { return activeProfile(this.settings); }
   openCompiler(): void { new SimpleCompileModal(this.app, this).open(); }
+  async openCompilerForFolder(folder: TFolder): Promise<void> { new SimpleCompileModal(this.app, this, folder).open(); }
   async openExport(path: string): Promise<void> { if (!await this.actions.openExport(path)) showError(new Error("Obsidian could not open this export automatically. Open it from your file manager.")); }
   async clearHistory(): Promise<void> { await this.history.clearHistory(); }
   async compileRequest(request: SimpleCompileRequest): Promise<void> { await this.commands.compileRequest(request); }
@@ -73,6 +76,12 @@ export default class ManuscriptCompilerPlugin extends Plugin {
     this.addCommand({ id: COMMAND_IDS.compileSelectedFolder, name: "Compile Selected Folder", callback: () => { new FolderSuggestModal(this.app, (folder) => { void this.commands.compileFolder(folder, undefined, [], "selected-folder"); }).open(); } });
     this.addCommand({ id: COMMAND_IDS.validateManuscript, name: "Validate Manuscript", callback: () => { void this.commands.validateManuscript(); } });
     this.addCommand({ id: COMMAND_IDS.generateDiagnostics, name: "Generate Diagnostics Report", callback: () => { void this.commands.generateDiagnostics(); } });
+  }
+
+  private registerFolderContextMenu(): void {
+    this.registerEvent(this.app.workspace.on("file-menu", (menu, file) => {
+      addCompileFolderMenuItem(menu, file, (folder) => { void this.openCompilerForFolder(folder); });
+    }));
   }
 
   private async cleanupStaleOutputFiles(): Promise<void> {

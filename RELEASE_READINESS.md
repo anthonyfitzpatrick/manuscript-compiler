@@ -2,11 +2,12 @@
 
 ## Current status
 
-Version 0.9.2 is an automated release candidate. On 2026-07-13, TypeScript checking, 80 core/release tests, 18 safe-writer tests, semantic Warden DOCX inspection, the large-manuscript benchmark, production build, release packaging, archive-content validation, and `git diff --check` completed successfully. An earlier `npm audit` run reported zero vulnerabilities; the final retry could not resolve `registry.npmjs.org`, so the registry-dependent check should be repeated before release. Live Obsidian, Word/LibreOffice, Vellum, desktop, and mobile checks remain manual and are not represented as complete.
+Version 0.9.2 remains a release candidate. Live Obsidian/Vellum testing exposed a nested-container hierarchy and matter-classification defect; Step 8 corrects it with exact File Explorer root selection, structural-ancestor reconstruction, matter aliases, and a realistic regression fixture. The updated DOCX has not yet been manually re-imported into Vellum, so application-level confirmation remains required.
 
 ## Supported workflow
 
 - Select a book root in the four-step Compile Manuscript workspace.
+- Or right-click the exact File Explorer folder and choose **Compile manuscript from this folder**.
 - Review roles, inclusion, exclusions, transparent containers, and manual order.
 - Select Vellum, Standard Manuscript, or supported Custom DOCX formatting.
 - Review the exact prepared semantic manuscript.
@@ -16,10 +17,10 @@ Version 0.9.2 is an automated release candidate. On 2026-07-13, TypeScript check
 ## Automated release gates completed
 
 - `npm run typecheck` — passed
-- `npm test` — 80 tests passed
+- `npm test` — 97 tests passed, including the real-vault nested-container and matter-role regression
 - `npm run test:safe-writer` — 18 tests passed
-- `npm run test:docx` — passed; Warden regression DOCX generated and semantically inspected
-- `npm run benchmark:large` — 500 Chapters, 2,000 Scenes, and 2,000,000 words measured locally; timing is informational
+- `npm run test:docx` — passed; original and real-vault Warden semantic structures inspected
+- `npm run benchmark:large` — 500 Chapters, 2,000 Scenes, and 2,000,000 words in 373 ms locally; timing is informational
 - `npm run build` — passed
 - `npm run package` — passed
 - `npm run package:validate` — passed
@@ -40,6 +41,7 @@ Local filesystem vaults receive the strongest same-folder staged replacement pat
 - Complex nested Markdown, tables, embedded media, and advanced page layout are outside the fiction-manuscript renderer.
 - Ordinary blockquotes are preserved by cleaning but rendered as readable paragraphs rather than a dedicated Word quotation style.
 - Vellum recognition and visual pagination require application-level confirmation.
+- Matter inference covers documented aliases and ancestry; unusual names still require author review in Contents.
 - Mobile and non-filesystem adapter recovery cannot promise filesystem-atomic replacement.
 
 ## Manual gates still required

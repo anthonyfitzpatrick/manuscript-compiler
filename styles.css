@@ -57,6 +57,7 @@
 .manuscript-content-name > span:nth-child(2) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .manuscript-content-name small { grid-column: 2; color: var(--text-muted); }
 .manuscript-content-icon { color: var(--text-muted); }
+.manuscript-content-name button.manuscript-content-icon { width: 18px; height: 18px; padding: 0; border: 0; box-shadow: none; background: transparent; }
 .manuscript-order-buttons { display: flex; gap: var(--size-4-1); }
 .manuscript-order-buttons button { width: 32px; height: 32px; }
 .manuscript-export-summary { display: grid; grid-template-columns: max-content 1fr; gap: var(--size-4-2) var(--size-4-5); padding: var(--size-4-4); border-radius: var(--radius-m); background: var(--background-secondary); }

@@ -1,11 +1,11 @@
 import type { CompileProfile, DocxStylePreset, ExportTarget, StructuralDisplay, StructurePreset } from "./settings";
 import type { ContentPlanItem } from "./content-plan";
 
-export interface DocxFormatting { font: string; fontSize: number; lineSpacing: number; firstLineIndent: number; pageSize: "letter" | "a4"; chapterPageBreak: boolean; titlePage: boolean; }
+export interface DocxFormatting { font: string; fontSize: number; lineSpacing: number; firstLineIndentCm: number; pageSize: "letter" | "a4"; chapterPageBreak: boolean; titlePage: boolean; }
 
 export const DOCX_FORMATTING_PRESETS: Record<Exclude<DocxStylePreset, "custom">, Readonly<DocxFormatting>> = {
-  vellum: { font: "Garamond", fontSize: 12, lineSpacing: 1.15, firstLineIndent: 0.3, pageSize: "letter", chapterPageBreak: true, titlePage: false },
-  standard: { font: "Times New Roman", fontSize: 12, lineSpacing: 2, firstLineIndent: 0.5, pageSize: "letter", chapterPageBreak: true, titlePage: false }
+  vellum: { font: "Garamond", fontSize: 12, lineSpacing: 1.15, firstLineIndentCm: 0.75, pageSize: "a4", chapterPageBreak: true, titlePage: false },
+  standard: { font: "Times New Roman", fontSize: 12, lineSpacing: 2, firstLineIndentCm: 1.27, pageSize: "a4", chapterPageBreak: true, titlePage: false }
 };
 
 export function docxFormattingForPreset(preset: DocxStylePreset, titlePage = false, current?: DocxFormatting): DocxFormatting {
@@ -36,23 +36,25 @@ const STRUCTURES: Record<Exclude<StructurePreset, "custom">, Partial<CompileProf
 };
 
 const DOCX: Record<DocxStylePreset, Partial<CompileProfile>> = {
-  vellum: { exportTarget: "docx", orderingMethod: "metadata", metadataOrdering: true, stripYamlFrontmatter: true, removeObsidianComments: true, removeHtmlComments: true, removeDataviewBlocks: true, removeCallouts: true, stripInternalLinks: true, generateTableOfContents: false, keepIntermediateMarkdown: false, blankLinesBetweenSections: 1, blankLinesBetweenChapters: 1 },
-  standard: { exportTarget: "docx", orderingMethod: "filename", metadataOrdering: false, stripYamlFrontmatter: true, removeObsidianComments: true, removeHtmlComments: true, removeDataviewBlocks: true, removeCallouts: true, stripInternalLinks: true, generateTableOfContents: false, keepIntermediateMarkdown: false, blankLinesBetweenSections: 1, blankLinesBetweenChapters: 1 },
+  vellum: { exportTarget: "docx", orderingMethod: "metadata", metadataOrdering: true, stripYamlFrontmatter: true, removeObsidianComments: true, removeHtmlComments: true, removeDataviewBlocks: true, removeCallouts: true, stripInternalLinks: true, generateTableOfContents: false, keepIntermediateMarkdown: false, blankLinesBetweenSections: 1, blankLinesBetweenChapters: 1, sceneSeparator: "#" },
+  standard: { exportTarget: "docx", orderingMethod: "filename", metadataOrdering: false, stripYamlFrontmatter: true, removeObsidianComments: true, removeHtmlComments: true, removeDataviewBlocks: true, removeCallouts: true, stripInternalLinks: true, generateTableOfContents: false, keepIntermediateMarkdown: false, blankLinesBetweenSections: 1, blankLinesBetweenChapters: 1, sceneSeparator: "* * *" },
   custom: { exportTarget: "docx", stripYamlFrontmatter: true, removeObsidianComments: true, removeHtmlComments: true, removeDataviewBlocks: true, removeCallouts: true, stripInternalLinks: true, generateTableOfContents: false, keepIntermediateMarkdown: false }
 };
 
 export function resolveSimpleCompileRequest(request: SimpleCompileRequest, base: CompileProfile): CompileProfile {
   const structure = request.structurePreset === "custom" ? request.custom ?? {} : STRUCTURES[request.structurePreset];
+  const formatting = request.formatting ?? docxFormattingForPreset(request.docxPreset, base.docxTitlePage === true);
   return { ...base, ...DOCX[request.docxPreset], ...structure, ...(request.structurePreset === "custom" ? request.custom : {}),
     id: base.id, name: `${STRUCTURE_PRESET_NAMES[request.structurePreset]} · ${request.docxPreset === "vellum" ? "Vellum" : request.docxPreset === "standard" ? "Standard DOCX" : "Custom DOCX"}`,
     manuscriptRoot: request.manuscriptRoot.trim(), exportFolder: request.exportFolder.trim(), outputFilename: request.outputFilename.trim(),
-    exportTarget: request.outputFormat, includeFrontMatter: request.includeFrontMatter, includeBackMatter: request.includeBackMatter, sceneSeparator: request.custom?.sceneSeparator ?? structure.sceneSeparator ?? base.sceneSeparator,
+    exportTarget: request.outputFormat, includeFrontMatter: request.includeFrontMatter, includeBackMatter: request.includeBackMatter,
+    sceneSeparator: request.docxPreset === "custom" ? request.custom?.sceneSeparator ?? structure.sceneSeparator ?? base.sceneSeparator : DOCX[request.docxPreset].sceneSeparator ?? base.sceneSeparator,
     generateTableOfContents: request.outputFormat !== "markdown" && request.tableOfContents === true,
     variables: { ...base.variables, ...(request.custom?.variables ?? {}) }, metadataFilters: base.metadataFilters.map((rule) => ({ ...rule })), referenceDocx: "", pandocMetadataFile: "", additionalPandocArguments: "",
     contentOrder: request.contentPlan?.filter((item) => item.included && item.role !== "ignore").map((item) => item.path),
-    docxFont: request.formatting?.font, docxFontSize: request.formatting?.fontSize, docxLineSpacing: request.formatting?.lineSpacing,
-    docxFirstLineIndent: request.formatting?.firstLineIndent, docxPageSize: request.formatting?.pageSize,
-    docxChapterPageBreak: request.formatting?.chapterPageBreak, docxTitlePage: request.formatting?.titlePage, downloadAfterExport: request.downloadAfterExport, skipLegacyPreview: request.contentPlan !== undefined,
+    docxFont: formatting.font, docxFontSize: formatting.fontSize, docxLineSpacing: formatting.lineSpacing,
+    docxFirstLineIndentCm: formatting.firstLineIndentCm, docxPageSize: formatting.pageSize,
+    docxChapterPageBreak: formatting.chapterPageBreak, docxTitlePage: formatting.titlePage, downloadAfterExport: request.downloadAfterExport, skipLegacyPreview: request.contentPlan !== undefined,
     partDisplay: request.partDisplay ?? "word-title", chapterDisplay: request.chapterDisplay ?? "word-title", explicitlyIncludedPaths: request.contentPlan?.filter((item) => item.userOverride && item.included).map((item) => item.path), bodySectionAliases: request.custom?.bodySectionAliases ?? base.bodySectionAliases
   };
 }

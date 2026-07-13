@@ -71,7 +71,16 @@ export class ExportCoordinator {
     if (compileInputSignature(session.request, session.contentPlan) !== session.inputSignature) throw new Error("The compile choices changed after the preview was prepared. Refresh the preview before creating the DOCX.");
     if (await calculateSourceFingerprint(this.app.vault, session.sourcePaths) !== session.sourceFingerprint) throw new Error("The manuscript changed after the preview was prepared. Refresh the preview before creating the DOCX.");
   }
-  private async persistDefaults(session: PreparedCompileSession): Promise<void> { const settings = this.settings(); settings.defaultManuscriptFolder = session.request.manuscriptRoot; settings.defaultExportFolder = session.request.exportFolder; settings.defaultStructurePreset = session.request.structurePreset; if (session.request.docxPreset !== "custom") settings.defaultDocxStyle = session.request.docxPreset; settings.defaultExportFormat = session.request.outputFormat; await this.saveSettings(); }
+  private async persistDefaults(session: PreparedCompileSession): Promise<void> {
+    const settings = this.settings(); settings.defaultManuscriptFolder = session.request.manuscriptRoot; settings.defaultExportFolder = session.request.exportFolder; settings.defaultStructurePreset = session.request.structurePreset; if (session.request.docxPreset !== "custom") settings.defaultDocxStyle = session.request.docxPreset; settings.defaultExportFormat = session.request.outputFormat;
+    if (session.request.formatting) {
+      settings.defaultDocxPageSize = session.request.formatting.pageSize;
+      settings.defaultDocxFirstLineIndentCm = session.request.formatting.firstLineIndentCm;
+      const profile = settings.profiles.find((item) => item.id === session.profile.id);
+      if (profile) { profile.docxPageSize = session.request.formatting.pageSize; profile.docxFirstLineIndentCm = session.request.formatting.firstLineIndentCm; profile.sceneSeparator = session.profile.sceneSeparator; }
+    }
+    await this.saveSettings();
+  }
   private async exportIssues(paths: string[]): Promise<CompileWarning[]> { const issues: CompileWarning[] = []; for (const path of paths) if (await this.outputExists(path)) issues.push({ severity: "warning", code: "output-exists", message: `Output already exists and will require confirmation: ${path}`, path }); return issues; }
   private async outputExists(path: string): Promise<boolean> { if (this.app.vault.getAbstractFileByPath(path)) return true; return this.app.vault.adapter instanceof FileSystemAdapter && await pathExists(this.app.vault.adapter.getFullPath(path)); }
   private confirmOverwrite(path: string): Promise<boolean> { return modalPromise((finish) => new ConfirmOverwriteModal(this.app, path, finish)); }

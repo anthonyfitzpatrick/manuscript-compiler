@@ -1,5 +1,5 @@
 import type { PreparedCompileSession } from "../compile-preparation";
-import type { ContentPlanItem, ContentRole } from "../content-plan";
+import { applyMatterRoleInheritance, type ContentPlanItem, type ContentRole } from "../content-plan";
 import { OperationStateController } from "../operation-state";
 import { docxFormattingForPreset, type DocxFormatting, type SimpleCompileRequest } from "../simple-workflow";
 import { validateSimpleCompileRequest } from "../simple-workflow";
@@ -19,7 +19,7 @@ export class CompileWorkspaceController {
   private preparationPromise?: Promise<PreparedCompileSession | undefined>;
   private exportPromise?: Promise<boolean>;
   private detachedExport = false;
-  private readonly childSnapshots = new Map<string, Map<string, { included: boolean; role: ContentRole }>>();
+  private readonly childSnapshots = new Map<string, Map<string, { included: boolean; role: ContentRole; userOverride?: boolean }>>();
 
   constructor(request: SimpleCompileRequest, formatting: DocxFormatting, private readonly services: CompileWorkspaceServices) {
     this.state = { step: "manuscript", request, contentPlan: [], formatting, scannedRoot: "", preparationStatus: "idle", exportStatus: "idle" };
@@ -32,13 +32,20 @@ export class CompileWorkspaceController {
   setRoot(root: string): void { this.update(() => { this.state.request.manuscriptRoot = root.trim(); this.state.contentPlan = []; this.state.scannedRoot = ""; }); }
   setPreset(preset: StructurePreset): void { this.update(() => { this.state.request.structurePreset = preset; this.state.contentPlan = []; this.state.scannedRoot = ""; }); }
   setDetectedPlan(root: string, plan: ContentPlanItem[]): void { this.update(() => { this.state.request.manuscriptRoot = root; this.state.contentPlan = plan; this.state.scannedRoot = root; }); }
-  setRole(path: string, role: ContentRole): void { this.update(() => setItemRole(this.state.contentPlan, this.state.request.manuscriptRoot, path, role)); }
+  setRole(path: string, role: ContentRole): void {
+    this.update(() => {
+      const item = this.state.contentPlan.find((candidate) => candidate.path === path);
+      const previousRole = item?.role;
+      setItemRole(this.state.contentPlan, this.state.request.manuscriptRoot, path, role);
+      if (item?.kind === "folder") applyMatterRoleInheritance(this.state.contentPlan, path, role, previousRole);
+    });
+  }
   setIncluded(path: string, included: boolean): void {
     this.update(() => {
       const item = this.state.contentPlan.find((candidate) => candidate.path === path);
-      if (item?.kind === "folder" && !included) this.childSnapshots.set(path, new Map(this.state.contentPlan.filter((candidate) => candidate.path.startsWith(`${path}/`)).map((child) => [child.path, { included: child.included, role: child.role }])));
+      if (item?.kind === "folder" && !included && item.included) this.snapshotChildren(path);
       setItemIncluded(this.state.contentPlan, this.state.request.manuscriptRoot, path, included);
-      if (item?.kind === "folder" && included) this.childSnapshots.get(path)?.forEach((snapshot, childPath) => { const child = this.state.contentPlan.find((candidate) => candidate.path === childPath); if (child) { child.included = snapshot.included; child.role = snapshot.role; } });
+      if (item?.kind === "folder") this.restoreChildren(path);
     });
   }
   moveItem(path: string, direction: -1 | 1): void { this.update(() => { this.state.contentPlan = moveSibling(this.state.contentPlan, this.state.request.manuscriptRoot, path, direction); }); }
@@ -55,7 +62,6 @@ export class CompileWorkspaceController {
       this.state.request.docxPreset = value;
       if (value !== "custom") {
         Object.assign(this.state.formatting, docxFormattingForPreset(value, this.state.formatting.titlePage));
-        if (this.state.request.custom) this.state.request.custom.sceneSeparator = "#";
         this.state.request.partDisplay = "word-title";
         this.state.request.chapterDisplay = "word-title";
         this.state.request.tableOfContents = false;
@@ -137,6 +143,8 @@ export class CompileWorkspaceController {
   cancelActiveOperation(): boolean { return this.operations.cancel(); }
   detachExport(): void { this.detachedExport = true; }
   close(): void { if (!this.detachedExport) this.cancelActiveOperation(); }
+  private snapshotChildren(path: string): void { this.childSnapshots.set(path, new Map(this.state.contentPlan.filter((candidate) => candidate.path.startsWith(`${path}/`)).map((child) => [child.path, { included: child.included, role: child.role, userOverride: child.userOverride }]))); }
+  private restoreChildren(path: string): void { this.childSnapshots.get(path)?.forEach((snapshot, childPath) => { const child = this.state.contentPlan.find((candidate) => candidate.path === childPath); if (child) { child.included = snapshot.included; child.role = snapshot.role; child.userOverride = snapshot.userOverride; } }); }
   private update(change: () => void): void { change(); this.invalidatePreparedSession(); }
 }
 

@@ -6,6 +6,7 @@ import { CompileWorkspaceController } from "./workspace/compile-workspace-contro
 import type { CompileWorkspaceStep } from "./workspace/workspace-types";
 import { renderManuscriptStep } from "./workspace/manuscript-step";
 import { renderContentsStep } from "./workspace/contents-step";
+import { ContentsTreeViewState } from "./workspace/contents-tree-view-state";
 import { renderFormattingStep } from "./workspace/formatting-step";
 import { renderExportStep } from "./workspace/export-step";
 
@@ -21,15 +22,24 @@ const labels = ["Manuscript", "Contents", "Formatting", "Export"];
 
 export class SimpleCompileModal extends Modal {
   private readonly controller: CompileWorkspaceController;
-  constructor(app: App, private readonly plugin: ManuscriptCompilerPlugin) {
+  private readonly contentsViewState = new ContentsTreeViewState();
+  private readonly fileExplorerRoot?: TFolder;
+  constructor(app: App, private readonly plugin: ManuscriptCompilerPlugin, selectedFolder?: TFolder) {
     super(app);
+    this.fileExplorerRoot = selectedFolder;
     const settings = plugin.settings; const profile = plugin.getActiveProfile();
     const formatting: DocxFormatting = docxFormattingForPreset(settings.defaultDocxStyle, settings.includeTitlePageByDefault);
-    const request: SimpleCompileRequest = { manuscriptRoot: settings.defaultManuscriptFolder || profile.manuscriptRoot, structurePreset: settings.defaultStructurePreset, includeFrontMatter: true, includeBackMatter: true, exportFolder: settings.defaultExportFolder || profile.exportFolder, outputFilename: this.filename(profile.outputFilename || "Manuscript.docx"), outputFormat: "docx", docxPreset: settings.defaultDocxStyle, downloadAfterExport: true, formatting, tableOfContents: settings.includeTableOfContentsByDefault, partDisplay: "word-title", chapterDisplay: "word-title", custom: { variables: { ...profile.variables }, bodySectionAliases: [...(profile.bodySectionAliases ?? ["Scene", "Manuscript", "Text", "Draft", "Body"])] } };
+    formatting.pageSize = settings.defaultDocxPageSize;
+    formatting.firstLineIndentCm = settings.defaultDocxFirstLineIndentCm;
+    const request: SimpleCompileRequest = { manuscriptRoot: selectedFolder?.path ?? (settings.defaultManuscriptFolder || profile.manuscriptRoot), structurePreset: settings.defaultStructurePreset, includeFrontMatter: true, includeBackMatter: true, exportFolder: settings.defaultExportFolder || profile.exportFolder, outputFilename: this.filename(profile.outputFilename || "Manuscript.docx"), outputFormat: "docx", docxPreset: settings.defaultDocxStyle, downloadAfterExport: true, formatting, tableOfContents: settings.includeTableOfContentsByDefault, partDisplay: "word-title", chapterDisplay: "word-title", custom: { variables: { ...profile.variables }, sceneSeparator: profile.sceneSeparator, bodySectionAliases: [...(profile.bodySectionAliases ?? ["Scene", "Manuscript", "Text", "Draft", "Body"])] } };
     this.controller = new CompileWorkspaceController(request, formatting, { prepare: (next, plan, signal) => this.plugin.prepareCompileRequest(next, plan, signal), sessionIsCurrent: (session) => this.plugin.preparedSessionIsCurrent(session), export: (session) => this.plugin.exportPreparedSession(session) });
   }
 
-  onOpen(): void { this.modalEl.addClass("manuscript-compile-workspace"); this.render(); }
+  onOpen(): void {
+    this.modalEl.addClass("manuscript-compile-workspace");
+    this.render();
+    if (this.fileExplorerRoot) void this.selectFolder(this.fileExplorerRoot).catch(() => new Notice("The selected folder could not be scanned.", 7000));
+  }
   onClose(): void { this.controller.close(); this.contentEl.empty(); }
 
   private render(): void {
@@ -37,8 +47,8 @@ export class SimpleCompileModal extends Modal {
     const nav = this.contentEl.createDiv({ cls: "manuscript-compile-steps", attr: { role: "tablist", "aria-label": "Compile steps" } });
     labels.forEach((label, index) => { const button = nav.createEl("button", { text: `${index + 1}  ${label}`, cls: index === current ? "is-active" : index < current ? "is-complete" : "" }); button.setAttribute("role", "tab"); button.setAttribute("aria-selected", String(index === current)); button.disabled = index > current + 1 || index > 0 && !state.contentPlan.length; button.addEventListener("click", () => this.enterStep(steps[index])); });
     const body = this.contentEl.createDiv({ cls: "manuscript-compile-body" });
-    if (state.step === "manuscript") renderManuscriptStep(body, this.controller, this.folder(), { chooseFolder: () => new FolderPicker(this.app, (folder) => { void this.selectFolder(folder); }).open(), useCurrentFolder: () => { const folder = this.app.workspace.getActiveFile()?.parent; if (folder) void this.selectFolder(folder); else new Notice("Open a note inside the manuscript folder first."); }, changed: () => this.updateCreateButton() });
-    else if (state.step === "contents") renderContentsStep(body, this.controller, () => this.render());
+    if (state.step === "manuscript") renderManuscriptStep(body, this.controller, this.folder(), { selectedFromFileExplorer: this.fileExplorerRoot?.path === state.request.manuscriptRoot, chooseFolder: () => new FolderPicker(this.app, (folder) => { void this.selectFolder(folder); }).open(), useCurrentFolder: () => { const folder = this.app.workspace.getActiveFile()?.parent; if (folder) void this.selectFolder(folder); else new Notice("Open a note inside the manuscript folder first."); }, changed: () => this.updateCreateButton() });
+    else if (state.step === "contents") renderContentsStep(body, this.controller, this.contentsViewState);
     else if (state.step === "formatting") renderFormattingStep(body, this.controller);
     else renderExportStep(body, this.controller, { refresh: () => { void this.prepare(true); }, filename: (value) => this.filename(value), changed: () => this.markPreviewInvalidated() });
     this.renderFooter();

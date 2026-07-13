@@ -8,12 +8,13 @@ import { createDefaultProfiles } from "../src/profiles";
 import { loadFixtureTree } from "./fixture-loader";
 import { validateDocxBytes } from "../src/docx-validator";
 import { SafeBinaryWriter, type SafeBinaryBackend } from "../src/safe-binary-writer";
+import { centimetresToTwips } from "../src/measurements";
 
 const loaded = await loadFixtureTree("samples/Book 1 - Warden of Silence");
 const profile = createDefaultProfiles()[1]; profile.useParts = true; profile.chapterSource = "folders"; profile.sceneSeparator = "#"; profile.partDisplay = "word-title"; profile.chapterDisplay = "word-title"; profile.bodySectionAliases = ["Scene", "Manuscript", "Text", "Draft", "Body"];
 const session = await new CompilePreparationService(loaded.vault as never, profile, 250).prepareAuthoritative({ manuscriptRoot: loaded.root.path, profile, structurePreset: "novel-parts", purpose: "compile", route: "legacy-profile" });
 const { book } = session;
-const baseOptions: DocxOptions = { title: "Warden of Silence", author: "Anthony Fitzpatrick", titlePage: true, font: "Times New Roman", fontSize: 12, lineSpacing: 2, firstLineIndent: 0.5, partDisplay: "word-title", chapterDisplay: "word-title", chapterPageBreak: true };
+const baseOptions: DocxOptions = { title: "Warden of Silence", author: "Anthony Fitzpatrick", titlePage: true, font: "Times New Roman", fontSize: 12, lineSpacing: 2, firstLineIndentCm: 1.27, partDisplay: "word-title", chapterDisplay: "word-title", chapterPageBreak: true };
 const bytes = createManuscriptDocx(book, profile, baseOptions);
 assert.equal(validateDocxBytes(bytes).valid, true);
 const backend: SafeBinaryBackend = { kind: "filesystem", exists: async (value) => { try { await stat(value); return true; } catch { return false; } }, read: async (value) => new Uint8Array(await readFile(value)), write: async (value, data) => { await writeFile(value, data); }, rename: async (from, to) => { await rename(from, to); }, remove: async (value) => { await rm(value, { force: true }); }, list: async (folder) => (await readdir(folder)).map((name) => ({ path: path.join(folder, name), mtime: 0 })) };
@@ -29,7 +30,7 @@ assert.doesNotMatch(styles, /w:styleId="Subtitle"/);
 assert.match(document, /w:pStyle w:val="Title"[\s\S]*?Warden of Silence/); assert.match(document, /w:pStyle w:val="Author"[\s\S]*?Anthony Fitzpatrick/);
 assert.match(document, /w:pStyle w:val="PartNumber"[\s\S]*?Part One/); assert.match(document, /w:pStyle w:val="PartTitle"[\s\S]*?The Silence Breaks/);
 assert.match(document, /w:pStyle w:val="ChapterNumber"[\s\S]*?Chapter One/); assert.match(document, /w:pStyle w:val="ChapterTitle"[\s\S]*?The Silence of Östersund/);
-assert.match(document, /w:pStyle w:val="SceneBreak"[\s\S]*?\* \* \*/); assert.match(document, /w:pStyle w:val="FirstParagraph"[\s\S]*?Östersund was silent/); assert.match(document, /w:pStyle w:val="BodyText"[\s\S]*?The barn answered/);
+assert.match(document, /w:pStyle w:val="SceneBreak"[\s\S]*?#/); assert.match(document, /w:pStyle w:val="FirstParagraph"[\s\S]*?Östersund was silent/); assert.match(document, /w:pStyle w:val="BodyText"[\s\S]*?The barn answered/);
 assert.match(document, /winter stars—too silent/); assert.match(document, /“Listen,”/); assert.match(document, /Östersund/);
 for (const forbidden of ["Part: Archive", "Part: Development", "Part: Exports", "Part 0: Manuscript", "Chapter 0: Book 1 - Warden of Silence", "Warden of Silence Dashboard", "The Watchers of Silence Series Dashboard", "Revision Notes", "Internal synopsis", "Editing Status", "Character Notes", "Previous Export"]) assert.doesNotMatch(document, new RegExp(forbidden.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i"), forbidden);
 assert.ok(document.indexOf("Copyright ©") < document.indexOf("Part One")); assert.ok(document.indexOf("Part Two") < document.indexOf("With gratitude"));
@@ -77,6 +78,7 @@ const numberOnlyPartXml = documentFor({}, profile, { ...book, frontMatter: { ...
 assert.equal(paragraphs(numberOnlyPartXml, "PartNumber").length, 1);
 assert.equal(paragraphs(numberOnlyPartXml, "PartTitle").length, 0);
 
+for (const separator of ["#", "*", "***", "* * *"] as const) { const sceneBreak = paragraphs(documentFor({ sceneSeparator: separator }), "SceneBreak"); assert.equal(sceneBreak.length, 1); assert.equal(paragraphText(sceneBreak[0]), separator); }
 assert.equal(paragraphs(documentFor({ sceneSeparator: "§ & <雪>" }), "SceneBreak").length, 1);
 assert.match(documentFor({ sceneSeparator: "§ & <雪>" }), /§ &amp; &lt;雪&gt;/);
 const blankBreak = paragraphs(documentFor({ sceneSeparator: "" }), "SceneBreak");
@@ -109,13 +111,18 @@ assert.doesNotMatch(documentFor({ tableOfContents: false }), /w:instrText[^>]*> 
 
 assert.match(documentFor({ pageSize: "letter" }), /w:pgSz w:w="12240" w:h="15840"/);
 assert.match(documentFor({ pageSize: "a4" }), /w:pgSz w:w="11906" w:h="16838"/);
-const customStyles = stylesFor({ font: "Georgia", fontSize: 13, lineSpacing: 1.5, firstLineIndent: 0.25 });
+const customStyles = stylesFor({ font: "Georgia", fontSize: 13, lineSpacing: 1.5, firstLineIndentCm: 0.635 });
 assert.match(customStyles, /w:rFonts w:ascii="Georgia" w:hAnsi="Georgia"/);
 assert.match(customStyles, /w:sz w:val="26"/);
 assert.match(customStyles, /w:spacing w:after="0" w:line="360" w:lineRule="auto"/);
 assert.match(customStyles, /w:styleId="BodyText"[\s\S]*?w:ind w:firstLine="360"/);
 assert.match(customStyles, /w:styleId="FirstParagraph"[\s\S]*?w:ind w:firstLine="0"/);
-assert.deepEqual(resolveDocxOptions({ title: "x", author: "y", font: "", fontSize: 100, lineSpacing: -2, firstLineIndent: 9, pageSize: "a4" }), { title: "x", author: "y", font: "Times New Roman", fontSize: 24, lineSpacing: 0.8, firstLineIndent: 1.5, pageSize: "a4", chapterPageBreak: true, titlePage: false, tableOfContents: false });
+assert.match(stylesFor({ firstLineIndentCm: 0.75 }), /w:styleId="BodyText"[\s\S]*?w:ind w:firstLine="425"/);
+assert.match(stylesFor({ firstLineIndentCm: 1.27 }), /w:styleId="BodyText"[\s\S]*?w:ind w:firstLine="720"/);
+assert.equal(centimetresToTwips(0.75), 425); assert.equal(centimetresToTwips(1.27), 720); assert.equal(centimetresToTwips(2.54), 1440);
+assert.match(documentFor({ pageSize: "a4" }), /w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440"/);
+assert.deepEqual(resolveDocxOptions({ title: "x", author: "y", font: "", fontSize: 100, lineSpacing: -2, firstLineIndentCm: 9, pageSize: "a4" }), { title: "x", author: "y", font: "Times New Roman", fontSize: 24, lineSpacing: 0.8, firstLineIndentCm: 3.81, pageSize: "a4", chapterPageBreak: true, titlePage: false, tableOfContents: false });
+assert.equal(resolveDocxOptions({ title: "x", author: "y" }).pageSize, "a4");
 
 const richScene = { ...book.parts[0].chapters[0].scenes[0], content: "**bold** *italic* ***both*** [readable link](https://example.invalid) `code` & <angle> “smart”—Östersund 雪" };
 const richBook = { ...book, parts: [{ ...book.parts[0], chapters: [{ ...book.parts[0].chapters[0], scenes: [richScene] }] }] };
@@ -126,4 +133,16 @@ assert.match(richXml, /<w:b\/><w:i\/>[\s\S]*?both/);
 assert.match(richXml, /readable link/);
 assert.doesNotMatch(richXml, /example\.invalid/);
 assert.match(richXml, /&amp; &lt;angle&gt; “smart”—Östersund 雪/);
+
+const realVault = await loadFixtureTree("tests/fixtures/real-vault/Book 1 - Warden of Silence");
+const realProfile = createDefaultProfiles()[1]; realProfile.sceneSeparator = "#"; realProfile.partDisplay = "word-title"; realProfile.chapterDisplay = "word-title";
+const realSession = await new CompilePreparationService(realVault.vault as never, realProfile, 250).prepareAuthoritative({ manuscriptRoot: realVault.root.path, profile: realProfile, structurePreset: "novel-parts", purpose: "compile", route: "selected-folder" });
+assert.equal(realSession.book.parts.length, 1); assert.equal(realSession.statistics.chapterCount, 1); assert.equal(realSession.statistics.sceneCount, 3); assert.equal(realSession.book.orphanScenes.length, 0); assert.equal(realSession.book.parts[0].orphanScenes.length, 0);
+const realBytes = createManuscriptDocx(realSession.book, realSession.profile, { title: "Warden of Silence", author: "Anthony Fitzpatrick", titlePage: true, sceneSeparator: "#", partDisplay: "word-title", chapterDisplay: "word-title" });
+assert.equal(validateDocxBytes(realBytes).valid, true);
+const realDocument = strFromU8(unzipSync(realBytes)["word/document.xml"]);
+assert.match(realDocument, /w:pStyle w:val="PartNumber"[\s\S]*?Part One/); assert.match(realDocument, /w:pStyle w:val="ChapterNumber"[\s\S]*?Chapter One/);
+assert.ok(realDocument.indexOf("Copyright ebook edition") < realDocument.indexOf("Part One")); assert.ok(realDocument.indexOf("The answer arrived without warning") < realDocument.indexOf("About the Author"));
+for (const matter of ["About the Author", "Acknowledgments", "Also by Anthony Fitzpatrick", "Back Cover Blurb"]) { const paragraph = [...realDocument.matchAll(/<w:p[\s\S]*?<\/w:p>/g)].find((match) => match[0].includes(matter))?.[0] ?? ""; assert.doesNotMatch(paragraph, /w:pStyle w:val="(?:PartNumber|ChapterNumber)"/, matter); }
+assert.doesNotMatch(realDocument, />Manuscript<|>Front and back matter<|>Copyright notices<|Revision Notes|Internal summary/);
 process.stdout.write(`Built-in Warden regression DOCX passed (${bytes.length.toLocaleString()} bytes); wrote .test-build/Warden-of-Silence-regression.docx.\n`);

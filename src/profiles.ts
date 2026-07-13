@@ -1,10 +1,11 @@
 import type { CompileProfile, ManuscriptCompilerSettings } from "./settings";
 import { DEFAULT_OPTIONS } from "./settings";
+import { clampCentimetres, inchesToCentimetres } from "./measurements";
 
 const VELLUM_OPTIONS = { ...DEFAULT_OPTIONS, orderingMethod: "metadata" as const, metadataOrdering: true, partHeadingTemplate: "Part {number}: {name}", chapterHeadingTemplate: "Chapter {number}: {name}", removeHtmlComments: true, removeDataviewBlocks: true, removeCallouts: true, stripInternalLinks: true };
 export function profileId(): string { return `profile-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`; }
-function profile(name: string, options = DEFAULT_OPTIONS): CompileProfile { return { ...options, metadataFilters: options.metadataFilters.map((rule) => ({ ...rule })), id: profileId(), name, manuscriptRoot: "", exportFolder: "Manuscript Exports", outputFilename: "{BookTitle}.docx", variables: { BookTitle: "", Series: "", Author: "" }, exportTarget: "docx", referenceDocx: "", pandocMetadataFile: "", additionalPandocArguments: "", generateTableOfContents: false, keepIntermediateMarkdown: false }; }
-export function createDefaultProfiles(): CompileProfile[] { return [profile("Default"), profile("Vellum", VELLUM_OPTIONS)]; }
+function profile(name: string, options = DEFAULT_OPTIONS, firstLineIndentCm = 1.27): CompileProfile { return { ...options, metadataFilters: options.metadataFilters.map((rule) => ({ ...rule })), id: profileId(), name, manuscriptRoot: "", exportFolder: "Manuscript Exports", outputFilename: "{BookTitle}.docx", variables: { BookTitle: "", Series: "", Author: "" }, exportTarget: "docx", referenceDocx: "", pandocMetadataFile: "", additionalPandocArguments: "", generateTableOfContents: false, keepIntermediateMarkdown: false, docxFirstLineIndentCm: firstLineIndentCm, docxPageSize: "a4" }; }
+export function createDefaultProfiles(): CompileProfile[] { return [profile("Default"), profile("Vellum", VELLUM_OPTIONS, 0.75)]; }
 export function duplicateProfile(source: CompileProfile, name = `${source.name} Copy`): CompileProfile { return { ...source, id: profileId(), name, metadataFilters: source.metadataFilters.map((rule) => ({ ...rule })), variables: { ...source.variables } }; }
 export function migrateSettings(settings: ManuscriptCompilerSettings): ManuscriptCompilerSettings {
   if (settings.profiles.length > 0) { settings.profiles = settings.profiles.map((item) => ({ ...item, exportTarget: item.exportTarget ?? settings.defaultExportFormat ?? "markdown", referenceDocx: item.referenceDocx ?? settings.defaultReferenceDocx ?? "", pandocMetadataFile: item.pandocMetadataFile ?? "", additionalPandocArguments: item.additionalPandocArguments ?? "", generateTableOfContents: item.generateTableOfContents ?? false, keepIntermediateMarkdown: item.keepIntermediateMarkdown ?? settings.keepTemporaryMarkdown ?? false })); return settings; }
@@ -27,6 +28,9 @@ export function repairSettings(settings: ManuscriptCompilerSettings): Manuscript
   repaired.defaultDocxStyle ??= repaired.defaultCompilePreset === "vellum" || /vellum/i.test(activeForMigration?.name ?? "") ? "vellum" : "standard";
   if (!(repaired.defaultDocxStyle === "vellum" || repaired.defaultDocxStyle === "standard")) repaired.defaultDocxStyle = "standard";
   repaired.defaultExportFormat ??= "docx"; repaired.warnBeforeOverwrite ??= true; repaired.openAfterCompile ??= false; repaired.includeTitlePageByDefault ??= false; repaired.includeTableOfContentsByDefault ??= activeForMigration?.generateTableOfContents ?? false; repaired.showAdvancedOptions ??= false;
+  repaired.defaultDocxPageSize = activeForMigration?.docxPageSize === "letter" || activeForMigration?.docxPageSize === "a4" ? activeForMigration.docxPageSize : repaired.defaultDocxPageSize === "letter" ? "letter" : "a4";
+  const migratedDefaultIndent = activeForMigration?.docxFirstLineIndentCm ?? (typeof activeForMigration?.docxFirstLineIndent === "number" ? inchesToCentimetres(activeForMigration.docxFirstLineIndent) : repaired.defaultDocxStyle === "vellum" ? 0.75 : 1.27);
+  repaired.defaultDocxFirstLineIndentCm = clampCentimetres(migratedDefaultIndent, 0, 3.81, repaired.defaultDocxStyle === "vellum" ? 0.75 : 1.27);
   if (!Array.isArray(repaired.exportHistory)) { repaired.exportHistory = []; warnings.push("Invalid export history was reset."); }
   if (!Array.isArray(repaired.compileLogs)) { repaired.compileLogs = []; warnings.push("Invalid compile logs were reset."); }
   if (!Number.isFinite(repaired.readingWordsPerMinute) || repaired.readingWordsPerMinute <= 0) { repaired.readingWordsPerMinute = 250; warnings.push("Reading speed was repaired to 250 words per minute."); }
@@ -42,6 +46,10 @@ export function repairSettings(settings: ManuscriptCompilerSettings): Manuscript
     if (merged.chapterSource !== "folders" && merged.chapterSource !== "notes") { merged.chapterSource = "folders"; warnings.push(`Profile “${merged.name}” chapter source was repaired to folders.`); }
     for (const key of ["manuscriptRoot", "exportFolder", "outputFilename", "partHeadingTemplate", "chapterHeadingTemplate", "sceneSeparator", "referenceDocx", "pandocMetadataFile", "additionalPandocArguments"] as const) if (typeof merged[key] !== "string") { (merged[key] as string) = defaults[key]; warnings.push(`Profile “${merged.name}” setting ${key} was repaired.`); }
     for (const key of ["blankLinesBetweenSections", "blankLinesBetweenChapters"] as const) if (!Number.isInteger(merged[key]) || merged[key] < 0) { merged[key] = defaults[key]; warnings.push(`Profile “${merged.name}” setting ${key} was repaired.`); }
+    const profileIndentDefault = /vellum/i.test(item.name ?? "") ? 0.75 : defaults.docxFirstLineIndentCm ?? 1.27;
+    const metricIndent = typeof item.docxFirstLineIndentCm === "number" ? item.docxFirstLineIndentCm : typeof item.docxFirstLineIndent === "number" ? inchesToCentimetres(item.docxFirstLineIndent) : profileIndentDefault;
+    merged.docxFirstLineIndentCm = clampCentimetres(metricIndent, 0, 3.81, profileIndentDefault);
+    merged.docxPageSize = item.docxPageSize === "letter" || item.docxPageSize === "a4" ? item.docxPageSize : "a4";
     return merged;
   });
   if (!repaired.profiles.some((item) => item.id === repaired.activeProfileId)) { repaired.activeProfileId = repaired.profiles[0].id; warnings.push("Active profile selection was repaired."); }

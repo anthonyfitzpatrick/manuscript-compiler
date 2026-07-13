@@ -15,6 +15,7 @@ export class ManuscriptParser {
 
   async parse(scan: ScannedBook, settings: CompileOptions, signal?: AbortSignal): Promise<Book> {
     const warnings = [...scan.warnings];
+    if (scan.hierarchyDiagnostics?.length) console.warn("Manuscript Compiler hierarchy diagnostics", scan.hierarchyDiagnostics);
     const unreadable = new Map<string, string>();
     const cache = new Map<string, ManuscriptDocument>();
     this.filterDurationMs = 0;
@@ -47,7 +48,7 @@ export class ManuscriptParser {
       root: scan.root, title: scan.root.name,
       frontMatter: { kind: "front", title: "Front Matter", documents: frontDocuments },
       parts, orphanScenes, backMatter: { kind: "back", title: "Back Matter", documents: backDocuments },
-      includedFiles, excludedFiles: [...uniqueExclusions.values()], warnings, issues: []
+      includedFiles, excludedFiles: [...uniqueExclusions.values()], warnings, issues: [], hierarchyDiagnostics: scan.hierarchyDiagnostics
     };
   }
 

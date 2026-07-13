@@ -9,16 +9,24 @@ Record the date, tester, Obsidian version, operating system, Word/LibreOffice ve
 - [ ] Confirm first-run behaviour is understandable and does not require Pandoc or an external executable.
 - [ ] Open **Manuscript Compiler: Compile Manuscript** from the command palette.
 - [ ] Open the compiler from **Open Manuscript Compiler** in plugin settings.
+- [ ] Right-click a folder in File Explorer and confirm **Compile manuscript from this folder** appears; confirm it is absent for note menus.
+- [ ] Confirm the folder action opens the existing workspace, shows the exact clicked path, and begins scanning without another folder picker.
 
 ## Real manuscript
 
 - [ ] Select the actual book folder, not its `Manuscript` child.
 - [ ] Confirm the selected root is not displayed as a Part or Chapter.
 - [ ] Confirm `Manuscript` is suggested as a Transparent container and creates no heading.
+- [ ] Confirm nested `Manuscript/Book 1 - …` containers remain transparent while Part, Chapter, and Scene hierarchy is preserved.
+- [ ] Confirm the final report has non-zero Chapters and no orphan Scenes for a normally structured book.
+- [ ] Confirm mixed `Front and back matter`/`Font and back matter` and `Copyright notices` folders do not become Parts or Chapters.
+- [ ] Confirm About the Author, Acknowledgments/Acknowledgements, Also by…, and Back Cover Blurb are back matter after the manuscript.
 - [ ] Confirm Archive, Development, and Exports are visibly excluded with reasons.
 - [ ] Confirm dashboard and revision notes are visibly excluded.
 - [ ] Inspect and reorder individual front- and back-matter notes.
 - [ ] Change one folder or note role manually and confirm the outline updates.
+- [ ] Scroll halfway down a large Contents tree, change several roles and inclusion boxes, and confirm scroll position and keyboard focus remain stable.
+- [ ] Exclude a folder and confirm it collapses; re-enable it and confirm it remains collapsed until explicitly expanded.
 - [ ] Reorder two Scenes and confirm the order survives moving between steps.
 - [ ] Exclude and re-enable a parent folder; confirm prior child choices are preserved.
 - [ ] Confirm no Part 0 or Chapter 0 is shown.
@@ -34,6 +42,7 @@ Record the date, tester, Obsidian version, operating system, Word/LibreOffice ve
 ## Vellum DOCX
 
 - [ ] Select Vellum and create a DOCX.
+- [ ] Confirm Vellum defaults to A4, a 0.75 cm first-line indent, and `#` scene breaks.
 - [ ] Inspect title-page enabled and disabled behaviour.
 - [ ] Confirm every Part begins on a new page without an unintended blank page.
 - [ ] Confirm Chapters begin on new pages with separate Chapter Number and Chapter Title styles.
@@ -42,11 +51,12 @@ Record the date, tester, Obsidian version, operating system, Word/LibreOffice ve
 - [ ] Search for YAML, Series/Book/Part/Chapter/Scene metadata, Dashboard, Synopsis, Revision Notes, Archive, Development, and Exports.
 - [ ] Import the DOCX into Vellum on macOS.
 - [ ] Confirm Vellum recognises Parts and Chapters and does not duplicate their titles.
+- [ ] Confirm Vellum places front matter before Parts and back matter after every manuscript Part.
 
 ## Standard Manuscript
 
 - [ ] Select Standard Manuscript and confirm Times New Roman 12 pt.
-- [ ] Confirm double spacing and a 0.5-inch first-line indent on Body Text.
+- [ ] Confirm A4, double spacing, a 1.27 cm first-line indent, 2.54 cm margins, and `* * *` scene breaks.
 - [ ] Confirm First Paragraph remains unindented.
 - [ ] Confirm Chapters start on new pages.
 
@@ -57,7 +67,7 @@ Record the date, tester, Obsidian version, operating system, Word/LibreOffice ve
 - [ ] Change font, font size, line spacing, and first-line indent and inspect each result.
 - [ ] Test title page on and off.
 - [ ] Enable the TOC, update fields in Word/LibreOffice, and confirm it populates.
-- [ ] Test centred `* * *`, blank scene spacing, and a compatible-profile custom/Unicode separator.
+- [ ] Test `#`, `*`, `***`, `* * *`, Blank line, and a custom/Unicode separator.
 - [ ] Confirm bold, italics, combined emphasis, links, smart quotes, dashes, accented characters, and non-Latin Unicode survive.
 - [ ] Confirm callout markers/titles become plain text while their body remains readable.
 

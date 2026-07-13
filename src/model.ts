@@ -1,4 +1,5 @@
 import type { TFile, TFolder } from "obsidian";
+import type { HierarchyDiagnostic } from "./types";
 
 export type MatterKind = "front" | "back";
 
@@ -63,6 +64,7 @@ export interface Book {
   excludedFiles: Array<{ file: TFile; reason: string }>;
   warnings: string[];
   issues: CompileWarning[];
+  hierarchyDiagnostics?: HierarchyDiagnostic[];
 }
 
 export type WarningSeverity = "information" | "warning" | "error";

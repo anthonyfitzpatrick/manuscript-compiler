@@ -1,0 +1,3 @@
+# Copyright
+
+Copyright paperback edition.

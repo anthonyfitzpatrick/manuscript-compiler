@@ -12,8 +12,10 @@ export class BookRootResolver {
     return folder;
   }
 
+  /** Explicit selections are authoritative and are never replaced by an ancestor or descendant. */
   selected(folder: TFolder): TFolder { return this.require(folder.path, "selected manuscript folder"); }
 
+  /** Legacy commands may infer a root from saved configuration or current-file ancestry. */
   configuredOrCurrent(configuredPath: string, activeFile: TFile | null): TFolder | null {
     if (configuredPath.trim()) {
       const configured = this.vault.getAbstractFileByPath(configuredPath.trim());

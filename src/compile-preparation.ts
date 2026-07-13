@@ -4,6 +4,7 @@ import { applyContentPlan, classifyContentPlan, createContentPlan, isPlanItemInc
 import { MarkdownExporter, type ExportProgressStage, type ExportRequest } from "./exporter";
 import type { Book, CompileResult, CompileWarning, ManuscriptStatistics } from "./model";
 import type { CompileProfile, StructurePreset } from "./settings";
+import { inchesToCentimetres } from "./measurements";
 import { applyContentPlanAuthority, applyWorkspacePlanAuthority, inferStructurePreset, resolveSimpleCompileRequest, type SimpleCompileRequest } from "./simple-workflow";
 import type { ScannedBook } from "./types";
 import { VaultScanner } from "./vault-scanner";
@@ -164,8 +165,8 @@ function simpleRequestFromProfile(request: CompilePreparationRequest, plan: Cont
       font: profile.docxFont ?? "Times New Roman",
       fontSize: profile.docxFontSize ?? 12,
       lineSpacing: profile.docxLineSpacing ?? 2,
-      firstLineIndent: profile.docxFirstLineIndent ?? 0.5,
-      pageSize: profile.docxPageSize ?? "letter",
+      firstLineIndentCm: profile.docxFirstLineIndentCm ?? inchesToCentimetres(profile.docxFirstLineIndent ?? 0.5),
+      pageSize: profile.docxPageSize ?? "a4",
       chapterPageBreak: profile.docxChapterPageBreak ?? true,
       titlePage: profile.docxTitlePage ?? true
     },

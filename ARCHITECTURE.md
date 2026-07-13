@@ -6,6 +6,8 @@ Every production route resolves a `TFolder` through `BookRootResolver` and cross
 
 `src/main.ts` is the plugin composition root. It loads and repairs settings, constructs services, registers stable command IDs and the settings tab, runs conservative startup cleanup, and cancels the active global operation on unload.
 
+It also registers the documented workspace `file-menu` event through `registerEvent()`. `folder-context-menu.ts` adds the action only for `TFolder`; its callback delegates to `openCompilerForFolder()` and contains no scanning or preparation logic.
+
 - `CompileCommandService` resolves roots and coordinates guided, legacy, sample, validation, and diagnostics commands.
 - `CompilePreparationService` is the only root-to-`PreparedCompileSession` boundary.
 - `CompileWorkspaceController` owns four-step state, validation, invalidation, duplicate-click protection, and cancellable workspace operations.
@@ -21,6 +23,7 @@ Every production route resolves a `TFolder` through `BookRootResolver` and cross
 | Command or caller | Root resolution | Content plan | Preparation purpose | Consumer |
 | --- | --- | --- | --- | --- |
 | `compile-manuscript` / `SimpleCompileModal` | explicit workspace folder through the preparation service | edited workspace plan, authoritative | `preview` / `guided` | Export-step preview, then `exportPreparedSession()` |
+| File Explorer folder action | exact right-clicked `TFolder`; no ancestry inference | workspace scan, then edited authoritative plan | `preview` / `guided` | same four-step workspace and `exportPreparedSession()` |
 | `compileRequest()` compatibility caller | explicit request root | supplied plan, or safely inferred when absent | `preview` / `guided` | `exportPreparedSession()` |
 | `compile-current-book` | `BookRootResolver.configuredOrCurrent()` | safely inferred and classified | `compile` / `current-book` | final-model preview, then `exportPreparedSession()` |
 | `compile-selected-folder` | `BookRootResolver.selected()` | safely inferred and classified | `compile` / `selected-folder` | final-model preview, then `exportPreparedSession()` |
@@ -72,9 +75,12 @@ SimpleCompileModal
 
 The workspace plan wins over inference and legacy profile structure. Automatic routes always classify project folders, dashboards, revision notes, and empty cleaned notes before parsing. Legacy profiles can still supply formatting, output choices, matter preferences, and scene-break settings, but cannot bypass the content plan.
 
+`createContentPlan()` records each detected role, recognises dedicated and mixed matter containers, and treats nested folders repeating the selected root name as transparent when they are not explicit Parts or Chapters. `applyContentPlan()` reconstructs the scan using each item’s nearest included Part/Chapter ancestor. Transparent folders therefore flatten only their own heading; they do not flatten or detach the structural descendants below them. Manual order is read from the authoritative global content order.
+
 ## Execution invariants
 
 - The selected root names the book and is never a Part or Chapter.
+- An explicitly selected root is exact: no ancestor or nested child may replace it.
 - Transparent containers never emit headings.
 - The parser receives only a scan rewritten by an authoritative content plan.
 - Manual workspace inclusion, roles, and sibling order remain authoritative.

@@ -7,14 +7,16 @@ Manuscript Compiler 0.9.2 turns fiction written in an Obsidian vault into a clea
 ## Quick Start
 
 1. Install and enable Manuscript Compiler.
-2. Run **Manuscript Compiler: Compile Manuscript**.
-3. Select the actual book folder.
+2. In the File Explorer, right-click the actual book folder and choose **Compile manuscript from this folder** (or run **Manuscript Compiler: Compile Manuscript**).
+3. Confirm the selected folder shown as the exact book root.
 4. Review and correct **Contents**.
 5. Choose **Vellum** or **Standard Manuscript** formatting, or select supported Custom values.
 6. Review the exact final manuscript and press **Create DOCX**.
 7. Save the verified DOCX to the vault, then optionally save a copy to the computer, open it, or reveal it where supported.
 
-The selected folder is the book root and never becomes a Part or Chapter. The Contents step lets the author confirm front matter, transparent containers, Parts, Chapters, Scenes, back matter, inclusion, and order before any output is created.
+The selected folder is the book root and never becomes a Part or Chapter. The Contents step lets the author confirm front matter, transparent containers, Parts, Chapters, Scenes, back matter, inclusion, and order before any output is created. Role and inclusion edits update the affected rows without returning the tree to the top; scroll position, keyboard focus, expansion state, child choices, and manual order are retained. Excluding a folder collapses it automatically while preserving its descendants' individual choices for later re-enabling.
+
+The File Explorer action passes the exact right-clicked `TFolder` to the existing four-step workspace and starts its scan. Explicit selection never walks to an ancestor or substitutes a nested `Book`, `Manuscript`, or `Draft` folder. Nested organisational containers can be transparent while their Part → Chapter → Scene relationships remain intact.
 
 The four-step compile workspace is authoritative for that export. Existing profiles and settings are preserved for compatibility but cannot override explicit workspace choices.
 
@@ -31,6 +33,8 @@ Folders named `Manuscript`, `Draft`, `Drafts`, `Book`, `Content`, or `Chapters` 
 Project folders such as Archive, Development, Exports, Research, Notes, Revision Notes, Planning, Characters, Locations, Plotlines, Dashboards, Templates, Attachments, Images, Trash, and old drafts are excluded by default. Matching ignores case, punctuation, hyphens, spaces, and numeric prefixes. Exclusions remain visible and may be explicitly overridden.
 
 Dashboard/index notes, revision notes, underscore-prefixed project notes, and notes classified by YAML as dashboard, character, location, plotline, research, planning, or revision material are also excluded by default. Empty notes are shown as exclusions after manuscript cleaning.
+
+Mixed matter folders such as `Front and back matter`, `Front & Back Matter`, and the observed `Font and back matter` spelling are treated as transparent matter containers. `Copyright notices` is a transparent front-matter container. Common names including Copyright variants, About the Author, Acknowledgments/Acknowledgements, Also by…, Back Cover Blurb, and author/newsletter notes are classified as matter rather than manuscript Chapters or Scenes. Every inferred role remains editable.
 
 ## Scene Templates and Metadata Cleaning
 
@@ -61,21 +65,23 @@ Generated Word paragraph styles include:
 
 Parts always begin on a new page. Chapters begin on a new page by default; in Custom formatting this can be disabled without changing the Chapter Number or Chapter Title styles. Page breaks are paragraph properties on the first displayed heading, not synthetic blank paragraphs. Number and title can be shown separately, numerically, in words, as title only, or through a retained legacy-profile template. Missing numbers remain missing—zero is never invented.
 
-The deterministic **Vellum** preset uses Garamond 12 pt, 1.15 line spacing, a 0.3-inch body indent, Letter pages, clean separate word-number/title headings, Chapter page breaks, and no automatic TOC. **Standard Manuscript** uses Times New Roman 12 pt, double spacing, a 0.5-inch body indent, one-inch margins, Letter pages, and Chapter page breaks. Selecting an individual formatting value switches the workspace to **Custom**. Custom supports the exposed font, size, spacing, indent, Letter/A4, Chapter-break, title-page, scene-break, heading-display, and TOC choices; margins remain fixed at one inch.
+The deterministic **Vellum** preset uses Garamond 12 pt, 1.15 line spacing, a 0.75 cm body indent, A4 pages, a centred `#` scene break, clean separate word-number/title headings, Chapter page breaks, and no automatic TOC. **Standard Manuscript** uses Times New Roman 12 pt, double spacing, a 1.27 cm body indent, 2.54 cm margins, A4 pages, a centred `* * *` scene break, and Chapter page breaks. Selecting an individual formatting value switches the workspace to **Custom**. Custom supports the exposed font, size, spacing, metric indent, A4/Letter, Chapter-break, title-page, scene-break, heading-display, and TOC choices; margins remain fixed at 2.54 cm.
 
-The title page is off by default. When enabled, it contains only the book title and author and ends with a page break. The optional table of contents is a genuine Word TOC field that must be updated in Word; it is off by default for Vellum. The default scene break is centred `* * *`; blank scene-break mode emits an empty Scene Break paragraph only between included scenes. Headers, footers, and page numbers are not generated because Vellum handles final book layout.
+The title page is off by default. When enabled, it contains only the book title and author and ends with a page break. The optional table of contents is a genuine Word TOC field that must be updated in Word; it is off by default for Vellum. Scene-break choices are `#`, `*`, `***`, `* * *`, Blank line, and Custom. Blank-line mode emits an empty Scene Break paragraph only between included scenes. Headers, footers, and page numbers are not generated because Vellum handles final book layout.
 
 Bold, italics, combined bold/italics, readable Markdown link text, inline-code text, punctuation, accented characters, smart quotes, dashes, and Unicode are preserved. Complex nested Markdown, tables, embedded media, and advanced layout are intentionally unsupported. **Convert callouts to plain text** removes the Obsidian callout marker and callout title while preserving its quoted body as readable text; ordinary blockquotes are not classified as callouts.
 
 ## Front and Back Matter
 
-Front and back matter folders are transparent. Individual notes can be included, excluded, and ordered in the Contents step. Common front-matter items are ordered with Title Page before Copyright, Dedication, Epigraph, Contents, Preface, and Prologue. Common back-matter items include Acknowledgements, About the Author, Also by the Author, Newsletter, and Copyright Notes.
+Front- and back-matter container folders do not emit headings. Individual notes can be included, excluded, and ordered in the Contents step. Common front-matter items are ordered with Title Page before Copyright, Dedication, Epigraph, Contents, Preface, and Prologue. Common back-matter items include Acknowledgements, About the Author, Also by the Author, Newsletter, and Copyright Notes.
+
+Inference is intentionally name- and ancestry-based, not a general natural-language classifier. Unusual matter names or unconventional structures should be corrected in Contents before preparing the final preview.
 
 ## Settings and Compatibility
 
 The registered plugin settings page contains saved defaults and a prominent **Open Manuscript Compiler** button. Legacy profiles and migration data remain preserved for compatibility. The normal compile workflow does not require or expose the legacy profile system.
 
-Settings from earlier releases are repaired idempotently. Obsolete Pandoc-related values may remain in stored profiles so user data is not silently deleted, but no Pandoc runtime exists or executes.
+Settings from earlier releases are repaired idempotently. Existing Letter selections are retained, and legacy inch-based indentation values are converted once to the canonical centimetre value without changing the resulting Word indentation. New settings use A4 and metric measurements. Obsolete Pandoc-related values may remain in stored profiles so user data is not silently deleted, but no Pandoc runtime exists or executes.
 
 ## Privacy and Platform Support
 
