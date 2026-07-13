@@ -1,6 +1,7 @@
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import type { ScannedBook, ScannedChapter, ScannedPart } from "../src/types";
+import { TFile, TFolder } from "obsidian";
 
 interface FixtureFile { path: string; name: string; basename: string; extension: string; absolutePath: string; }
 interface FixtureFolder { path: string; name: string; }
@@ -17,3 +18,10 @@ async function collectMarkdown(root: string, absolute: string): Promise<FixtureF
 async function visibleEntries(absolute: string) { return (await readdir(absolute, { withFileTypes: true })).filter((entry) => !entry.name.startsWith(".") && !entry.name.startsWith("Icon")).sort((a, b) => natural.compare(a.name, b.name)); }
 function file(root: string, absolute: string): FixtureFile { const name = path.basename(absolute); return { path: path.relative(root, absolute).split(path.sep).join("/"), name, basename: name.replace(/\.md$/i, ""), extension: "md", absolutePath: absolute }; }
 function folder(root: string, absolute: string): FixtureFolder { return { path: path.relative(root, absolute).split(path.sep).join("/") || path.basename(absolute), name: path.basename(absolute) }; }
+
+export async function loadFixtureTree(rootPath: string): Promise<{ root: TFolder; vault: { cachedRead(file: TFile): Promise<string>; getAbstractFileByPath(value: string): TFile | TFolder | null }; setContent(path: string, value: string): void }> {
+  const rootAbsolute = path.resolve(rootPath); const entries = new Map<string, TFile | TFolder>(); const content = new Map<string, string>();
+  const visit = async (absolute: string, vaultPath: string): Promise<TFolder> => { const current = Object.assign(new TFolder(), { name: path.basename(absolute), path: vaultPath, children: [] as Array<TFile | TFolder> }); entries.set(vaultPath, current); for (const entry of await visibleEntries(absolute)) { const childAbsolute = path.join(absolute, entry.name); const childPath = `${vaultPath}/${entry.name}`; if (entry.isDirectory()) current.children.push(await visit(childAbsolute, childPath)); else if (entry.name.toLowerCase().endsWith(".md")) { const item = Object.assign(new TFile(), { name: entry.name, basename: entry.name.replace(/\.md$/i, ""), extension: "md", path: childPath, parent: current }); entries.set(childPath, item); content.set(childPath, await readFile(childAbsolute, "utf8")); current.children.push(item); } } return current; };
+  const rootName = path.basename(rootAbsolute); const root = await visit(rootAbsolute, rootName); const assignParents = (folder: TFolder): void => { folder.children.forEach((child) => { Object.assign(child, { parent: folder }); if (child instanceof TFolder) assignParents(child); }); }; assignParents(root);
+  return { root, vault: { cachedRead: async (file) => content.get(file.path) ?? "", getAbstractFileByPath: (value) => entries.get(value) ?? null }, setContent: (value, next) => { content.set(value, next); } };
+}

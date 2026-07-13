@@ -1,11 +1,15 @@
 import { FileSystemAdapter, normalizePath, TFile, Vault } from "obsidian";
 import type { Book } from "./model";
-import { createDocx } from "./docx";
+import { createManuscriptDocx } from "./docx";
 import { nodeFs, pathExists } from "./filesystem";
 import type { CompileProfile } from "./settings";
 import { TemplateEngine, type TemplateVariables } from "./template-engine";
+import { validateDocxBytes } from "./docx-validator";
+import { SafeBinaryWriter, type SafeSaveStage } from "./safe-binary-writer";
+import { validateVaultPath } from "./output-path";
 
-export interface ExportRequest { book: Book; profile: CompileProfile; markdown: string; outputPath: string; variables: TemplateVariables; keepTemporaryMarkdown?: boolean; signal?: AbortSignal; onCommit?: () => void; }
+export type ExportProgressStage = "Creating DOCX" | "Checking DOCX" | SafeSaveStage;
+export interface ExportRequest { book: Book; profile: CompileProfile; markdown: string; outputPath: string; variables: TemplateVariables; keepTemporaryMarkdown?: boolean; signal?: AbortSignal; onProgress?: (stage: ExportProgressStage) => void; onCommit?: () => void; }
 export interface ExportResult { format: string; path: string; file?: TFile; stdout?: string; stderr?: string; }
 export interface Exporter { readonly format: string; export(request: ExportRequest): Promise<ExportResult>; }
 
@@ -24,18 +28,20 @@ export class MarkdownExporter implements Exporter {
 
 export class DocxExporter implements Exporter {
   readonly format = "docx";
-  constructor(private readonly vault: Vault, private readonly markdownExporter: MarkdownExporter) {}
+  constructor(private readonly vault: Vault, private readonly markdownExporter: MarkdownExporter, private readonly binaryWriter = new SafeBinaryWriter(vault)) {}
   async export(request: ExportRequest): Promise<ExportResult> {
-    const slash = request.outputPath.lastIndexOf("/"); if (slash >= 0) await this.markdownExporter.ensureFolder(request.outputPath.slice(0, slash));
     if (request.signal?.aborted) throw new Error("Compilation cancelled.");
-    const bytes = createDocx(request.markdown, { title: String(request.variables.BookTitle ?? request.book.title), author: String(request.variables.Author ?? ""), tableOfContents: request.profile.generateTableOfContents });
-    request.onCommit?.(); const file = await this.writeBinary(request.outputPath, bytes);
+    request.onProgress?.("Creating DOCX");
+    const bytes = createManuscriptDocx(request.book, request.profile, { title: String(request.variables.BookTitle ?? request.book.title), author: String(request.variables.Author ?? ""), tableOfContents: request.profile.generateTableOfContents, font: request.profile.docxFont, fontSize: request.profile.docxFontSize, lineSpacing: request.profile.docxLineSpacing, firstLineIndent: request.profile.docxFirstLineIndent, pageSize: request.profile.docxPageSize, chapterPageBreak: request.profile.docxChapterPageBreak, titlePage: request.profile.docxTitlePage, sceneSeparator: request.profile.sceneSeparator, partDisplay: request.profile.partDisplay, chapterDisplay: request.profile.chapterDisplay });
+    request.onProgress?.("Checking DOCX"); const validation = validateDocxBytes(bytes); if (!validation.valid) throw new Error(`The generated DOCX could not be validated and was not saved. ${validation.errors.join(" ")}`);
+    if (request.signal?.aborted) throw new Error("Compilation cancelled."); const slash = request.outputPath.lastIndexOf("/"); if (slash >= 0) await this.markdownExporter.ensureFolder(request.outputPath.slice(0, slash));
+    const cleanup = await this.binaryWriter.cleanupStaleArtifacts(slash < 0 ? "" : request.outputPath.slice(0, slash)); if (cleanup.removed.length) console.info(`Manuscript Compiler removed ${cleanup.removed.length} stale temporary file(s) before saving.`); if (cleanup.preservedBackups.length) console.warn(`Manuscript Compiler preserved ${cleanup.preservedBackups.length} recovery backup file(s) for manual review.`);
+    await this.binaryWriter.writeValidated(request.outputPath, bytes, { signal: request.signal, onProgress: request.onProgress, onCommit: request.onCommit }); const file = this.vault.getAbstractFileByPath(request.outputPath);
     if (request.keepTemporaryMarkdown) await this.markdownExporter.write(request.outputPath.replace(/\.docx$/i, ".md"), request.markdown);
-    return { format: this.format, path: request.outputPath, file };
+    return { format: this.format, path: request.outputPath, file: file instanceof TFile ? file : undefined };
   }
-  private async writeBinary(path: string, bytes: Uint8Array): Promise<TFile | undefined> { const safePath = validateVaultPath(path); const existing = this.vault.getAbstractFileByPath(safePath); const data = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer; if (existing instanceof TFile) { await this.vault.modifyBinary(existing, data); return existing; } return this.vault.createBinary(safePath, data); }
 }
 
 async function atomicReplace(source: string, destination: string): Promise<void> { const { fs } = nodeFs(); const suffix = `${Date.now()}-${Math.random().toString(36).slice(2)}`; const staged = `${destination}.manuscript-compiler-${suffix}.tmp`; const backup = `${destination}.manuscript-compiler-${suffix}.backup`; let backedUp = false; try { await fs.copyFile(source, staged); if (await pathExists(destination)) { await fs.rename(destination, backup); backedUp = true; } await fs.rename(staged, destination); if (backedUp) await fs.rm(backup, { force: true }).catch(() => undefined); } catch (error) { await fs.rm(staged, { force: true }); if (backedUp && !await pathExists(destination)) await fs.rename(backup, destination); throw error; } }
 async function atomicWriteText(destination: string, content: string): Promise<void> { const { fs } = nodeFs(); const source = `${destination}.manuscript-compiler-source-${Date.now()}.tmp`; try { await fs.writeFile(source, content, "utf8"); await atomicReplace(source, destination); } finally { await fs.rm(source, { force: true }); } }
-export function validateVaultPath(value: string): string { const raw = value.trim(); if (!raw) return ""; if (/^(?:\/|\\|[A-Za-z]:)/.test(raw)) throw new Error("Export paths must be vault-relative, not absolute."); const normalized = normalizePath(raw.replace(/\/+$/g, "")); if (normalized.split("/").some((segment) => segment === ".." || segment === ".")) throw new Error("Export paths may not contain traversal segments."); if (/[\\:*?"<>|]/.test(normalized)) throw new Error("Export path contains characters that are not portable across supported operating systems."); return normalized; }
+export { validateVaultPath } from "./output-path";

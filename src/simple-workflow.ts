@@ -1,9 +1,14 @@
-import type { CompileProfile, DocxStylePreset, ExportTarget, StructurePreset } from "./settings";
+import type { CompileProfile, DocxStylePreset, ExportTarget, StructuralDisplay, StructurePreset } from "./settings";
+import type { ContentPlanItem } from "./content-plan";
+
+export interface DocxFormatting { font: string; fontSize: number; lineSpacing: number; firstLineIndent: number; pageSize: "letter" | "a4"; chapterPageBreak: boolean; titlePage: boolean; }
 
 export interface SimpleCompileRequest {
   manuscriptRoot: string; structurePreset: StructurePreset; includeFrontMatter: boolean; includeBackMatter: boolean;
   exportFolder: string; outputFilename: string; outputFormat: ExportTarget; docxPreset: DocxStylePreset;
   custom?: Partial<CompileProfile>;
+  contentPlan?: ContentPlanItem[]; formatting?: DocxFormatting; downloadAfterExport?: boolean;
+  partDisplay?: StructuralDisplay; chapterDisplay?: StructuralDisplay;
 }
 
 export const STRUCTURE_PRESET_NAMES: Record<StructurePreset, string> = {
@@ -29,9 +34,46 @@ export function resolveSimpleCompileRequest(request: SimpleCompileRequest, base:
   return { ...base, ...DOCX[request.docxPreset], ...structure, ...(request.structurePreset === "custom" ? request.custom : {}),
     id: base.id, name: `${STRUCTURE_PRESET_NAMES[request.structurePreset]} · ${request.docxPreset === "vellum" ? "Vellum" : "Standard DOCX"}`,
     manuscriptRoot: request.manuscriptRoot.trim(), exportFolder: request.exportFolder.trim(), outputFilename: request.outputFilename.trim(),
-    exportTarget: request.outputFormat, includeFrontMatter: request.includeFrontMatter, includeBackMatter: request.includeBackMatter,
-    variables: { ...base.variables }, metadataFilters: base.metadataFilters.map((rule) => ({ ...rule })), referenceDocx: "", pandocMetadataFile: "", additionalPandocArguments: ""
+    exportTarget: request.outputFormat, includeFrontMatter: request.includeFrontMatter, includeBackMatter: request.includeBackMatter, sceneSeparator: request.custom?.sceneSeparator ?? structure.sceneSeparator ?? base.sceneSeparator,
+    variables: { ...base.variables, ...(request.custom?.variables ?? {}) }, metadataFilters: base.metadataFilters.map((rule) => ({ ...rule })), referenceDocx: "", pandocMetadataFile: "", additionalPandocArguments: "",
+    contentOrder: request.contentPlan?.filter((item) => item.included && item.role !== "ignore").map((item) => item.path),
+    docxFont: request.formatting?.font, docxFontSize: request.formatting?.fontSize, docxLineSpacing: request.formatting?.lineSpacing,
+    docxFirstLineIndent: request.formatting?.firstLineIndent, docxPageSize: request.formatting?.pageSize,
+    docxChapterPageBreak: request.formatting?.chapterPageBreak, docxTitlePage: request.formatting?.titlePage, downloadAfterExport: request.downloadAfterExport, skipLegacyPreview: request.contentPlan !== undefined,
+    partDisplay: request.partDisplay ?? "word-title", chapterDisplay: request.chapterDisplay ?? "word-title", explicitlyIncludedPaths: request.contentPlan?.filter((item) => item.userOverride && item.included).map((item) => item.path), bodySectionAliases: request.custom?.bodySectionAliases ?? base.bodySectionAliases
   };
+}
+
+export function applyWorkspacePlanAuthority(profile: CompileProfile, request: SimpleCompileRequest): CompileProfile {
+  const plan = request.contentPlan;
+  if (!plan) return profile;
+  return applyContentPlanAuthority(profile, request.manuscriptRoot, plan);
+}
+
+/** Applies structural choices from a content plan without consulting legacy profile inference. */
+export function applyContentPlanAuthority(profile: CompileProfile, manuscriptRoot: string, plan: ContentPlanItem[]): CompileProfile {
+  const byPath = new Map(plan.map((item) => [item.path, item]));
+  const included = (item: ContentPlanItem): boolean => {
+    let current: ContentPlanItem | undefined = item;
+    while (current) {
+      if (!current.included || current.role === "ignore") return false;
+      if (current.parentPath === manuscriptRoot) break;
+      current = byPath.get(current.parentPath);
+    }
+    return true;
+  };
+  profile.useParts = plan.some((item) => item.kind === "folder" && item.role === "part" && included(item));
+  profile.chapterSource = plan.some((item) => item.kind === "note" && item.role === "chapter" && included(item)) ? "notes" : "folders";
+  profile.metadataOrdering = false;
+  profile.orderingMethod = "filename";
+  const children = new Map<string, ContentPlanItem[]>();
+  plan.forEach((item) => children.set(item.parentPath, [...(children.get(item.parentPath) ?? []), item]));
+  const order: string[] = [];
+  const visit = (parent: string): void => { [...(children.get(parent) ?? [])].sort((a, b) => a.order - b.order || a.path.localeCompare(b.path)).forEach((item) => { if (included(item)) order.push(item.path); visit(item.path); }); };
+  visit(manuscriptRoot);
+  profile.contentOrder = order;
+  profile.explicitlyIncludedPaths = plan.filter((item) => item.kind === "note" && item.userOverride && included(item)).map((item) => item.path);
+  return profile;
 }
 
 export function validateSimpleCompileRequest(request: SimpleCompileRequest): string[] {

@@ -1,9 +1,9 @@
 {
   "id": "manuscript-compiler",
   "name": "Manuscript Compiler",
-  "version": "0.8.0",
+  "version": "0.9.1",
   "minAppVersion": "1.5.0",
-  "description": "Compile Obsidian book manuscripts directly to DOCX with a simple author workflow. Simplified beta.",
+  "description": "Compile explicitly selected publishable manuscript content to a clean native DOCX for Vellum or Word.",
   "author": "Anthony Fitzpatrick",
   "isDesktopOnly": false
 }

@@ -1,6 +1,6 @@
 {
   "name": "obsidian-manuscript-compiler",
-  "version": "0.8.0",
+  "version": "0.9.1",
   "description": "Validate, preview, and compile Obsidian book manuscripts to Markdown or DOCX.",
   "main": "main.js",
   "scripts": {
@@ -8,6 +8,7 @@
     "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
     "typecheck": "tsc -noEmit -skipLibCheck",
     "test": "node esbuild.test.mjs",
+    "test:safe-writer": "node esbuild.safe-writer-test.mjs",
     "test:docx": "node esbuild.docx-test.mjs",
     "package": "npm run build && node scripts/package.mjs",
     "package:validate": "node scripts/package.mjs --validate"

@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.9.1 Corrective Release
+
+- Changed manuscript discovery to exclude project, archive, development, dashboard, research, revision, and export material by default while keeping every exclusion visible and overridable.
+- Added transparent manuscript containers so folders such as `Manuscript`, `Draft`, and `Content` contribute no exported heading.
+- Added template-aware scene-body extraction and structured project-metadata removal, including leaked `Series`, `Book`, `Part`, `Chapter`, `Scene`, character, and editing fields.
+- Replaced the generic native Markdown-to-DOCX dump with model-driven fiction DOCX generation using semantic Part, Chapter, body, first-paragraph, scene-break, and matter styles.
+- Added the Warden of Silence regression fixture and semantic DOCX XML assertions for content exclusion, pagination, paragraph styles, Unicode, and metadata safety.
+- Changed the Export preview to use the exact prepared semantic manuscript model passed to DOCX/Markdown export; included source changes now require **Refresh Preview** before export.
+- Added structural DOCX validation plus staged, verified saving with same-folder replacement on local vaults, adapter-compatible recovery, rollback of existing outputs, and conservative stale-temporary cleanup.
+- Unified guided, current-book, selected-folder, sample, legacy-profile, validation, Markdown, and DOCX routes behind the authoritative prepared-manuscript service. Existing command IDs are retained, and validation now reports the same final semantic model used by export.
+
+Central export rule: **Only explicitly included publishable content is exported. Vault organisation and project metadata are never manuscript content.**
+
 ## 0.8.0 Simplified Beta
 
 - Added a single author-oriented Compile Manuscript window with folder, structure, output, and format choices.
@@ -11,7 +24,7 @@
 ## 0.7.0 Beta
 
 - Added cancellable, stage-aware compilation and Pandoc termination.
-- Added staged/atomic desktop output replacement and strict vault-relative path validation.
+- Added staged desktop output replacement and strict vault-relative path validation.
 - Added six golden manuscript fixtures, historical migration coverage, parser/cleaner edge cases, mobile guards, and diagnostics privacy tests.
 - Added real Pandoc DOCX archive/XML integration validation.
 - Added deterministic release packaging with exact archive-content and version checks.

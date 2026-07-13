@@ -7,7 +7,7 @@ export type StructurePreset = "novel-parts" | "novel" | "chapter-notes" | "short
 export type DocxStylePreset = "vellum" | "standard";
 
 export interface MetadataFilterRule { id: string; field: string; operator: MetadataOperator; value: string; }
-export interface CleaningSettings { stripYamlFrontmatter: boolean; removeObsidianComments: boolean; removeHtmlComments: boolean; removeDataviewBlocks: boolean; removeCallouts: boolean; stripInternalLinks: boolean; }
+export interface CleaningSettings { stripYamlFrontmatter: boolean; removeObsidianComments: boolean; removeHtmlComments: boolean; removeDataviewBlocks: boolean; removeCallouts: boolean; stripInternalLinks: boolean; bodySectionAliases?: string[]; }
 export interface CompileOptions extends CleaningSettings {
   includeFrontMatter: boolean; includeBackMatter: boolean; includeSceneTitles: boolean; metadataOrdering: boolean;
   partHeadingTemplate: string; chapterHeadingTemplate: string; sceneSeparator: string;
@@ -19,8 +19,14 @@ export interface CompileProfile extends CompileOptions {
   variables: { BookTitle: string; Series: string; Author: string };
   exportTarget: ExportTarget; referenceDocx: string; pandocMetadataFile: string; additionalPandocArguments: string;
   generateTableOfContents: boolean; keepIntermediateMarkdown: boolean;
+  /** Session-level Compile Manuscript choices. These are not profile settings. */
+  contentOrder?: string[]; docxFont?: string; docxFontSize?: number; docxLineSpacing?: number; docxFirstLineIndent?: number;
+  docxPageSize?: "letter" | "a4"; docxChapterPageBreak?: boolean; docxTitlePage?: boolean; downloadAfterExport?: boolean;
+  skipLegacyPreview?: boolean;
+  partDisplay?: StructuralDisplay; chapterDisplay?: StructuralDisplay; explicitlyIncludedPaths?: string[];
 }
-export interface ExportHistoryEntry { id: string; timestamp: string; profile: string; manuscript: string; outputFiles: string[]; wordCount: number; success: boolean; message?: string; }
+export type StructuralDisplay = "word" | "numeric" | "word-title" | "numeric-title" | "title" | "custom";
+export interface ExportHistoryEntry { id: string; timestamp: string; profile: string; manuscript: string; outputFiles: string[]; wordCount: number; success: boolean; cancelled?: boolean; message?: string; }
 export interface CompileLogEntry extends ExportHistoryEntry { exportFormats: ExportTarget; compilerVersion: string; pandocVersion?: string; durationMs: number; scanDurationMs: number; parseDurationMs: number; filterDurationMs: number; generationDurationMs: number; exportDurationMs: number; warnings: string[]; diagnostics?: string; }
 export interface ManuscriptCompilerSettings extends CompileOptions {
   profiles: CompileProfile[]; activeProfileId: string; defaultProfileId: string;
@@ -42,6 +48,7 @@ export const DEFAULT_OPTIONS: CompileOptions = {
   blankLinesBetweenSections: 1, blankLinesBetweenChapters: 1,
   useParts: true, chapterSource: "folders",
   stripYamlFrontmatter: true, removeObsidianComments: true, removeHtmlComments: false, removeDataviewBlocks: false, removeCallouts: false, stripInternalLinks: false
+  , bodySectionAliases: ["Scene", "Manuscript", "Text", "Draft", "Body"]
 };
 export const DEFAULT_SETTINGS: ManuscriptCompilerSettings = {
   ...DEFAULT_OPTIONS, profiles: [], activeProfileId: "", defaultProfileId: "", showPreview: true, expandPreviewTree: false,

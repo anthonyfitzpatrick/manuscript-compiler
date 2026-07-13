@@ -3,7 +3,7 @@ import { ContentCleaningPipeline } from "./filters";
 import { MetadataFilterEngine, normalizeKey } from "./metadata-filter";
 import type { Book, Chapter, DocumentMetadata, ManuscriptDocument, Part, Scene } from "./model";
 import { extractNumber, sortDocuments, sortParts, titleName } from "./ordering";
-import type { CompileOptions } from "./settings";
+import type { CompileOptions, CompileProfile } from "./settings";
 import type { ScannedBook, ScannedChapter, ScannedPart } from "./types";
 import { throwIfCancelled } from "./cancellation";
 
@@ -29,6 +29,7 @@ export class ManuscriptParser {
     sortDocuments(backDocuments, settings.metadataOrdering);
     sortDocuments(orphanScenes, settings.metadataOrdering);
     sortParts(parts, settings.metadataOrdering);
+    this.applyManualOrder(parts, frontDocuments, backDocuments, orphanScenes, (settings as CompileProfile).contentOrder);
 
     this.addStructuralWarnings(parts, orphanScenes, warnings);
     this.addDuplicateFilenameWarnings(scan.allMarkdown, warnings);
@@ -50,12 +51,19 @@ export class ManuscriptParser {
     };
   }
 
+  private applyManualOrder(parts: Part[], front: ManuscriptDocument[], back: ManuscriptDocument[], orphans: Scene[], order?: string[]): void {
+    if (!order?.length) return; const ranks = new Map(order.map((path, index) => [path, index])); const rank = (path: string): number => ranks.get(path) ?? Number.MAX_SAFE_INTEGER;
+    const documents = (items: ManuscriptDocument[]): void => { items.sort((a, b) => rank(a.file.path) - rank(b.file.path)); };
+    documents(front); documents(back); documents(orphans); parts.sort((a, b) => rank(a.path) - rank(b.path));
+    parts.forEach((part) => { documents(part.orphanScenes); part.chapters.sort((a, b) => rank(a.path) - rank(b.path)); part.chapters.forEach((chapter) => documents(chapter.scenes)); });
+  }
+
   private async parseDocument(file: TFile, settings: CompileOptions): Promise<ManuscriptDocument> {
     const rawContent = await this.vault.cachedRead(file);
     const parsed = this.readMetadata(rawContent); const metadata = parsed.metadata;
-    const statusExcluded = metadata.editingStatus?.trim().toLowerCase() === "excluded";
+    const explicitlyIncluded = (settings as CompileProfile).explicitlyIncludedPaths?.includes(file.path) === true; const statusExcluded = !explicitlyIncluded && metadata.editingStatus?.trim().toLowerCase() === "excluded";
     const filterStarted = performance.now(); const filter = this.metadataFilter.matches(metadata, settings.metadataFilters); this.filterDurationMs += performance.now() - filterStarted;
-    const excluded = statusExcluded || !filter.included;
+    const excluded = statusExcluded || !explicitlyIncluded && !filter.included;
     const exclusionReason = statusExcluded ? "Editing Status is Excluded" : filter.failedRule ? `${filter.failedRule.field} ${filter.failedRule.operator === "equals" ? "==" : "!="} ${filter.failedRule.value} did not match` : undefined;
     return { file, title: file.basename, number: settings.metadataOrdering ? extractNumber(metadata.scene) ?? extractNumber(file.basename) : extractNumber(file.basename), metadata, rawContent, content: this.cleaner.clean(rawContent, settings).trim(), excluded, exclusionReason, metadataError: parsed.error };
   }
