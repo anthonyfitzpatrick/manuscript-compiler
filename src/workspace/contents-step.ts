@@ -1,3 +1,9 @@
+/**
+ * Manuscript Compiler — Contents step renderer.
+ *
+ * Renders the editable tree and delegates mutations to the controller. Rows are
+ * updated in place to preserve focus, scroll, expansion, and large-book speed.
+ */
 import { Setting } from "obsidian";
 import type { ContentPlanItem, ContentRole } from "../content-plan";
 import type { CompileWorkspaceController } from "./compile-workspace-controller";

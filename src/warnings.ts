@@ -1,8 +1,15 @@
+/**
+ * Manuscript Compiler — semantic and output-safety warning analysis.
+ *
+ * Examines the final Book and resolved profile, never permissive scanner output.
+ * Warnings are prose-free and author-facing; export-safety applies blocking policy.
+ */
 import type { Book, CompileWarning, WarningSeverity } from "./model";
 import type { CompileProfile } from "./settings";
 import { extractNumber } from "./ordering";
 import { normalizeKey } from "./metadata-filter";
 
+/** Stateless semantic/output analysis run after model construction. */
 export class WarningEngine {
   analyze(book: Book, profile: CompileProfile, outputPath: string): CompileWarning[] {
     const issues: CompileWarning[] = book.warnings.map((message) => ({ severity: this.legacySeverity(message), code: "structure", message }));

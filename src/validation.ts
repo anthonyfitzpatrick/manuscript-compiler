@@ -1,12 +1,22 @@
+/**
+ * Manuscript Compiler — read-only prepared-manuscript validation.
+ *
+ * Reports the exact Book, counts, exclusions, and issues that export would use.
+ * Called by CompileCommandService. It consumes PreparedCompileSession and never
+ * scans, rebuilds the Book, or writes output.
+ */
 import { TFolder, Vault } from "obsidian";
 import type { PreparedCompileSession, PreparedExclusion } from "./compile-preparation";
 import type { Book, CompileWarning, ManuscriptStatistics } from "./model";
 import { validateProfile } from "./profiles";
 import type { ManuscriptCompilerSettings } from "./settings";
 
+/** Immutable report view over the prepared Book; ownership remains with the session. */
 export interface ValidationResult { book: Book; statistics: ManuscriptStatistics & { partCount: number }; exclusions: PreparedExclusion[]; issues: CompileWarning[]; docxEngine: "built-in"; durationMs: number; }
+/** Vault/settings-bound read-only validator over PreparedCompileSession. */
 export class ManuscriptValidationService {
   constructor(private readonly vault: Vault, private readonly settings: ManuscriptCompilerSettings) {}
+  /** Adds configuration/output-safety issues to session warnings without writing or rebuilding. */
   async validate(session: PreparedCompileSession): Promise<ValidationResult> {
     const started = performance.now(); const { book, profile } = session; const issues = [...session.warnings];
     const profileValidation = validateProfile(profile); profileValidation.errors.forEach((message) => issues.push({ severity: "error", code: "invalid-profile", message }));

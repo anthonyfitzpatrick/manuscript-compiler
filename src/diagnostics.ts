@@ -1,6 +1,14 @@
+/**
+ * Manuscript Compiler — privacy-safe support diagnostics.
+ *
+ * Produces configuration/platform summaries without reading manuscript notes.
+ * Called by CompileCommandService and diagnostics UI. Absolute paths, metadata
+ * filter values, and manuscript prose must never enter the report.
+ */
 import type { CompileProfile, ManuscriptCompilerSettings } from "./settings";
 
 export interface DiagnosticsContext { pluginVersion: string; obsidianVersion: string; operatingSystem: string; profile: CompileProfile; settings: ManuscriptCompilerSettings; generatedAt?: Date; }
+/** Stateless redacted report builder; generated output is safe to share for support. */
 export class DiagnosticsReportGenerator {
   generate(context: DiagnosticsContext): string {
     const { profile, settings } = context; const lastLog = settings.compileLogs[0]; const historySuccesses = settings.exportHistory.filter((entry) => entry.success).length;

@@ -1,6 +1,14 @@
+/**
+ * Manuscript Compiler — semantic manuscript statistics.
+ *
+ * Counts only included, non-empty documents from the final Book. Preparation,
+ * preview, validation, and reports share this result so raw discovery counts
+ * cannot disagree with exported structure.
+ */
 import type { Book, ManuscriptStatistics, NamedStatistic } from "./model";
 import type { CompileProfile } from "./settings";
 export function documentWordCount(content: string): number { const text = content.replace(/```[\s\S]*?```/g, " ").replace(/`[^`]*`/g, " ").replace(/[\p{P}\p{S}]+/gu, " ").trim(); return text ? text.split(/\s+/u).length : 0; }
+/** Stateless calculator over the final semantic Book. */
 export class StatisticsEngine {
   calculate(book: Book, profile: CompileProfile, wordsPerMinute: number): ManuscriptStatistics {
     const scenes = [...book.orphanScenes, ...book.parts.flatMap((part) => [...part.orphanScenes, ...part.chapters.flatMap((chapter) => chapter.scenes)])].filter((scene) => !scene.excluded && !!scene.content.trim());

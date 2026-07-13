@@ -1,3 +1,11 @@
+/**
+ * Manuscript Compiler — native semantic DOCX generation.
+ *
+ * Converts a prepared Book directly into an offline WordprocessingML package.
+ * Called by DocxExporter; calls XML/ZIP helpers and measurement conversion. It
+ * never scans the vault, reparses generic Markdown structure, or writes files.
+ * Structural styles come from Book nodes and missing numbers remain missing.
+ */
 import { strToU8, zipSync } from "fflate";
 import type { Book, Chapter, ManuscriptDocument, Part } from "./model";
 import { numberWord } from "./ordering";
@@ -8,6 +16,7 @@ import { centimetresToTwips, clampCentimetres } from "./measurements";
 const XML = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`;
 const DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
+/** Supported generator inputs. Callers may pass unresolved compatibility values. */
 export interface DocxOptions {
   title: string;
   author: string;
@@ -24,6 +33,7 @@ export interface DocxOptions {
   chapterDisplay?: StructuralDisplay;
 }
 
+/** Repaired, complete values safe for XML/style generation; owned by one build. */
 export interface ResolvedDocxOptions extends DocxOptions {
   font: string;
   fontSize: number;

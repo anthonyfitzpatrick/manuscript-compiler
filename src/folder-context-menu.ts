@@ -1,3 +1,9 @@
+/**
+ * Manuscript Compiler — File Explorer folder action.
+ *
+ * Adds one documented menu item only for TFolder and delegates the exact clicked
+ * object to main.ts. It contains no inference, preparation, or legacy compile path.
+ */
 import { TFolder, type Menu, type TAbstractFile } from "obsidian";
 
 export const COMPILE_FOLDER_MENU_TITLE = "Compile manuscript from this folder";

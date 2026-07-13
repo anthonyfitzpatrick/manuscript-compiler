@@ -1,3 +1,10 @@
+/**
+ * Manuscript Compiler — persisted configuration schema and defaults.
+ *
+ * Shared by migration, workspace resolution, compiler services, and settings
+ * UI. Historical fields remain for data compatibility even when inactive. New
+ * defaults must remain native-DOCX, offline, A4/metric, and author-safe.
+ */
 export type OrderingMethod = "filename" | "metadata";
 export type WarningLevel = "information" | "warning" | "error";
 export type MetadataOperator = "equals" | "not-equals";
@@ -6,14 +13,21 @@ export type ChapterSource = "folders" | "notes";
 export type StructurePreset = "novel-parts" | "novel" | "chapter-notes" | "short-story" | "anthology" | "custom";
 export type DocxStylePreset = "vellum" | "standard" | "custom";
 
+/** Persisted legacy-compatible metadata predicate with stable UI identity. */
 export interface MetadataFilterRule { id: string; field: string; operator: MetadataOperator; value: string; }
+/** Configurable syntax cleaning; mandatory metadata/body safety is not optional. */
 export interface CleaningSettings { stripYamlFrontmatter: boolean; removeObsidianComments: boolean; removeHtmlComments: boolean; removeDataviewBlocks: boolean; removeCallouts: boolean; stripInternalLinks: boolean; bodySectionAliases?: string[]; }
+/** Parser/generator options after request/profile resolution. */
 export interface CompileOptions extends CleaningSettings {
   includeFrontMatter: boolean; includeBackMatter: boolean; includeSceneTitles: boolean; metadataOrdering: boolean;
   partHeadingTemplate: string; chapterHeadingTemplate: string; sceneSeparator: string;
   orderingMethod: OrderingMethod; metadataFilters: MetadataFilterRule[]; blankLinesBetweenSections: number; blankLinesBetweenChapters: number;
   useParts: boolean; chapterSource: ChapterSource;
 }
+/**
+ * Persisted reusable configuration. Profiles are cloned before compilation.
+ * Pandoc-named fields are inert compatibility data and must remain non-executable.
+ */
 export interface CompileProfile extends CompileOptions {
   id: string; name: string; manuscriptRoot: string; exportFolder: string; outputFilename: string;
   variables: { BookTitle: string; Series: string; Author: string };
@@ -30,8 +44,10 @@ export interface CompileProfile extends CompileOptions {
   partDisplay?: StructuralDisplay; chapterDisplay?: StructuralDisplay; explicitlyIncludedPaths?: string[];
 }
 export type StructuralDisplay = "word" | "numeric" | "word-title" | "numeric-title" | "title" | "custom";
+/** Repaired, bounded persisted summary; never contains manuscript prose. */
 export interface ExportHistoryEntry { id: string; timestamp: string; profile: string; manuscript: string; outputFiles: string[]; wordCount: number; success: boolean; cancelled?: boolean; message?: string; }
 export interface CompileLogEntry extends ExportHistoryEntry { exportFormats: ExportTarget; compilerVersion: string; pandocVersion?: string; durationMs: number; scanDurationMs: number; parseDurationMs: number; filterDurationMs: number; generationDurationMs: number; exportDurationMs: number; warnings: string[]; diagnostics?: string; }
+/** Plugin-owned persisted state loaded and saved only through the plugin lifecycle. */
 export interface ManuscriptCompilerSettings extends CompileOptions {
   profiles: CompileProfile[]; activeProfileId: string; defaultProfileId: string;
   showPreview: boolean; expandPreviewTree: boolean; showStatistics: boolean; readingWordsPerMinute: number; minimumWarningLevel: WarningLevel;

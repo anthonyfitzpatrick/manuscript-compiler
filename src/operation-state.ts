@@ -1,5 +1,12 @@
+/**
+ * Manuscript Compiler — single-operation state and cancellation ownership.
+ *
+ * Prevents duplicate preparation/export and gives each task one AbortController.
+ * Finalisation disables cancellation so replacement or rollback can finish.
+ */
 export type OperationStatus = "idle" | "preparing" | "ready" | "exporting" | "finalising" | "cancelled" | "failed" | "complete";
 
+/** Handle retained by one caller until `settle`; methods are idempotent by design. */
 export interface ActiveOperation {
   readonly signal: AbortSignal;
   readonly status: OperationStatus;
@@ -10,11 +17,12 @@ export interface ActiveOperation {
   settle(): void;
 }
 
-/** A single-operation lock with an explicit non-cancellable finalisation boundary. */
+/** Owns at most one active operation and releases its lock only when settled. */
 export class OperationStateController {
   private current?: OperationHandle;
   status: OperationStatus = "idle";
 
+  /** Acquires the global operation slot, returning undefined rather than queueing duplicate work. */
   begin(status: "preparing" | "exporting"): ActiveOperation | undefined {
     if (this.current) return undefined;
     const handle = new OperationHandle(status, (next) => { this.status = next; }, () => { if (this.current === handle) this.current = undefined; });
@@ -23,7 +31,9 @@ export class OperationStateController {
     return handle;
   }
 
+  /** Requests cancellation only while the active handle still permits interruption. */
   cancel(): boolean { return this.current?.cancel() ?? false; }
+  /** Indicates ownership of the operation slot, including non-cancellable finalisation. */
   get busy(): boolean { return this.current !== undefined; }
 }
 

@@ -1,3 +1,10 @@
+/**
+ * Manuscript Compiler — settings migration, repair, and profile utilities.
+ *
+ * Called during plugin load and advanced profile editing. Migration preserves
+ * old data while repair supplies safe current defaults and warnings. Both must
+ * be idempotent and must not overwrite explicit user choices.
+ */
 import type { CompileProfile, ManuscriptCompilerSettings } from "./settings";
 import { DEFAULT_OPTIONS } from "./settings";
 import { clampCentimetres, inchesToCentimetres } from "./measurements";
@@ -5,8 +12,11 @@ import { clampCentimetres, inchesToCentimetres } from "./measurements";
 const VELLUM_OPTIONS = { ...DEFAULT_OPTIONS, orderingMethod: "metadata" as const, metadataOrdering: true, partHeadingTemplate: "Part {number}: {name}", chapterHeadingTemplate: "Chapter {number}: {name}", removeHtmlComments: true, removeDataviewBlocks: true, removeCallouts: true, stripInternalLinks: true };
 export function profileId(): string { return `profile-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`; }
 function profile(name: string, options = DEFAULT_OPTIONS, firstLineIndentCm = 1.27): CompileProfile { return { ...options, metadataFilters: options.metadataFilters.map((rule) => ({ ...rule })), id: profileId(), name, manuscriptRoot: "", exportFolder: "Manuscript Exports", outputFilename: "{BookTitle}.docx", variables: { BookTitle: "", Series: "", Author: "" }, exportTarget: "docx", referenceDocx: "", pandocMetadataFile: "", additionalPandocArguments: "", generateTableOfContents: false, keepIntermediateMarkdown: false, docxFirstLineIndentCm: firstLineIndentCm, docxPageSize: "a4" }; }
+/** Creates fresh profiles; callers may mutate them without sharing nested arrays. */
 export function createDefaultProfiles(): CompileProfile[] { return [profile("Default"), profile("Vellum", VELLUM_OPTIONS, 0.75)]; }
+/** Copies mutable nested profile values and assigns a new stable identity. */
 export function duplicateProfile(source: CompileProfile, name = `${source.name} Copy`): CompileProfile { return { ...source, id: profileId(), name, metadataFilters: source.metadataFilters.map((rule) => ({ ...rule })), variables: { ...source.variables } }; }
+/** Applies historical schema upgrades once while retaining compatibility data. */
 export function migrateSettings(settings: ManuscriptCompilerSettings): ManuscriptCompilerSettings {
   if (settings.profiles.length > 0) { settings.profiles = settings.profiles.map((item) => ({ ...item, exportTarget: item.exportTarget ?? settings.defaultExportFormat ?? "markdown", referenceDocx: item.referenceDocx ?? settings.defaultReferenceDocx ?? "", pandocMetadataFile: item.pandocMetadataFile ?? "", additionalPandocArguments: item.additionalPandocArguments ?? "", generateTableOfContents: item.generateTableOfContents ?? false, keepIntermediateMarkdown: item.keepIntermediateMarkdown ?? settings.keepTemporaryMarkdown ?? false })); return settings; }
   const profiles = createDefaultProfiles(); const active = profiles[settings.defaultCompilePreset === "vellum" ? 1 : 0];
@@ -21,6 +31,7 @@ export function migrateSettings(settings: ManuscriptCompilerSettings): Manuscrip
   });
   return { ...settings, profiles, activeProfileId: active.id, defaultProfileId: active.id };
 }
+/** Repairs malformed/current fields after migration and records configuration warnings. */
 export function repairSettings(settings: ManuscriptCompilerSettings): ManuscriptCompilerSettings {
   const warnings: string[] = []; if (!Array.isArray(settings.profiles)) { settings.profiles = []; warnings.push("Invalid profile storage was recovered with default profiles."); } const repaired = migrateSettings(settings);
   const activeForMigration = repaired.profiles.find((item) => item.id === repaired.activeProfileId) ?? repaired.profiles[0];
@@ -57,9 +68,11 @@ export function repairSettings(settings: ManuscriptCompilerSettings): Manuscript
   repaired.configurationWarnings = [...(Array.isArray(repaired.configurationWarnings) ? repaired.configurationWarnings : []), ...warnings].slice(-100);
   return repaired;
 }
+/** Resolves active/default profile safely and creates defaults when necessary. */
 export function activeProfile(settings: ManuscriptCompilerSettings): CompileProfile {
   return settings.profiles.find((item) => item.id === settings.activeProfileId) ?? settings.profiles.find((item) => item.id === settings.defaultProfileId) ?? settings.profiles[0];
 }
+/** Validates imported profile data without mutating settings or accepting code. */
 export function validateProfile(value: unknown): { profile?: CompileProfile; errors: string[] } {
   const errors: string[] = []; if (!value || typeof value !== "object" || Array.isArray(value)) return { errors: ["Profile must be a JSON object."] };
   const item = value as Partial<CompileProfile>;

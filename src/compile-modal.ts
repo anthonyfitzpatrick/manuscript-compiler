@@ -1,3 +1,10 @@
+/**
+ * Manuscript Compiler — four-step workspace shell.
+ *
+ * Owns modal lifecycle, step composition, folder selection, and DOM event wiring.
+ * CompileWorkspaceController owns state/operations; step modules own controls.
+ * Parser, exporter, history, filesystem, and Electron logic do not belong here.
+ */
 import { App, FuzzySuggestModal, Modal, Notice, TFolder } from "obsidian";
 import type ManuscriptCompilerPlugin from "./main";
 import { classifyContentPlan, createContentPlan } from "./content-plan";
@@ -20,6 +27,7 @@ class FolderPicker extends FuzzySuggestModal<TFolder> {
 const steps: CompileWorkspaceStep[] = ["manuscript", "contents", "formatting", "export"];
 const labels = ["Manuscript", "Contents", "Formatting", "Export"];
 
+/** Modal-scoped workspace view; closing delegates cancellation to its controller. */
 export class SimpleCompileModal extends Modal {
   private readonly controller: CompileWorkspaceController;
   private readonly contentsViewState = new ContentsTreeViewState();

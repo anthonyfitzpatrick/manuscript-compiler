@@ -1,3 +1,9 @@
+/**
+ * Manuscript Compiler — Formatting step renderer.
+ *
+ * Exposes only native-DOCX options implemented by the generator. Author input is
+ * delegated to the controller; metric-to-OOXML conversion stays elsewhere.
+ */
 import { Setting, type DropdownComponent, type ToggleComponent } from "obsidian";
 import type { DocxStylePreset, StructuralDisplay } from "../settings";
 import type { CompileWorkspaceController } from "./compile-workspace-controller";

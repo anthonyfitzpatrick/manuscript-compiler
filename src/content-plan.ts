@@ -1,9 +1,27 @@
+/**
+ * Manuscript Compiler — author-controlled structural plan.
+ *
+ * Bridges mechanical vault discovery and semantic parsing. It infers safe
+ * defaults, records explicit author overrides, and rewrites ScannedBook so only
+ * authoritative roles, inclusion, and order reach the parser. Called by
+ * CompilePreparationService and the Contents workspace; calls content cleaning
+ * for note classification.
+ *
+ * Invariants: the selected root is absent, transparent containers emit no
+ * heading, explicit choices beat inference, and flattening retains the nearest
+ * Part/Chapter relationship.
+ */
 import { parseYaml, TAbstractFile, TFile, TFolder, type Vault } from "obsidian";
 import type { CompileProfile, StructurePreset } from "./settings";
 import type { ScannedBook, ScannedChapter, ScannedPart } from "./types";
 import { cleanManuscriptContent, hasProjectMetadataLeakage } from "./filters";
 
 export type ContentRole = "front-matter" | "transparent" | "part" | "chapter" | "scene" | "back-matter" | "ignore";
+/**
+ * Mutable workspace record for one discovered item. `detectedRole` remembers
+ * inference while `role` is authoritative; `userOverride` protects explicit
+ * choices from later parent-role propagation. Preparation copies supplied plans.
+ */
 export interface ContentPlanItem { path: string; parentPath: string; name: string; kind: "folder" | "note"; role: ContentRole; detectedRole?: ContentRole; included: boolean; order: number; exclusionReason?: string; warning?: string; userOverride?: boolean; }
 
 const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
@@ -18,6 +36,7 @@ const matterOrder: Record<string, number> = { "title page": 10, copyright: 20, "
 
 export function normalizedProjectName(value: string): string { return value.replace(/\.[^.]+$/, "").replace(/^\s*\d+[\s._—–-]*/, "").replace(/[_.—–-]+/g, " ").replace(/\s+/g, " ").trim().toLowerCase(); }
 
+/** Creates deterministic path/ancestry roles without reading note bodies. */
 export function createContentPlan(root: TFolder, preset: StructurePreset): ContentPlanItem[] {
   const items: ContentPlanItem[] = [];
   const normalizedRootName = normalizedProjectName(root.name);
@@ -76,6 +95,7 @@ function isBackMatterNote(normalized: string): boolean {
   return /^(?:a note from elin|about the author|acknowledg(?:e)?ments?|also by|back cover blurb|newsletter|reader note|author note|connect with the author)(?:\s|$)/i.test(normalized);
 }
 
+/** Reads note metadata/body and enriches the supplied mutable plan in place. */
 export async function classifyContentPlan(vault: Vault, plan: ContentPlanItem[]): Promise<ContentPlanItem[]> {
   await Promise.all(plan.filter((item) => item.kind === "note" && item.role !== "ignore").map(async (item) => {
     const file = vault.getAbstractFileByPath(item.path); if (!(file instanceof TFile)) return; const raw = await vault.cachedRead(file);
@@ -89,6 +109,7 @@ export async function classifyContentPlan(vault: Vault, plan: ContentPlanItem[])
 }
 
 /** Applies a folder matter role only to descendants that the author has not explicitly classified. */
+/** Propagates matter roles only to descendants without explicit overrides. */
 export function applyMatterRoleInheritance(plan: ContentPlanItem[], folderPath: string, role: ContentRole, previousRole?: ContentRole): void {
   const matterRole = role === "front-matter" || role === "back-matter" ? role : undefined;
   const wasMatter = previousRole === "front-matter" || previousRole === "back-matter";
@@ -102,6 +123,11 @@ export function isPlanItemIncluded(item: ContentPlanItem, plan: ContentPlanItem[
 
 function frontmatter(markdown: string): Record<string, unknown> { const match = markdown.replace(/^\uFEFF/, "").match(/^---[\t ]*\r?\n([\s\S]*?)\r?\n(?:---|\.\.\.)[\t ]*(?:\r?\n|$)/); if (!match) return {}; try { const value = parseYaml(match[1]); if (!value || typeof value !== "object" || Array.isArray(value)) return {}; return Object.fromEntries(Object.entries(value as Record<string, unknown>).map(([key, item]) => [normalizedProjectName(key), item])); } catch { return {}; } }
 
+/**
+ * Reconstructs scanner output using nearest included structural ancestors. This
+ * is the transparent-container flattening boundary and must preserve source paths,
+ * manual order, explicit roles, and uniqueness of descendants.
+ */
 export function applyContentPlan(scan: ScannedBook, plan: ContentPlanItem[], profile: CompileProfile): ScannedBook {
   if (!plan.length) return scan;
   const byPath = new Map(plan.map((item) => [item.path, item]));

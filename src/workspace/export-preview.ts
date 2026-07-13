@@ -1,3 +1,9 @@
+/**
+ * Manuscript Compiler — final semantic preview projection.
+ *
+ * Converts PreparedCompileSession into display-only data. It reads session.book,
+ * never ContentPlan structure, so preview describes the exact exported instance.
+ */
 import type { PreparedCompileSession, PreparedExclusion } from "../compile-preparation";
 import type { CompileWarning, ManuscriptStatistics } from "../model";
 import { numberWord } from "../ordering";
@@ -6,6 +12,7 @@ import type { StructuralDisplay } from "../settings";
 export interface PreviewMatterItem { title: string; }
 export interface PreviewChapterItem { title: string; sceneCount: number; }
 export interface PreviewPartItem { title: string; chapters: PreviewChapterItem[]; }
+/** Immutable display projection derived only from PreparedCompileSession. */
 export interface ExportPreviewViewModel {
   book: PreparedCompileSession["book"];
   title: string;

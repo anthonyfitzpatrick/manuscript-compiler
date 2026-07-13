@@ -1,3 +1,8 @@
+/**
+ * Native DOCX semantic integration suite.
+ * Inspects WordprocessingML to protect styles, pagination, scene/paragraph state,
+ * Unicode, matter order, Warden exclusions, validation, and staged output.
+ */
 import assert from "node:assert/strict";
 import { readFile, readdir, rename, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";

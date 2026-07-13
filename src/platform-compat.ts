@@ -1,3 +1,10 @@
+/**
+ * Manuscript Compiler — platform capability isolation.
+ *
+ * Provides optional desktop open/reveal/file-picker bridges without leaking
+ * Electron or filesystem details into modals. ResultActionService is the main
+ * caller. Every operation fails closed when unavailable.
+ */
 import { FileSystemAdapter, Vault } from "obsidian";
 
 /**

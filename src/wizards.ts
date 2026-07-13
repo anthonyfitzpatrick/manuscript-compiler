@@ -1,3 +1,10 @@
+/**
+ * Manuscript Compiler — retained onboarding and profile setup UI.
+ *
+ * Creates compatible saved defaults and profiles for first-run/advanced users.
+ * It does not provide an alternative compile path; compilation still flows
+ * through CompileCommandService and CompilePreparationService.
+ */
 import { App, FuzzySuggestModal, Modal, Notice, Setting, TFolder } from "obsidian";
 import type ManuscriptCompilerPlugin from "./main";
 import { createDefaultProfiles, profileId } from "./profiles";
@@ -20,6 +27,7 @@ export function profileFromWizard(choices: WizardChoices): CompileProfile {
   return { ...base, id: profileId(), name: choices.name.trim() || (choices.vellum ? "Vellum" : "Standard"), manuscriptRoot: choices.manuscriptRoot, exportFolder: choices.exportFolder, chapterSource: choices.chapterSource, useParts: choices.useParts, sceneSeparator: choices.sceneSeparators ? "#" : "", includeFrontMatter: choices.includeFrontMatter, includeBackMatter: choices.includeBackMatter, referenceDocx: choices.referenceDocx, exportTarget: choices.referenceDocx ? "markdown-docx" : base.exportTarget };
 }
 
+/** Advanced profile creator; its result is persisted but never compiled directly. */
 export class ProfileWizardModal extends Modal {
   protected choices = initialChoices();
   constructor(app: App, protected readonly plugin: ManuscriptCompilerPlugin, private readonly finished?: (profile: CompileProfile) => Promise<void>) { super(app); }
@@ -33,6 +41,7 @@ export class ProfileWizardModal extends Modal {
   protected toggle(name: string, description: string, key: "useParts" | "sceneSeparators" | "includeFrontMatter" | "includeBackMatter" | "vellum"): void { new Setting(this.contentEl).setName(name).setDesc(description).addToggle((toggle) => toggle.setValue(this.choices[key]).onChange((value) => { this.choices[key] = value; })); }
 }
 
+/** One-time onboarding view that stores defaults and may launch the sample route. */
 export class FirstRunWizardModal extends Modal {
   private choices = initialChoices(); private compileSample = false;
   constructor(app: App, private readonly plugin: ManuscriptCompilerPlugin) { super(app); }

@@ -1,3 +1,9 @@
+/**
+ * Manuscript Compiler — optional frontmatter inclusion rules.
+ *
+ * Evaluates persisted equality filters against parser-normalised metadata.
+ * Called by ManuscriptParser. Explicit workspace inclusion remains authoritative.
+ */
 import type { DocumentMetadata } from "./model";
 import type { MetadataFilterRule, MetadataOperator } from "./settings";
 export interface FilterOperator { id: MetadataOperator; matches(actual: unknown, expected: string): boolean; }
@@ -6,6 +12,7 @@ const OPERATORS: Record<MetadataOperator, FilterOperator> = {
   equals: { id: "equals", matches: (actual, expected) => normalize(actual) === normalize(expected) },
   "not-equals": { id: "not-equals", matches: (actual, expected) => normalize(actual) !== normalize(expected) }
 };
+/** Stateless evaluator; matching never mutates document metadata or filter rules. */
 export class MetadataFilterEngine {
   matches(metadata: DocumentMetadata, rules: MetadataFilterRule[]): { included: boolean; failedRule?: MetadataFilterRule } {
     for (const rule of rules) { const actual = metadata.values[normalizeKey(rule.field)]; const operator = OPERATORS[rule.operator]; if (!operator || !operator.matches(actual, rule.value)) return { included: false, failedRule: rule }; }

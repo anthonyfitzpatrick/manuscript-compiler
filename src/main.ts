@@ -1,3 +1,15 @@
+/**
+ * Manuscript Compiler — plugin composition root.
+ *
+ * Loads and repairs settings, constructs the application services, registers
+ * commands and File Explorer integration, and owns plugin shutdown. Compile
+ * logic deliberately lives in CompileCommandService and the workspace
+ * controller so entry points cannot acquire different preparation paths.
+ *
+ * Called by Obsidian. Calls profile repair, UI registration, command/export/
+ * history/action services, onboarding, and conservative output cleanup.
+ * Invariant: application services are composed here once and then delegated to.
+ */
 import { Notice, Plugin, TFolder } from "obsidian";
 import { activeProfile, repairSettings } from "./profiles";
 import { DEFAULT_SETTINGS, type CompileProfile, type ManuscriptCompilerSettings } from "./settings";
@@ -16,7 +28,7 @@ import { FirstRunWizardModal } from "./wizards";
 import { FolderSuggestModal, ManuscriptCompilerSettingTab, showError } from "./ui";
 import { addCompileFolderMenuItem } from "./folder-context-menu";
 
-/** Plugin composition root: lifecycle, settings persistence, service construction, and command registration. */
+/** Obsidian-owned plugin instance and composition root for one enabled lifecycle. */
 export default class ManuscriptCompilerPlugin extends Plugin {
   settings: ManuscriptCompilerSettings = { ...DEFAULT_SETTINGS };
   private readonly operations = new OperationStateController();
@@ -25,6 +37,7 @@ export default class ManuscriptCompilerPlugin extends Plugin {
   private exporter!: ExportCoordinator;
   private commands!: CompileCommandService;
 
+  /** Loads durable state, composes services once, and registers all Obsidian entry points. */
   async onload(): Promise<void> {
     await this.loadSettings();
     this.composeServices();
@@ -37,8 +50,10 @@ export default class ManuscriptCompilerPlugin extends Plugin {
     });
   }
 
+  /** Cancels work that has not crossed its non-cancellable file-finalisation boundary. */
   onunload(): void { this.operations.cancel(); }
 
+  /** Repairs persisted data idempotently before any service is allowed to read it. */
   async loadSettings(): Promise<void> {
     const raw = await this.loadData() as Partial<ManuscriptCompilerSettings> | null;
     const loaded = Object.assign({}, DEFAULT_SETTINGS, raw);
@@ -50,17 +65,29 @@ export default class ManuscriptCompilerPlugin extends Plugin {
     if (this.settings.configurationWarnings.length > previousWarnings) new Notice("Manuscript Compiler repaired invalid settings. Run Validate Manuscript for details.", 8000);
   }
 
+  /** Persists the complete repaired settings object through Obsidian's plugin storage. */
   async saveSettings(): Promise<void> { await this.saveData(this.settings); }
+  /** Returns the repaired active profile, including compatibility fallback rules. */
   getActiveProfile(): CompileProfile { return activeProfile(this.settings); }
+  /** Opens a new guided workspace without choosing a root on the user's behalf. */
   openCompiler(): void { new SimpleCompileModal(this.app, this).open(); }
+  /** Opens the same workspace with the exact File Explorer folder selected as root. */
   async openCompilerForFolder(folder: TFolder): Promise<void> { new SimpleCompileModal(this.app, this, folder).open(); }
+  /** Opens a verified result through platform capabilities or presents an author-facing failure. */
   async openExport(path: string): Promise<void> { if (!await this.actions.openExport(path)) showError(new Error("Obsidian could not open this export automatically. Open it from your file manager.")); }
+  /** Clears both history and associated compile logs through their persistence service. */
   async clearHistory(): Promise<void> { await this.history.clearHistory(); }
+  /** Compatibility facade retained for callers; all work is delegated to CompileCommandService. */
   async compileRequest(request: SimpleCompileRequest): Promise<void> { await this.commands.compileRequest(request); }
+  /** Supplies the workspace with an authoritative prepared semantic session. */
   async prepareCompileRequest(request: SimpleCompileRequest, contentPlan?: ContentPlanItem[], signal?: AbortSignal): Promise<PreparedCompileSession> { return this.commands.prepareGuided(request, contentPlan, signal); }
+  /** Rechecks a session's source fingerprint without mutating or rebuilding it. */
   async preparedSessionIsCurrent(session: PreparedCompileSession): Promise<boolean> { return this.commands.preparedSessionIsCurrent(session); }
+  /** Exports the exact prepared session and converts coordinator failure into a UI-safe exception. */
   async exportPreparedSession(session: PreparedCompileSession): Promise<void> { const result = await this.commands.exportPreparedSession(session); if (result.status === "failed") throw new Error(result.error); }
+  /** Routes onboarding/sample compilation through the production command service. */
   async compileSampleManuscript(): Promise<void> { await this.commands.compileSampleManuscript(); }
+  /** Retains the historical plugin facade while enforcing the unified explicit-root route. */
   async compileFolder(folder: TFolder, profile?: CompileProfile, contentPlan: ContentPlanItem[] = [], route: CompileRoute = "legacy-profile"): Promise<void> { await this.commands.compileFolder(folder, profile, contentPlan, route); }
 
   private composeServices(): void {

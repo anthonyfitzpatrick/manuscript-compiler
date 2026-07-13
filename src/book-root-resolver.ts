@@ -1,3 +1,10 @@
+/**
+ * Manuscript Compiler — central book-root policy.
+ *
+ * Explicit roots are returned exactly and never replaced by ancestors or
+ * children. Legacy commands may infer from configuration or active-note ancestry.
+ * The root names the Book but is never emitted as a structural node.
+ */
 import { TFile, TFolder, type Vault } from "obsidian";
 
 const BOOK_STRUCTURE_PATTERN = /^(?:part\b|(?:ebook |print )?(?:front|back) matter$|manuscript$|drafts?$|chapters$)/i;

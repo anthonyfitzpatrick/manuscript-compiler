@@ -1,3 +1,9 @@
+/**
+ * Manuscript Compiler — persistent Contents presentation state.
+ *
+ * Stores scroll, focus identity, and collapsed folders independently of compile
+ * data. One modal owns one instance; changing roots intentionally resets it.
+ */
 import type { ContentPlanItem } from "../content-plan";
 
 export type ContentsControl = "include" | "role" | "move-up" | "move-down" | "toggle";
@@ -8,6 +14,7 @@ export interface ContentsFocus {
 }
 
 /** UI-only state that must survive a Contents-step DOM rebuild. */
+/** Mutable view-only state retained for one modal lifetime. */
 export class ContentsTreeViewState {
   scrollTop = 0;
   focus?: ContentsFocus;

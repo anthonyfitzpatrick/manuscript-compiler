@@ -1,3 +1,10 @@
+/**
+ * Manuscript Compiler — semantic compilation facade.
+ *
+ * Joins parsing with deterministic statistics, warning analysis, and Markdown
+ * generation. CompilePreparationService owns this facade; exporters consume its
+ * finished Book/result and never ask it to parse again.
+ */
 import { Vault } from "obsidian";
 import { MarkdownGenerator } from "./markdown-generator";
 import type { Book, CompileResult } from "./model";
@@ -8,12 +15,19 @@ import type { ScannedBook } from "./types";
 import { WarningEngine } from "./warnings";
 import { throwIfCancelled } from "./cancellation";
 
+/** Vault-bound facade used only during authoritative preparation. */
 export class ManuscriptCompiler {
   private readonly parser: ManuscriptParser; private readonly generator = new MarkdownGenerator();
   private readonly statistics = new StatisticsEngine(); private readonly warnings = new WarningEngine();
   constructor(vault: Vault) { this.parser = new ManuscriptParser(vault); }
   readonly timings = { parseDurationMs: 0, filterDurationMs: 0, generationDurationMs: 0 };
+  /** Parses the authoritative scan once; the resulting Book is retained by the prepared session. */
   async buildModel(scan: ScannedBook, profile: CompileProfile, signal?: AbortSignal): Promise<Book> { const started = performance.now(); const book = await this.parser.parse(scan, profile, signal); this.timings.parseDurationMs = performance.now() - started; this.timings.filterDurationMs = this.parser.filterDurationMs; return book; }
+  /**
+   * Derives deterministic statistics, warnings, and optional Markdown from an
+   * existing Book. It must not rescan or replace that object because preview and
+   * native DOCX export depend on object identity.
+   */
   compile(book: Book, profile: CompileProfile, outputPath: string, wordsPerMinute: number, compileDate = new Date(), signal?: AbortSignal): CompileResult {
     throwIfCancelled(signal);
     const statistics = this.statistics.calculate(book, profile, wordsPerMinute);

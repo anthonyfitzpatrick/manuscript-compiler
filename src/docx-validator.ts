@@ -1,9 +1,18 @@
+/**
+ * Manuscript Compiler — focused DOCX package validation.
+ *
+ * Checks the minimum ZIP and WordprocessingML structure before any save can be
+ * trusted. Called by DocxExporter tests and SafeBinaryWriter before and after
+ * replacement. This is intentionally not a full OOXML conformance validator.
+ */
 import { unzipSync } from "fflate";
 
+/** Reusable structural verdict suitable for technical logs and tests. */
 export interface DocxValidationResult { valid: boolean; errors: string[]; }
 
 const REQUIRED = ["[Content_Types].xml", "_rels/.rels", "word/document.xml", "word/styles.xml"] as const;
 
+/** Performs read-only minimum package validation and never throws for bad bytes. */
 export function validateDocxBytes(bytes: Uint8Array): DocxValidationResult {
   const errors: string[] = [];
   if (bytes.length < 4 || bytes[0] !== 0x50 || bytes[1] !== 0x4b) return { valid: false, errors: ["The generated DOCX is not a readable ZIP package."] };

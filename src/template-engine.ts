@@ -1,4 +1,11 @@
+/**
+ * Manuscript Compiler — constrained variable expansion.
+ *
+ * Used by output naming and retained custom heading templates. Unknown variables
+ * resolve safely; this is interpolation, not a script runtime.
+ */
 export type TemplateVariables = Record<string, string | number | undefined>;
+/** Stateless safe interpolator with no evaluation or side effects. */
 export class TemplateEngine {
   render(template: string, variables: TemplateVariables): string {
     const exact = new Map(Object.entries(variables));

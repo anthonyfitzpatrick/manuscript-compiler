@@ -1,3 +1,11 @@
+/**
+ * Manuscript Compiler — sole export execution coordinator.
+ *
+ * Accepts PreparedCompileSession, checks fingerprints and overwrite consent,
+ * reports progress, invokes exporters, records terminal outcomes, and exposes
+ * supported result actions. Called by command/workspace services. It never
+ * scans, parses, creates a content plan, or replaces session.book.
+ */
 import { FileSystemAdapter, Notice, type App } from "obsidian";
 import { CompilationCancelledError, throwIfCancelled } from "./cancellation";
 import { calculateSourceFingerprint, compileInputSignature, createPreparedExportRequest, type PreparedCompileSession } from "./compile-preparation";
@@ -13,12 +21,22 @@ import type { ManuscriptCompilerSettings } from "./settings";
 import { CompilationProgressModal, CompileReportModal, ConfirmOverwriteModal } from "./ui";
 import { WarningEngine } from "./warnings";
 
+/** Truthful aggregate outcome; partial multi-format results remain explicit. */
 export interface ExportExecutionResult { status: "success" | "failed" | "cancelled"; outputFiles: string[]; report?: CompileResult; error?: string; }
 export interface ExportExecutionOptions { showResult?: boolean; }
 
+/**
+ * Application-scoped export owner composed in main.ts. Global OperationState
+ * prevents overlapping exports. Cancellation is honoured until SafeBinaryWriter
+ * announces its commit boundary; history/result UI follow verified completion.
+ */
 export class ExportCoordinator {
   constructor(private readonly app: App, private readonly settings: () => ManuscriptCompilerSettings, private readonly saveSettings: () => Promise<void>, private readonly operations: OperationStateController, private readonly history: CompileHistoryService, private readonly actions: ResultActionService) {}
 
+  /**
+   * Exports the supplied session without rebuilding it. Throws no raw stack to UI;
+   * failures become author-facing results and corresponding history records.
+   */
   async exportPreparedSession(session: PreparedCompileSession, options: ExportExecutionOptions = {}): Promise<ExportExecutionResult> {
     const operation = this.operations.begin("exporting");
     if (!operation) throw new Error("A manuscript preparation or compilation is already running.");

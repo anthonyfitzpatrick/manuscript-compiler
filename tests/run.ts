@@ -1,3 +1,9 @@
+/**
+ * Core and release-regression suite.
+ * Protects parsing, cleaning, inference, migration, prepared-session identity,
+ * route unification, workspace state, real-vault structure, privacy, and package
+ * invariants from drifting independently.
+ */
 import assert from "node:assert/strict";
 import { cleanManuscriptContent, ContentCleaningPipeline, removeCallouts, removeDataviewBlocks, removeHtmlComments, removeObsidianComments, removeProjectMetadataRegions, stripInternalLinks, stripYamlFrontmatter } from "../src/filters";
 import { MarkdownGenerator } from "../src/markdown-generator";

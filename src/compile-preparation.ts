@@ -1,3 +1,15 @@
+/**
+ * Manuscript Compiler — authoritative preparation boundary.
+ *
+ * Vault → scanner → content plan → parser/cleaner → semantic Book
+ *       → statistics/warnings/fingerprints → PreparedCompileSession
+ *
+ * Every preview, validation, Markdown export, and DOCX export crosses this
+ * boundary. Called by CompileCommandService; calls VaultScanner, content-plan
+ * rewriting, ManuscriptCompiler, and output-path calculation. Scanner-to-parser
+ * or scanner-to-export shortcuts are forbidden because they bypass author roles
+ * and safe exclusions.
+ */
 import { TFile, TFolder, type Vault } from "obsidian";
 import { ManuscriptCompiler } from "./compiler";
 import { applyContentPlan, classifyContentPlan, createContentPlan, isPlanItemIncluded, type ContentPlanItem } from "./content-plan";
@@ -9,9 +21,14 @@ import { applyContentPlanAuthority, applyWorkspacePlanAuthority, inferStructureP
 import type { ScannedBook } from "./types";
 import { VaultScanner } from "./vault-scanner";
 
+/** Prose-free explanation of an item absent from the final Book. */
 export interface PreparedExclusion { path: string; name: string; reason: string; }
 export type CompilePurpose = "preview" | "compile" | "validation";
 export type CompileRoute = "guided" | "current-book" | "selected-folder" | "legacy-profile" | "sample" | "validation";
+/**
+ * Route-neutral input accepted by the authoritative service. Guided callers
+ * provide an edited plan; compatibility routes omit it and receive safe inference.
+ */
 export interface CompilePreparationRequest {
   manuscriptRoot: string;
   profile: CompileProfile;
@@ -21,6 +38,12 @@ export interface CompilePreparationRequest {
   purpose: CompilePurpose;
   route: CompileRoute;
 }
+/**
+ * Immutable-in-practice snapshot owned by its requesting command/workspace.
+ * Consumers retain references rather than mutating or reconstructing fields.
+ * `book` is the exact object used by preview and export; fingerprints bind that
+ * object to both source files and author-controlled inputs.
+ */
 export interface PreparedCompileSession {
   request: SimpleCompileRequest;
   contentPlan: ContentPlanItem[];
@@ -40,13 +63,23 @@ export interface PreparedCompileSession {
   route: CompileRoute;
 }
 
+/**
+ * Sole root-to-semantic-Book service. Instances are vault-bound and stateless
+ * between calls. Preparation performs reads and computation but no output writes.
+ * AbortSignal cancellation propagates through parsing before a session is returned.
+ */
 export class CompilePreparationService {
   constructor(private readonly vault: Vault, private readonly baseProfile: CompileProfile, private readonly wordsPerMinute: number) {}
 
+  /** Prepares an edited four-step workspace request without altering its plan. */
   async prepare(request: SimpleCompileRequest, contentPlan: ContentPlanItem[], signal?: AbortSignal): Promise<PreparedCompileSession> {
     return this.prepareAuthoritative({ manuscriptRoot: request.manuscriptRoot, profile: this.baseProfile, structurePreset: request.structurePreset, contentPlan, simpleRequest: request, purpose: "preview", route: "guided" }, signal);
   }
 
+  /**
+   * Runs the complete production preparation pipeline for every route. Throws for
+   * an invalid root/read/parse failure and never returns a partially prepared session.
+   */
   async prepareAuthoritative(request: CompilePreparationRequest, signal?: AbortSignal): Promise<PreparedCompileSession> {
     const folder = this.vault.getAbstractFileByPath(request.manuscriptRoot);
     if (!(folder instanceof TFolder)) throw new Error("The manuscript folder does not exist.");
@@ -95,6 +128,10 @@ export class CompilePreparationService {
   }
 }
 
+/**
+ * Uses paths plus mtime/size for a lightweight stale-preview guard, falling back
+ * to content hashing only when an adapter supplies no file statistics.
+ */
 export async function calculateSourceFingerprint(vault: Vault, sourcePaths: string[]): Promise<string> {
   const entries: string[] = [];
   for (const path of [...sourcePaths].sort()) {
@@ -110,10 +147,13 @@ export async function calculateSourceFingerprint(vault: Vault, sourcePaths: stri
   return hash(entries.join("\n"));
 }
 
+/** Identity assertion used by regression tests; semantic equality is insufficient. */
 export function sessionMatchesBook(session: PreparedCompileSession, book: Book): boolean { return session.book === book; }
+/** Creates exporter input while retaining `session.book` by reference. */
 export function createPreparedExportRequest(session: PreparedCompileSession, outputPath: string, keepTemporaryMarkdown: boolean, signal?: AbortSignal, onCommit?: () => void, onProgress?: (stage: ExportProgressStage) => void): ExportRequest {
   return { book: session.book, profile: session.profile, markdown: session.result.markdown, outputPath, variables: session.variables, keepTemporaryMarkdown, signal, onCommit, onProgress };
 }
+/** Fingerprints all author inputs that can change model or output preparation. */
 export function compileInputSignature(request: SimpleCompileRequest, plan: ContentPlanItem[]): string {
   return hash(JSON.stringify({
     root: request.manuscriptRoot, preset: request.structurePreset, front: request.includeFrontMatter,

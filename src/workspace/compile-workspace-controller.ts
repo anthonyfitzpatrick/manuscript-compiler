@@ -1,3 +1,10 @@
+/**
+ * Manuscript Compiler — DOM-independent workspace state controller.
+ *
+ * Owns author mutations, session invalidation, duplicate-operation prevention,
+ * cancellation, and export dispatch. The modal renders state but does not own
+ * compiler logic. Model/output changes invalidate the prepared session once.
+ */
 import type { PreparedCompileSession } from "../compile-preparation";
 import { applyMatterRoleInheritance, type ContentPlanItem, type ContentRole } from "../content-plan";
 import { OperationStateController } from "../operation-state";
@@ -7,12 +14,18 @@ import type { StructuralDisplay, StructurePreset } from "../settings";
 import { includedNoteCount, moveSibling, setItemIncluded, setItemRole } from "./content-tree";
 import type { CompileWorkspaceState, CompileWorkspaceStep, WorkspaceError } from "./workspace-types";
 
+/** Injected service boundary; implementations retain prepared Book identity. */
 export interface CompileWorkspaceServices {
   prepare(request: SimpleCompileRequest, plan: ContentPlanItem[], signal: AbortSignal): Promise<PreparedCompileSession>;
   sessionIsCurrent(session: PreparedCompileSession): Promise<boolean>;
   export(session: PreparedCompileSession): Promise<void>;
 }
 
+/**
+ * Modal-scoped state owner. One controller serves one workspace lifetime and one
+ * active operation. Closing cancels cancellable work unless export was detached
+ * for safe finalisation.
+ */
 export class CompileWorkspaceController {
   readonly state: CompileWorkspaceState;
   private readonly operations = new OperationStateController();
@@ -25,13 +38,18 @@ export class CompileWorkspaceController {
     this.state = { step: "manuscript", request, contentPlan: [], formatting, scannedRoot: "", preparationStatus: "idle", exportStatus: "idle" };
   }
 
+  /** Changes visible step and cancels preparation when leaving Export. */
   setStep(step: CompileWorkspaceStep): void {
     if (step !== "export" && this.state.preparationStatus === "preparing") this.cancelActiveOperation();
     this.state.step = step;
   }
+  /** Replaces the authoritative root and discards scan-dependent choices. */
   setRoot(root: string): void { this.update(() => { this.state.request.manuscriptRoot = root.trim(); this.state.contentPlan = []; this.state.scannedRoot = ""; }); }
+  /** Changes inference policy; a new scan is required before proceeding. */
   setPreset(preset: StructurePreset): void { this.update(() => { this.state.request.structurePreset = preset; this.state.contentPlan = []; this.state.scannedRoot = ""; }); }
+  /** Takes ownership of a freshly detected mutable plan for the exact root. */
   setDetectedPlan(root: string, plan: ContentPlanItem[]): void { this.update(() => { this.state.request.manuscriptRoot = root; this.state.contentPlan = plan; this.state.scannedRoot = root; }); }
+  /** Records an explicit role and propagates matter only to untouched children. */
   setRole(path: string, role: ContentRole): void {
     this.update(() => {
       const item = this.state.contentPlan.find((candidate) => candidate.path === path);
@@ -40,6 +58,7 @@ export class CompileWorkspaceController {
       if (item?.kind === "folder") applyMatterRoleInheritance(this.state.contentPlan, path, role, previousRole);
     });
   }
+  /** Toggles effective inclusion while preserving a folder's child snapshot. */
   setIncluded(path: string, included: boolean): void {
     this.update(() => {
       const item = this.state.contentPlan.find((candidate) => candidate.path === path);
@@ -48,15 +67,20 @@ export class CompileWorkspaceController {
       if (item?.kind === "folder") this.restoreChildren(path);
     });
   }
+  /** Moves one sibling; the resulting order is authoritative for compilation. */
   moveItem(path: string, direction: -1 | 1): void { this.update(() => { this.state.contentPlan = moveSibling(this.state.contentPlan, this.state.request.manuscriptRoot, path, direction); }); }
+  /** Explicitly includes all items, converting inferred exclusions to safe roles. */
   includeAll(): void { this.update(() => this.state.contentPlan.forEach((item) => { item.included = true; item.userOverride = true; if (item.role === "ignore") item.role = item.kind === "folder" ? "transparent" : "scene"; })); }
+  /** Explicitly excludes notes without altering folder structure or order. */
   excludeAllNotes(): void { this.update(() => this.state.contentPlan.filter((item) => item.kind === "note").forEach((item) => { item.included = false; item.userOverride = true; })); }
+  /** Applies supported custom formatting and invalidates the prepared output. */
   setFormatting(change: Partial<DocxFormatting>): void {
     this.update(() => {
       Object.assign(this.state.formatting, change);
       this.state.request.docxPreset = "custom";
     });
   }
+  /** Applies deterministic preset values; Custom retains explicit values. */
   setDocxPreset(value: SimpleCompileRequest["docxPreset"]): void {
     this.update(() => {
       this.state.request.docxPreset = value;
@@ -68,21 +92,34 @@ export class CompileWorkspaceController {
       }
     });
   }
+  /** Selects literal scene-break text; an empty string means styled blank spacing. */
   setSceneSeparator(value: string): void { this.update(() => { if (this.state.request.custom) this.state.request.custom.sceneSeparator = value; this.state.request.docxPreset = "custom"; }); }
+  /** Changes semantic heading display without altering Part/Chapter identity. */
   setDisplay(kind: "part" | "chapter", value: StructuralDisplay): void { this.update(() => { if (kind === "part") this.state.request.partDisplay = value; else this.state.request.chapterDisplay = value; this.state.request.docxPreset = "custom"; }); }
+  /** Enables or disables the genuine Word TOC field. */
   setTableOfContents(value: boolean): void { this.update(() => { this.state.request.tableOfContents = value; this.state.request.docxPreset = "custom"; }); }
+  /** Replaces body-heading aliases used during note cleaning. */
   setBodyAliases(values: string[]): void { this.update(() => { if (this.state.request.custom) this.state.request.custom.bodySectionAliases = values; }); }
+  /** Controls final matter-section inclusion without rewriting individual roles. */
   setMatter(kind: "front" | "back", included: boolean): void { this.update(() => { if (kind === "front") this.state.request.includeFrontMatter = included; else this.state.request.includeBackMatter = included; }); }
+  /** Updates title-page variables that affect prepared DOCX output. */
   setVariable(kind: "BookTitle" | "Author", value: string): void { this.update(() => { if (this.state.request.custom?.variables) this.state.request.custom.variables[kind] = value; }); }
+  /** Updates validated vault destination inputs and invalidates preview metadata. */
   setOutput(folder: string, filename: string): void { this.update(() => { this.state.request.exportFolder = folder.trim(); this.state.request.outputFilename = filename; }); }
+  /** Changes only a post-success action preference; it does not rebuild the Book. */
   setDownloadAfterExport(value: boolean): void { this.state.request.downloadAfterExport = value; }
 
+  /** Returns author-facing blockers for the current step without side effects. */
   canAdvance(): string[] {
     if (this.state.step === "manuscript" && !this.state.request.manuscriptRoot) return ["Choose a manuscript folder."];
     if (this.state.step === "contents" && includedNoteCount(this.state.contentPlan, this.state.request.manuscriptRoot) === 0) return ["Include at least one manuscript note."];
     return [];
   }
 
+  /**
+   * Deduplicates preparation clicks and caches a successful session. `force`
+   * rebuilds stale preview state; failures leave the workspace usable.
+   */
   prepare(force = false): Promise<PreparedCompileSession | undefined> {
     if (this.preparationPromise) return this.preparationPromise;
     if (!force && this.state.preparedSession) return Promise.resolve(this.state.preparedSession);
@@ -112,6 +149,10 @@ export class CompileWorkspaceController {
     return this.preparationPromise;
   }
 
+  /**
+   * Verifies source freshness then delegates the exact prepared session. Duplicate
+   * clicks share one promise. False means the modal should remain open.
+   */
   export(): Promise<boolean> {
     if (this.exportPromise) return this.exportPromise;
     const session = this.state.preparedSession;
@@ -134,14 +175,18 @@ export class CompileWorkspaceController {
     return this.exportPromise;
   }
 
+  /** Cancels cancellable work and removes all derived preview state. */
   invalidatePreparedSession(message = ""): void {
     this.cancelActiveOperation();
     this.state.preparedSession = undefined;
     this.state.preparationStatus = "idle";
     this.state.error = message ? workspaceError(message) : undefined;
   }
+  /** Requests cancellation if the active operation has not begun finalisation. */
   cancelActiveOperation(): boolean { return this.operations.cancel(); }
+  /** Transfers finalising export ownership beyond modal close. */
   detachExport(): void { this.detachedExport = true; }
+  /** Releases modal ownership and cancels work that remains safely cancellable. */
   close(): void { if (!this.detachedExport) this.cancelActiveOperation(); }
   private snapshotChildren(path: string): void { this.childSnapshots.set(path, new Map(this.state.contentPlan.filter((candidate) => candidate.path.startsWith(`${path}/`)).map((child) => [child.path, { included: child.included, role: child.role, userOverride: child.userOverride }]))); }
   private restoreChildren(path: string): void { this.childSnapshots.get(path)?.forEach((snapshot, childPath) => { const child = this.state.contentPlan.find((candidate) => candidate.path === childPath); if (child) { child.included = snapshot.included; child.role = snapshot.role; child.userOverride = snapshot.userOverride; } }); }

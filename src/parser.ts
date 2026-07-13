@@ -1,3 +1,13 @@
+/**
+ * Manuscript Compiler — semantic parser.
+ *
+ * Reads a content-plan-rewritten scan, parses metadata, cleans notes, and builds
+ * the Book/Part/Chapter/Scene model. Called by ManuscriptCompiler; calls content
+ * cleaning, metadata filters, and ordering.
+ *
+ * Invariants: metadata never becomes prose, zero numbering is never invented,
+ * and cancellation stops queued reads rather than returning a partial Book.
+ */
 import { parseYaml, TFile, Vault } from "obsidian";
 import { ContentCleaningPipeline } from "./filters";
 import { MetadataFilterEngine, normalizeKey } from "./metadata-filter";
@@ -7,12 +17,20 @@ import type { CompileOptions, CompileProfile } from "./settings";
 import type { ScannedBook, ScannedChapter, ScannedPart } from "./types";
 import { throwIfCancelled } from "./cancellation";
 
+/** Vault-bound parser; each parse call owns caches, warnings, and cancellation. */
 export class ManuscriptParser {
   private readonly cleaner = new ContentCleaningPipeline();
   private readonly metadataFilter = new MetadataFilterEngine();
   filterDurationMs = 0;
   constructor(private readonly vault: Vault) {}
 
+  /**
+   * Builds one semantic Book from an already authoritative scan.
+   *
+   * File reads may run concurrently, but the returned hierarchy and ordering are
+   * deterministic. Cancellation rejects the whole parse; callers must never use
+   * partially populated caches as a manuscript.
+   */
   async parse(scan: ScannedBook, settings: CompileOptions, signal?: AbortSignal): Promise<Book> {
     const warnings = [...scan.warnings];
     if (scan.hierarchyDiagnostics?.length) console.warn("Manuscript Compiler hierarchy diagnostics", scan.hierarchyDiagnostics);

@@ -1,3 +1,8 @@
+/**
+ * Filesystem-to-Obsidian fixture adapter for integration tests. It constructs
+ * TFolder/TFile-shaped trees and a readable fake vault without replacing
+ * production preparation or parsing code.
+ */
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import type { ScannedBook, ScannedChapter, ScannedPart } from "../src/types";

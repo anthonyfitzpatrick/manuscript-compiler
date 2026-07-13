@@ -1,8 +1,15 @@
+/**
+ * Manuscript Compiler — semantic Markdown rendering.
+ *
+ * Produces deterministic Markdown from the same final Book used for DOCX. It
+ * never infers structure from source Markdown and must preserve semantic order.
+ */
 import type { Book, Chapter, ManuscriptDocument, ManuscriptStatistics, Part } from "./model";
 import type { CompileProfile } from "./settings";
 import { TemplateEngine, type TemplateVariables } from "./template-engine";
 import { numberWord } from "./ordering";
 
+/** Stateless final-Book renderer; output is deterministic for a supplied date. */
 export class MarkdownGenerator {
   private readonly templates = new TemplateEngine();
   generate(book: Book, profile: CompileProfile, statistics: ManuscriptStatistics, compileDate = new Date()): string {

@@ -1,3 +1,7 @@
+/**
+ * Informational large-manuscript benchmark and deterministic correctness check.
+ * Timing is reported, not treated as a universal hardware promise.
+ */
 import { MarkdownGenerator } from "../src/markdown-generator";
 import { ManuscriptParser } from "../src/parser";
 import { createDefaultProfiles } from "../src/profiles";

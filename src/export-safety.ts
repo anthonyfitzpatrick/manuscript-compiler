@@ -1,3 +1,10 @@
+/**
+ * Manuscript Compiler — final export eligibility policy.
+ *
+ * Converts prepared warnings and DOCX readiness into one blocking decision.
+ * Preview and export coordination share this pure policy so UI code cannot
+ * accidentally bypass output-safety errors.
+ */
 import type { CompileWarning } from "./model";
 import type { ExportTarget } from "./settings";
 

@@ -1,3 +1,4 @@
+/** Minimal semantic Book factory shared by DOCX validator/writer tests. */
 import type { Book, ManuscriptDocument } from "../src/model";
 import { createManuscriptDocx } from "../src/docx";
 import { createDefaultProfiles } from "../src/profiles";

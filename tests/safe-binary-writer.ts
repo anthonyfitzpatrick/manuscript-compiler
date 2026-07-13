@@ -1,3 +1,8 @@
+/**
+ * SafeBinaryWriter failure-injection suite.
+ * Fake backends prove destination preservation, rollback, cancellation boundaries,
+ * cleanup, and critical recovery guidance without real disk failures.
+ */
 import assert from "node:assert/strict";
 import { createTestDocx } from "./docx-test-fixture";
 import { validateDocxBytes } from "../src/docx-validator";

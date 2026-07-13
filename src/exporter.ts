@@ -1,3 +1,11 @@
+/**
+ * Manuscript Compiler — format-specific exporters.
+ *
+ * MarkdownExporter writes prepared Markdown through vault APIs. DocxExporter
+ * generates semantic DOCX bytes and delegates destination mutation to
+ * SafeBinaryWriter. Called only by ExportCoordinator. Exporters never scan,
+ * build Books, update history, or open result UI.
+ */
 import { FileSystemAdapter, normalizePath, TFile, Vault } from "obsidian";
 import type { Book } from "./model";
 import { createManuscriptDocx } from "./docx";
@@ -9,10 +17,17 @@ import { SafeBinaryWriter, type SafeSaveStage } from "./safe-binary-writer";
 import { validateVaultPath } from "./output-path";
 
 export type ExportProgressStage = "Creating DOCX" | "Checking DOCX" | SafeSaveStage;
+/**
+ * Immutable-in-practice exporter input built from PreparedCompileSession. `book`
+ * must be retained by identity; exporters may read it but must not mutate it.
+ */
 export interface ExportRequest { book: Book; profile: CompileProfile; markdown: string; outputPath: string; variables: TemplateVariables; keepTemporaryMarkdown?: boolean; signal?: AbortSignal; onProgress?: (stage: ExportProgressStage) => void; onCommit?: () => void; }
+/** Verified per-format outcome consumed by ExportCoordinator. */
 export interface ExportResult { format: string; path: string; file?: TFile; stdout?: string; stderr?: string; }
+/** Format adapter contract; implementations perform output only, never orchestration. */
 export interface Exporter { readonly format: string; export(request: ExportRequest): Promise<ExportResult>; }
 
+/** Vault-API Markdown writer used for final output and diagnostic reports. */
 export class MarkdownExporter implements Exporter {
   readonly format = "markdown"; private readonly templates = new TemplateEngine();
   constructor(private readonly vault: Vault) {}
@@ -26,6 +41,7 @@ export class MarkdownExporter implements Exporter {
   async ensureFolder(path: string): Promise<void> { const parts = normalizePath(path).split("/"); for (let index = 1; index <= parts.length; index += 1) { const current = parts.slice(0, index).join("/"); if (!this.vault.getAbstractFileByPath(current)) await this.vault.createFolder(current); } }
 }
 
+/** Semantic DOCX generator whose only save path is SafeBinaryWriter. */
 export class DocxExporter implements Exporter {
   readonly format = "docx";
   constructor(private readonly vault: Vault, private readonly markdownExporter: MarkdownExporter, private readonly binaryWriter = new SafeBinaryWriter(vault)) {}

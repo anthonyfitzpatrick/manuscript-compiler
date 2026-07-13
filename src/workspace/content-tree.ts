@@ -1,5 +1,12 @@
+/**
+ * Manuscript Compiler — pure Contents-tree mutations and projections.
+ *
+ * Keeps inclusion propagation, overrides, sibling order, and visible depth
+ * testable without a DOM. Parent disable/enable preserves saved child choices.
+ */
 import type { ContentPlanItem, ContentRole } from "../content-plan";
 
+/** Resolves local inclusion through every ancestor up to the authoritative root. */
 export function isEffectivelyIncluded(item: ContentPlanItem, plan: ContentPlanItem[], root: string): boolean {
   if (!item.included || item.role === "ignore") return false;
   const byPath = new Map(plan.map((candidate) => [candidate.path, candidate]));
@@ -19,6 +26,7 @@ function effectivelyIncluded(item: ContentPlanItem, byPath: ReadonlyMap<string, 
   return true;
 }
 
+/** Applies explicit inclusion and enables ancestors needed to make it effective. */
 export function setItemIncluded(plan: ContentPlanItem[], root: string, path: string, included: boolean): void {
   const item = plan.find((candidate) => candidate.path === path);
   if (!item) return;
@@ -35,6 +43,7 @@ export function setItemIncluded(plan: ContentPlanItem[], root: string, path: str
   if (included) enableAncestors(plan, root, item.parentPath);
 }
 
+/** Records an explicit role without silently rewriting descendant role choices. */
 export function setItemRole(plan: ContentPlanItem[], root: string, path: string, role: ContentRole): void {
   const item = plan.find((candidate) => candidate.path === path);
   if (!item) return;
@@ -45,6 +54,7 @@ export function setItemRole(plan: ContentPlanItem[], root: string, path: string,
   if (item.included) enableAncestors(plan, root, item.parentPath);
 }
 
+/** Swaps sibling order only; hierarchy and descendant ordering remain unchanged. */
 export function moveSibling(plan: ContentPlanItem[], root: string, path: string, direction: -1 | 1): ContentPlanItem[] {
   const item = plan.find((candidate) => candidate.path === path);
   if (!item) return plan;
@@ -58,6 +68,7 @@ export function moveSibling(plan: ContentPlanItem[], root: string, path: string,
   return orderedPlan(plan, root);
 }
 
+/** Flattens the tree in authoritative sibling order without changing parent paths. */
 export function orderedPlan(plan: ContentPlanItem[], root: string): ContentPlanItem[] {
   const children = new Map<string, ContentPlanItem[]>();
   plan.forEach((item) => children.set(item.parentPath, [...(children.get(item.parentPath) ?? []), item]));
@@ -77,6 +88,7 @@ export function includedNoteCount(plan: ContentPlanItem[], root: string): number
   return plan.filter((item) => item.kind === "note" && effectivelyIncluded(item, byPath, root)).length;
 }
 
+/** Produces tree rows and effective inclusion; collapse remains separate view state. */
 export function visibleRows(plan: ContentPlanItem[], root: string): Array<{ item: ContentPlanItem; depth: number; included: boolean }> {
   const byPath = new Map(plan.map((item) => [item.path, item]));
   return orderedPlan(plan, root).map((item) => ({ item, depth: Math.max(0, item.path.slice(root.length + 1).split("/").length - 1), included: effectivelyIncluded(item, byPath, root) }));

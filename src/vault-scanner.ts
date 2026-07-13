@@ -1,3 +1,13 @@
+/**
+ * Manuscript Compiler — mechanical vault discovery.
+ *
+ * Walks one exact TFolder boundary and records Markdown files. It intentionally
+ * does not infer author intent; content-plan.ts owns classification. Called only
+ * by CompilePreparationService.
+ *
+ * Invariant: production code must apply an authoritative ContentPlan before
+ * scanner output reaches ManuscriptParser or any exporter.
+ */
 import { TAbstractFile, TFile, TFolder } from "obsidian";
 import type { ScannedBook, ScannedChapter, ScannedPart } from "./types";
 
@@ -5,7 +15,13 @@ const FRONT_NAMES = new Set(["front matter", "ebook front matter", "print front 
 const BACK_NAMES = new Set(["back matter", "ebook back matter", "print back matter"]);
 const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
 
+/** Stateless synchronous scanner; it never reads file bodies or mutates vault data. */
 export class VaultScanner {
+  /**
+   * Discovers Markdown below exactly `root` and returns a provisional mechanical
+   * shape. The result is intentionally permissive and is unsafe for export until
+   * content-plan classification and authoritative reconstruction have run.
+   */
   scan(root: TFolder): ScannedBook {
     const warnings: string[] = [];
     const children = this.visibleChildren(root);

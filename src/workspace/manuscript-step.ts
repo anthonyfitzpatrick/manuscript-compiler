@@ -1,3 +1,9 @@
+/**
+ * Manuscript Compiler — Manuscript root step renderer.
+ *
+ * Shows the exact root, structure preset, and scan summary. It emits choices to
+ * the modal/controller and performs no inference or scanning itself.
+ */
 import { Setting, type TFolder } from "obsidian";
 import { STRUCTURE_PRESET_NAMES } from "../simple-workflow";
 import type { StructurePreset } from "../settings";

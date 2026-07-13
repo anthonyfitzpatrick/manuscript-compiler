@@ -1,3 +1,14 @@
+/**
+ * Manuscript Compiler — staged, validated binary output.
+ *
+ * Validates complete DOCX bytes, writes a same-folder temporary file, verifies
+ * readback, then commits or rolls back through an adapter-aware backend. Called
+ * by DocxExporter; calls docx-validator and platform adapters.
+ *
+ * Invariants: preserve the old file until final verification, stop accepting
+ * cancellation at commit, return success only after validation, and clean only
+ * artifacts matching this plugin's exact naming convention.
+ */
 import { FileSystemAdapter, normalizePath, type DataAdapter, type Vault } from "obsidian";
 import { CompilationCancelledError } from "./cancellation";
 import { assertValidDocx, validateDocxBytes, type DocxValidationResult } from "./docx-validator";
@@ -5,10 +16,16 @@ import { nodeFs } from "./filesystem";
 import { validateVaultPath } from "./output-path";
 
 export type SafeSaveStage = "Saving to vault" | "Verifying temporary file" | "Finalising file" | "Verifying saved DOCX" | "Restoring previous file" | "Cleaning up";
+/** Per-operation callbacks and cancellation supplied by export orchestration. */
 export interface SafeBinaryWriteOptions { signal?: AbortSignal; onProgress?: (stage: SafeSaveStage) => void; onCommit?: () => void; token?: string; }
+/** Returned only after the destination has been read back and validated. */
 export interface SafeBinaryWriteResult { path: string; strategy: "same-folder-filesystem" | "verified-adapter-recovery"; replacedExisting: boolean; finalValidation: DocxValidationResult; checksum: string; }
 export interface StaleCleanupResult { removed: string[]; preservedBackups: string[]; }
 export interface BinaryEntry { path: string; mtime: number; }
+/**
+ * Minimal binary storage contract. Tests inject deterministic failure backends;
+ * production wraps either a local filesystem or generic Obsidian adapter.
+ */
 export interface SafeBinaryBackend {
   readonly kind: "filesystem" | "adapter";
   exists(path: string): Promise<boolean>;
@@ -19,16 +36,26 @@ export interface SafeBinaryBackend {
   list(folder: string): Promise<BinaryEntry[]>;
 }
 
+/** Failure carrying restoration outcome and, only when critical, recovery paths. */
 export class SafeBinaryWriteError extends Error {
   readonly severity: "error" | "critical";
   constructor(message: string, readonly restoration: "not-needed" | "restored" | "failed", readonly backupPath?: string, readonly destinationPath?: string) { super(message); this.name = "SafeBinaryWriteError"; this.severity = restoration === "failed" ? "critical" : "error"; }
 }
 
+/**
+ * Transaction-like writer for validated DOCX bytes. One instance may serve many
+ * sequential exports; callers provide per-write cancellation/progress. It owns
+ * temporary and backup artifacts but never records history or displays UI.
+ */
 export class SafeBinaryWriter {
   static readonly STALE_TEMP_AGE_MS = 24 * 60 * 60 * 1000;
   private readonly backend: SafeBinaryBackend;
   constructor(vaultOrBackend: Vault | SafeBinaryBackend) { this.backend = isBackend(vaultOrBackend) ? vaultOrBackend : backendForVault(vaultOrBackend); }
 
+  /**
+   * Validates before touching the destination, stages and verifies bytes, then
+   * completes replacement or rollback. Cancellation after `onCommit` is ignored.
+   */
   async writeValidated(destinationPath: string, bytes: Uint8Array, options: SafeBinaryWriteOptions = {}): Promise<SafeBinaryWriteResult> {
     const destination = validateVaultPath(destinationPath); assertValidDocx(bytes, "Generated DOCX"); checkCancelled(options.signal);
     const { temp, backup } = artifactPaths(destination, options.token ?? token()); const generatedChecksum = checksum(bytes); let commitStarted = false; let preserveBackup = false;
@@ -45,6 +72,10 @@ export class SafeBinaryWriter {
     }
   }
 
+  /**
+   * Non-recursively removes only recognised old temporary files. Backups and
+   * recent files are preserved because they may represent recovery or active work.
+   */
   async cleanupStaleArtifacts(folderPath: string, now = Date.now()): Promise<StaleCleanupResult> {
     const folder = validateVaultPath(folderPath); const removed: string[] = []; const preservedBackups: string[] = [];
     for (const entry of await this.backend.list(folder)) {

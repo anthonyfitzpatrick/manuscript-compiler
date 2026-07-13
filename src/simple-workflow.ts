@@ -1,6 +1,14 @@
+/**
+ * Manuscript Compiler — four-step request and preset resolution.
+ *
+ * Translates concise author choices into a complete compatibility profile while
+ * preserving the workspace plan as authoritative. Called by workspace state and
+ * CompilePreparationService; calls no vault or UI APIs.
+ */
 import type { CompileProfile, DocxStylePreset, ExportTarget, StructuralDisplay, StructurePreset } from "./settings";
 import type { ContentPlanItem } from "./content-plan";
 
+/** Controller-owned mutable formatting; centimetres are the canonical UI unit. */
 export interface DocxFormatting { font: string; fontSize: number; lineSpacing: number; firstLineIndentCm: number; pageSize: "letter" | "a4"; chapterPageBreak: boolean; titlePage: boolean; }
 
 export const DOCX_FORMATTING_PRESETS: Record<Exclude<DocxStylePreset, "custom">, Readonly<DocxFormatting>> = {
@@ -8,11 +16,16 @@ export const DOCX_FORMATTING_PRESETS: Record<Exclude<DocxStylePreset, "custom">,
   standard: { font: "Times New Roman", fontSize: 12, lineSpacing: 2, firstLineIndentCm: 1.27, pageSize: "a4", chapterPageBreak: true, titlePage: false }
 };
 
+/** Returns a fresh deterministic preset; Custom copies the caller's values. */
 export function docxFormattingForPreset(preset: DocxStylePreset, titlePage = false, current?: DocxFormatting): DocxFormatting {
   if (preset === "custom") return { ...(current ?? DOCX_FORMATTING_PRESETS.standard), titlePage };
   return { ...DOCX_FORMATTING_PRESETS[preset], titlePage };
 }
 
+/**
+ * Complete author request. Mutable in the workspace, then copied into a prepared
+ * session so later UI edits cannot alter reviewed output implicitly.
+ */
 export interface SimpleCompileRequest {
   manuscriptRoot: string; structurePreset: StructurePreset; includeFrontMatter: boolean; includeBackMatter: boolean;
   exportFolder: string; outputFilename: string; outputFormat: ExportTarget; docxPreset: DocxStylePreset;
@@ -41,6 +54,7 @@ const DOCX: Record<DocxStylePreset, Partial<CompileProfile>> = {
   custom: { exportTarget: "docx", stripYamlFrontmatter: true, removeObsidianComments: true, removeHtmlComments: true, removeDataviewBlocks: true, removeCallouts: true, stripInternalLinks: true, generateTableOfContents: false, keepIntermediateMarkdown: false }
 };
 
+/** Resolves one request into a new profile snapshot without mutating the base. */
 export function resolveSimpleCompileRequest(request: SimpleCompileRequest, base: CompileProfile): CompileProfile {
   const structure = request.structurePreset === "custom" ? request.custom ?? {} : STRUCTURES[request.structurePreset];
   const formatting = request.formatting ?? docxFormattingForPreset(request.docxPreset, base.docxTitlePage === true);
@@ -59,6 +73,7 @@ export function resolveSimpleCompileRequest(request: SimpleCompileRequest, base:
   };
 }
 
+/** Ensures an edited workspace plan wins after compatibility-profile resolution. */
 export function applyWorkspacePlanAuthority(profile: CompileProfile, request: SimpleCompileRequest): CompileProfile {
   const plan = request.contentPlan;
   if (!plan) return profile;
@@ -91,6 +106,7 @@ export function applyContentPlanAuthority(profile: CompileProfile, manuscriptRoo
   return profile;
 }
 
+/** Returns author-facing input errors without touching the vault. */
 export function validateSimpleCompileRequest(request: SimpleCompileRequest): string[] {
   const errors: string[] = [];
   if (!request.manuscriptRoot.trim()) errors.push("Choose a manuscript folder.");
@@ -100,6 +116,7 @@ export function validateSimpleCompileRequest(request: SimpleCompileRequest): str
   return errors;
 }
 
+/** Maps legacy structural settings to the closest safe automatic-plan preset. */
 export function inferStructurePreset(profile: CompileProfile): StructurePreset {
   if (profile.useParts && profile.chapterSource === "notes") return "anthology";
   if (profile.useParts) return "novel-parts";

@@ -1,3 +1,9 @@
+/**
+ * Manuscript Compiler — Export step renderer.
+ *
+ * Displays preparation status, semantic outline, warnings, exclusions, and output.
+ * It emits actions to the controller and never builds a Book or accesses files.
+ */
 import { Setting } from "obsidian";
 import type { CompileWorkspaceController } from "./compile-workspace-controller";
 import { buildExportPreviewViewModel } from "./export-preview";

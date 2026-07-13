@@ -1,3 +1,13 @@
+/**
+ * Manuscript Compiler — semantic domain model.
+ *
+ * Defines the publishable vocabulary shared by parser, preview, validation,
+ * Markdown, DOCX, warnings, and statistics. These types describe manuscript
+ * structure rather than vault organisation.
+ *
+ * Invariant: once a Book enters PreparedCompileSession its object graph is
+ * treated as immutable and the same instance reaches preview and export.
+ */
 import type { TFile, TFolder } from "obsidian";
 import type { HierarchyDiagnostic } from "./types";
 
@@ -12,6 +22,7 @@ export interface DocumentMetadata {
   values: Record<string, unknown>;
 }
 
+/** Parsed source note containing cleaned content and exclusion diagnostics. */
 export interface ManuscriptDocument {
   file: TFile;
   title: string;
@@ -32,6 +43,7 @@ export interface MatterSection {
 
 export interface Scene extends ManuscriptDocument {}
 
+/** Semantic Chapter. An absent number remains absent rather than becoming zero. */
 export interface Chapter {
   title: string;
   name: string;
@@ -42,6 +54,7 @@ export interface Chapter {
   orphan: boolean;
 }
 
+/** Semantic Part; `synthetic` represents a partless book wrapper, not a heading. */
 export interface Part {
   title: string;
   name: string;
@@ -53,6 +66,10 @@ export interface Part {
   synthetic?: boolean;
 }
 
+/**
+ * Final publishable model owned by PreparedCompileSession. `root` names and bounds
+ * the source but is never itself a Part or Chapter. Treat the graph as immutable.
+ */
 export interface Book {
   root: TFolder;
   title: string;
@@ -68,6 +85,7 @@ export interface Book {
 }
 
 export type WarningSeverity = "information" | "warning" | "error";
+/** Prose-free issue shared unchanged by preview, validation, and export. */
 export interface CompileWarning { severity: WarningSeverity; code: string; message: string; path?: string; suggestion?: string; }
 export interface NamedStatistic { name: string; words: number; }
 export interface ManuscriptStatistics {
