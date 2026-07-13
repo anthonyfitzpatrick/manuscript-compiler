@@ -3,11 +3,22 @@ import type { ContentPlanItem } from "./content-plan";
 
 export interface DocxFormatting { font: string; fontSize: number; lineSpacing: number; firstLineIndent: number; pageSize: "letter" | "a4"; chapterPageBreak: boolean; titlePage: boolean; }
 
+export const DOCX_FORMATTING_PRESETS: Record<Exclude<DocxStylePreset, "custom">, Readonly<DocxFormatting>> = {
+  vellum: { font: "Garamond", fontSize: 12, lineSpacing: 1.15, firstLineIndent: 0.3, pageSize: "letter", chapterPageBreak: true, titlePage: false },
+  standard: { font: "Times New Roman", fontSize: 12, lineSpacing: 2, firstLineIndent: 0.5, pageSize: "letter", chapterPageBreak: true, titlePage: false }
+};
+
+export function docxFormattingForPreset(preset: DocxStylePreset, titlePage = false, current?: DocxFormatting): DocxFormatting {
+  if (preset === "custom") return { ...(current ?? DOCX_FORMATTING_PRESETS.standard), titlePage };
+  return { ...DOCX_FORMATTING_PRESETS[preset], titlePage };
+}
+
 export interface SimpleCompileRequest {
   manuscriptRoot: string; structurePreset: StructurePreset; includeFrontMatter: boolean; includeBackMatter: boolean;
   exportFolder: string; outputFilename: string; outputFormat: ExportTarget; docxPreset: DocxStylePreset;
   custom?: Partial<CompileProfile>;
   contentPlan?: ContentPlanItem[]; formatting?: DocxFormatting; downloadAfterExport?: boolean;
+  tableOfContents?: boolean;
   partDisplay?: StructuralDisplay; chapterDisplay?: StructuralDisplay;
 }
 
@@ -26,15 +37,17 @@ const STRUCTURES: Record<Exclude<StructurePreset, "custom">, Partial<CompileProf
 
 const DOCX: Record<DocxStylePreset, Partial<CompileProfile>> = {
   vellum: { exportTarget: "docx", orderingMethod: "metadata", metadataOrdering: true, stripYamlFrontmatter: true, removeObsidianComments: true, removeHtmlComments: true, removeDataviewBlocks: true, removeCallouts: true, stripInternalLinks: true, generateTableOfContents: false, keepIntermediateMarkdown: false, blankLinesBetweenSections: 1, blankLinesBetweenChapters: 1 },
-  standard: { exportTarget: "docx", orderingMethod: "filename", metadataOrdering: false, stripYamlFrontmatter: true, removeObsidianComments: true, removeHtmlComments: true, removeDataviewBlocks: true, removeCallouts: true, stripInternalLinks: true, generateTableOfContents: false, keepIntermediateMarkdown: false, blankLinesBetweenSections: 1, blankLinesBetweenChapters: 1 }
+  standard: { exportTarget: "docx", orderingMethod: "filename", metadataOrdering: false, stripYamlFrontmatter: true, removeObsidianComments: true, removeHtmlComments: true, removeDataviewBlocks: true, removeCallouts: true, stripInternalLinks: true, generateTableOfContents: false, keepIntermediateMarkdown: false, blankLinesBetweenSections: 1, blankLinesBetweenChapters: 1 },
+  custom: { exportTarget: "docx", stripYamlFrontmatter: true, removeObsidianComments: true, removeHtmlComments: true, removeDataviewBlocks: true, removeCallouts: true, stripInternalLinks: true, generateTableOfContents: false, keepIntermediateMarkdown: false }
 };
 
 export function resolveSimpleCompileRequest(request: SimpleCompileRequest, base: CompileProfile): CompileProfile {
   const structure = request.structurePreset === "custom" ? request.custom ?? {} : STRUCTURES[request.structurePreset];
   return { ...base, ...DOCX[request.docxPreset], ...structure, ...(request.structurePreset === "custom" ? request.custom : {}),
-    id: base.id, name: `${STRUCTURE_PRESET_NAMES[request.structurePreset]} · ${request.docxPreset === "vellum" ? "Vellum" : "Standard DOCX"}`,
+    id: base.id, name: `${STRUCTURE_PRESET_NAMES[request.structurePreset]} · ${request.docxPreset === "vellum" ? "Vellum" : request.docxPreset === "standard" ? "Standard DOCX" : "Custom DOCX"}`,
     manuscriptRoot: request.manuscriptRoot.trim(), exportFolder: request.exportFolder.trim(), outputFilename: request.outputFilename.trim(),
     exportTarget: request.outputFormat, includeFrontMatter: request.includeFrontMatter, includeBackMatter: request.includeBackMatter, sceneSeparator: request.custom?.sceneSeparator ?? structure.sceneSeparator ?? base.sceneSeparator,
+    generateTableOfContents: request.outputFormat !== "markdown" && request.tableOfContents === true,
     variables: { ...base.variables, ...(request.custom?.variables ?? {}) }, metadataFilters: base.metadataFilters.map((rule) => ({ ...rule })), referenceDocx: "", pandocMetadataFile: "", additionalPandocArguments: "",
     contentOrder: request.contentPlan?.filter((item) => item.included && item.role !== "ignore").map((item) => item.path),
     docxFont: request.formatting?.font, docxFontSize: request.formatting?.fontSize, docxLineSpacing: request.formatting?.lineSpacing,

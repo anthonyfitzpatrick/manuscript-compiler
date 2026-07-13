@@ -4,7 +4,7 @@ export type MetadataOperator = "equals" | "not-equals";
 export type ExportTarget = "markdown" | "docx" | "markdown-docx";
 export type ChapterSource = "folders" | "notes";
 export type StructurePreset = "novel-parts" | "novel" | "chapter-notes" | "short-story" | "anthology" | "custom";
-export type DocxStylePreset = "vellum" | "standard";
+export type DocxStylePreset = "vellum" | "standard" | "custom";
 
 export interface MetadataFilterRule { id: string; field: string; operator: MetadataOperator; value: string; }
 export interface CleaningSettings { stripYamlFrontmatter: boolean; removeObsidianComments: boolean; removeHtmlComments: boolean; removeDataviewBlocks: boolean; removeCallouts: boolean; stripInternalLinks: boolean; bodySectionAliases?: string[]; }

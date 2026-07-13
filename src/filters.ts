@@ -7,7 +7,7 @@ export class ContentCleaningPipeline {
     if (settings.removeObsidianComments) filters.push(removeObsidianComments);
     if (settings.removeHtmlComments) filters.push(removeHtmlComments);
     if (settings.removeDataviewBlocks) filters.push(removeDataviewBlocks);
-    if (settings.removeCallouts) filters.push(removeCallouts);
+    if (settings.removeCallouts) filters.push(convertCalloutsToPlainText);
     if (settings.stripInternalLinks) filters.push(stripInternalLinks);
     return cleanManuscriptContent(filters.reduce((content, filter) => filter(content), markdown), settings.bodySectionAliases);
   }
@@ -57,7 +57,7 @@ export function stripYamlFrontmatter(markdown: string): string { return markdown
 export function removeObsidianComments(markdown: string): string { return markdown.replace(/%%[\s\S]*?%%/g, ""); }
 export function removeHtmlComments(markdown: string): string { return markdown.replace(/<!--[\s\S]*?-->/g, ""); }
 export function removeDataviewBlocks(markdown: string): string { return markdown.replace(/```(?:dataview|dataviewjs)\b[^\n]*\n[\s\S]*?```[\t ]*(?:\r?\n)?/gi, ""); }
-export function removeCallouts(markdown: string): string {
+export function convertCalloutsToPlainText(markdown: string): string {
   const output: string[] = []; let inCallout = false;
   for (const line of markdown.split(/\r?\n/)) {
     if (/^\s*>\s*\[![^\]]+\][+-]?/i.test(line)) { inCallout = true; continue; }
@@ -66,4 +66,6 @@ export function removeCallouts(markdown: string): string {
   }
   return output.join("\n");
 }
+/** Retained for source and profile compatibility with pre-0.9.1 integrations. */
+export const removeCallouts = convertCalloutsToPlainText;
 export function stripInternalLinks(markdown: string): string { return markdown.replace(/!?\[\[([^\]|#]+)(?:#[^\]|]+)?(?:\|([^\]]+))?\]\]/g, (_match, target: string, alias?: string) => alias ?? target.split("/").pop() ?? target); }

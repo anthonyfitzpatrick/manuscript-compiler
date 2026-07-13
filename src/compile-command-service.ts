@@ -18,8 +18,10 @@ export class CompileCommandService {
   constructor(private readonly app: App, private readonly settings: () => ManuscriptCompilerSettings, private readonly activeProfile: () => CompileProfile, private readonly operations: OperationStateController, private readonly exporter: ExportCoordinator, private readonly pluginVersion: string) { this.roots = new BookRootResolver(app.vault); }
 
   async prepareGuided(request: SimpleCompileRequest, contentPlan?: ContentPlanItem[], signal?: AbortSignal): Promise<PreparedCompileSession> {
+    const root = this.roots.require(request.manuscriptRoot);
+    const normalizedRequest = { ...request, manuscriptRoot: root.path };
     const base = { ...this.activeProfile(), generateTableOfContents: request.outputFormat !== "markdown" && this.settings().includeTableOfContentsByDefault };
-    return this.prepare({ manuscriptRoot: request.manuscriptRoot, profile: base, structurePreset: request.structurePreset, contentPlan, simpleRequest: request, purpose: "preview", route: "guided" }, signal);
+    return this.prepare({ manuscriptRoot: root.path, profile: base, structurePreset: normalizedRequest.structurePreset, contentPlan, simpleRequest: normalizedRequest, purpose: "preview", route: "guided" }, signal);
   }
   async preparedSessionIsCurrent(session: PreparedCompileSession): Promise<boolean> { return await calculateSourceFingerprint(this.app.vault, session.sourcePaths) === session.sourceFingerprint; }
   async exportPreparedSession(session: PreparedCompileSession): Promise<ExportExecutionResult> { return this.exporter.exportPreparedSession(session); }

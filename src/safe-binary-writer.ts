@@ -4,7 +4,7 @@ import { assertValidDocx, validateDocxBytes, type DocxValidationResult } from ".
 import { nodeFs } from "./filesystem";
 import { validateVaultPath } from "./output-path";
 
-export type SafeSaveStage = "Preparing safe save" | "Verifying temporary file" | "Finalising file" | "Verifying saved DOCX" | "Restoring previous file" | "Cleaning up";
+export type SafeSaveStage = "Saving to vault" | "Verifying temporary file" | "Finalising file" | "Verifying saved DOCX" | "Restoring previous file" | "Cleaning up";
 export interface SafeBinaryWriteOptions { signal?: AbortSignal; onProgress?: (stage: SafeSaveStage) => void; onCommit?: () => void; token?: string; }
 export interface SafeBinaryWriteResult { path: string; strategy: "same-folder-filesystem" | "verified-adapter-recovery"; replacedExisting: boolean; finalValidation: DocxValidationResult; checksum: string; }
 export interface StaleCleanupResult { removed: string[]; preservedBackups: string[]; }
@@ -33,7 +33,7 @@ export class SafeBinaryWriter {
     const destination = validateVaultPath(destinationPath); assertValidDocx(bytes, "Generated DOCX"); checkCancelled(options.signal);
     const { temp, backup } = artifactPaths(destination, options.token ?? token()); const generatedChecksum = checksum(bytes); let commitStarted = false; let preserveBackup = false;
     try {
-      options.onProgress?.("Preparing safe save"); await this.backend.write(temp, bytes); checkCancelled(options.signal);
+      options.onProgress?.("Saving to vault"); await this.backend.write(temp, bytes); checkCancelled(options.signal);
       options.onProgress?.("Verifying temporary file"); const temporary = await this.backend.read(temp); verifyEqualAndValid(temporary, bytes.length, generatedChecksum, "Temporary DOCX"); checkCancelled(options.signal);
       const beginCommit = (): void => { checkCancelled(options.signal); commitStarted = true; options.onCommit?.(); options.onProgress?.("Finalising file"); };
       return this.backend.kind === "filesystem" ? await this.commitFilesystem(destination, temp, backup, bytes, generatedChecksum, options, beginCommit, () => { preserveBackup = true; }) : await this.commitAdapter(destination, temp, backup, bytes, generatedChecksum, options, beginCommit, () => { preserveBackup = true; });

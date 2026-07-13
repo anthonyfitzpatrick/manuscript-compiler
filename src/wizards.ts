@@ -28,7 +28,7 @@ export class ProfileWizardModal extends Modal {
     new Setting(this.contentEl).setName("Profile name").addText((text) => { text.setValue(this.choices.name).onChange((value) => { this.choices.name = value; }); text.inputEl.setAttribute("aria-label", "Compile profile name"); });
     new Setting(this.contentEl).setName("Are chapters folders or notes?").addDropdown((dropdown) => dropdown.addOption("folders", "Folders containing scenes").addOption("notes", "Individual chapter notes").setValue(this.choices.chapterSource).onChange((value) => { this.choices.chapterSource = value === "notes" ? "notes" : "folders"; }));
     this.toggle("Do you use Parts?", "Create level-one Part headings.", "useParts"); this.toggle("Insert scene separators?", "Insert the profile separator between scenes.", "sceneSeparators"); this.toggle("Include front matter?", "Include recognised front-matter folders.", "includeFrontMatter"); this.toggle("Include back matter?", "Include recognised back-matter folders.", "includeBackMatter"); this.toggle("Primarily export for Vellum?", "Use Vellum-oriented headings, cleaners, and built-in DOCX output.", "vellum");
-    new Setting(this.contentEl).setName("DOCX creation").setDesc("DOCX files are generated locally. Pandoc is not required.");
+    new Setting(this.contentEl).setName("DOCX creation").setDesc("DOCX files are generated locally by Manuscript Compiler.");
   }
   protected toggle(name: string, description: string, key: "useParts" | "sceneSeparators" | "includeFrontMatter" | "includeBackMatter" | "vellum"): void { new Setting(this.contentEl).setName(name).setDesc(description).addToggle((toggle) => toggle.setValue(this.choices[key]).onChange((value) => { this.choices[key] = value; })); }
 }

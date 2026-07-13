@@ -1,5 +1,34 @@
 # Changelog
 
+## 0.9.2 Release Candidate
+
+### Fixed
+
+- Preview, validation, Markdown, and DOCX export now consume one prepared semantic `Book`; export never rebuilds the manuscript after preview.
+- Source or compile-choice changes after preview block stale export and keep **Refresh Preview** available.
+- Every compile command uses the same authoritative content plan, transparent-container rules, project-folder exclusions, dashboard/revision classification, and body cleaning.
+- Legacy command routes can no longer bypass Archive, Development, Exports, dashboard, Synopsis, Revision Notes, metadata-leakage, or zero-number protections.
+- DOCX saving is staged, structurally validated, read back, verified, recoverable on overwrite failure, and reported successful only after final validation.
+- Chapter page breaks obey the active setting; Part and Chapter transitions no longer depend on synthetic blank break paragraphs.
+- Scene separators occur only between included Scenes, and the following prose uses First Paragraph styling.
+- Table-of-contents selection reaches a genuine Word TOC field.
+- Callouts are described accurately as conversion to plain text, preserving body text while removing the marker and title.
+- Removed the unused Subtitle Word style and the unused generic Markdown-to-DOCX production compatibility route.
+- Separated orchestration, workspace state, history, result actions, operation state, and step rendering without changing command IDs.
+
+### Improved
+
+- Final-model preview now shows the exact exported outline, statistics, warnings, exclusions, filename, and destination.
+- Output verification, rollback guidance, cancellation boundaries, partial-result handling, and history sequencing have stronger automated coverage.
+- Vellum, Standard Manuscript, and supported Custom formatting resolve deterministically and are inspected semantically in generated Word XML.
+- Architecture, release documentation, performance coverage, and the manual release checklist now describe the actual native-DOCX product.
+
+### Compatibility
+
+- Existing settings, profiles, history, logs, Chapter-break preferences, title-page choices, TOC preferences, formatting values, metadata filters, and command IDs remain supported through idempotent migration.
+- No other Obsidian community plugin is required. Pandoc and external executables are neither required nor invoked.
+- DOCX creation remains offline; obsolete Pandoc fields are retained only so older saved data can be loaded safely.
+
 ## 0.9.1 Corrective Release
 
 - Changed manuscript discovery to exclude project, archive, development, dashboard, research, revision, and export material by default while keeping every exclusion visible and overridable.

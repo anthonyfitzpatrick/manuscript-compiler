@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { createDocx } from "../src/docx";
+import { createTestDocx } from "./docx-test-fixture";
 import { validateDocxBytes } from "../src/docx-validator";
 import { SafeBinaryWriteError, SafeBinaryWriter, type BinaryEntry, type SafeBinaryBackend } from "../src/safe-binary-writer";
 import { strToU8, zipSync } from "fflate";
@@ -20,10 +20,10 @@ class FakeBackend implements SafeBinaryBackend {
 }
 
 const tests: Array<[string, () => void | Promise<void>]> = []; const test = (name: string, action: () => void | Promise<void>): void => { tests.push([name, action]); };
-const generated = createDocx("# Chapter One\n\nValidated prose.", { title: "Safe Book", author: "Author" }); const original = createDocx("# Original\n\nOriginal prose.", { title: "Original", author: "Author" }); const destination = "Exports/Safe Book.docx";
+const generated = createTestDocx("Validated prose.", "Safe Book"); const original = createTestDocx("Original prose.", "Original"); const destination = "Exports/Safe Book.docx";
 const artifacts = (backend: FakeBackend): string[] => [...backend.files.keys()].filter((path) => /manuscript-compiler/.test(path));
 
-test("validator rejects unreadable and structurally incomplete DOCX packages", () => { assert.equal(validateDocxBytes(new Uint8Array([1, 2, 3])).valid, false); const incomplete = zipSync({ "word/document.xml": strToU8("<w:document><w:body/></w:document>") }); const invalid = validateDocxBytes(incomplete); assert.equal(invalid.valid, false); assert.ok(invalid.errors.some((error) => /Content_Types|styles|relationships/i.test(error))); const result = validateDocxBytes(createDocx("", { title: "", author: "" })); assert.equal(result.valid, true); });
+test("validator rejects unreadable and structurally incomplete DOCX packages", () => { assert.equal(validateDocxBytes(new Uint8Array([1, 2, 3])).valid, false); const incomplete = zipSync({ "word/document.xml": strToU8("<w:document><w:body/></w:document>") }); const invalid = validateDocxBytes(incomplete); assert.equal(invalid.valid, false); assert.ok(invalid.errors.some((error) => /Content_Types|styles|relationships/i.test(error))); assert.equal(validateDocxBytes(createTestDocx("")).valid, true); });
 test("generated validation failure leaves destination unchanged", async () => { const backend = new FakeBackend("filesystem"); backend.seed(destination, original); await assert.rejects(new SafeBinaryWriter(backend).writeValidated(destination, new Uint8Array([1, 2, 3])), /validation|readable ZIP/i); assert.deepEqual(backend.files.get(destination)?.bytes, original); assert.deepEqual(artifacts(backend), []); });
 test("temporary write failure leaves destination unchanged", async () => { const backend = new FakeBackend("filesystem"); backend.seed(destination, original); backend.fail = (op, path) => op === "write" && path.endsWith(".tmp"); await assert.rejects(new SafeBinaryWriter(backend).writeValidated(destination, generated, { token: "temp-write" })); assert.deepEqual(backend.files.get(destination)?.bytes, original); });
 test("temporary readback failure leaves destination unchanged", async () => { const backend = new FakeBackend("filesystem"); backend.seed(destination, original); backend.fail = (op, path) => op === "read" && path.endsWith(".tmp"); await assert.rejects(new SafeBinaryWriter(backend).writeValidated(destination, generated, { token: "temp-read" })); assert.deepEqual(backend.files.get(destination)?.bytes, original); assert.deepEqual(artifacts(backend), []); });

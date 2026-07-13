@@ -1,7 +1,7 @@
 import type { PreparedCompileSession } from "../compile-preparation";
 import type { ContentPlanItem, ContentRole } from "../content-plan";
 import { OperationStateController } from "../operation-state";
-import type { DocxFormatting, SimpleCompileRequest } from "../simple-workflow";
+import { docxFormattingForPreset, type DocxFormatting, type SimpleCompileRequest } from "../simple-workflow";
 import { validateSimpleCompileRequest } from "../simple-workflow";
 import type { StructuralDisplay, StructurePreset } from "../settings";
 import { includedNoteCount, moveSibling, setItemIncluded, setItemRole } from "./content-tree";
@@ -44,15 +44,31 @@ export class CompileWorkspaceController {
   moveItem(path: string, direction: -1 | 1): void { this.update(() => { this.state.contentPlan = moveSibling(this.state.contentPlan, this.state.request.manuscriptRoot, path, direction); }); }
   includeAll(): void { this.update(() => this.state.contentPlan.forEach((item) => { item.included = true; item.userOverride = true; if (item.role === "ignore") item.role = item.kind === "folder" ? "transparent" : "scene"; })); }
   excludeAllNotes(): void { this.update(() => this.state.contentPlan.filter((item) => item.kind === "note").forEach((item) => { item.included = false; item.userOverride = true; })); }
-  setFormatting(change: Partial<DocxFormatting>): void { this.update(() => Object.assign(this.state.formatting, change)); }
-  setDocxPreset(value: SimpleCompileRequest["docxPreset"]): void { this.update(() => { this.state.request.docxPreset = value; }); }
-  setSceneSeparator(value: string): void { this.update(() => { if (this.state.request.custom) this.state.request.custom.sceneSeparator = value; }); }
-  setDisplay(kind: "part" | "chapter", value: StructuralDisplay): void { this.update(() => { if (kind === "part") this.state.request.partDisplay = value; else this.state.request.chapterDisplay = value; }); }
+  setFormatting(change: Partial<DocxFormatting>): void {
+    this.update(() => {
+      Object.assign(this.state.formatting, change);
+      this.state.request.docxPreset = "custom";
+    });
+  }
+  setDocxPreset(value: SimpleCompileRequest["docxPreset"]): void {
+    this.update(() => {
+      this.state.request.docxPreset = value;
+      if (value !== "custom") {
+        Object.assign(this.state.formatting, docxFormattingForPreset(value, this.state.formatting.titlePage));
+        if (this.state.request.custom) this.state.request.custom.sceneSeparator = "#";
+        this.state.request.partDisplay = "word-title";
+        this.state.request.chapterDisplay = "word-title";
+        this.state.request.tableOfContents = false;
+      }
+    });
+  }
+  setSceneSeparator(value: string): void { this.update(() => { if (this.state.request.custom) this.state.request.custom.sceneSeparator = value; this.state.request.docxPreset = "custom"; }); }
+  setDisplay(kind: "part" | "chapter", value: StructuralDisplay): void { this.update(() => { if (kind === "part") this.state.request.partDisplay = value; else this.state.request.chapterDisplay = value; this.state.request.docxPreset = "custom"; }); }
+  setTableOfContents(value: boolean): void { this.update(() => { this.state.request.tableOfContents = value; this.state.request.docxPreset = "custom"; }); }
   setBodyAliases(values: string[]): void { this.update(() => { if (this.state.request.custom) this.state.request.custom.bodySectionAliases = values; }); }
   setMatter(kind: "front" | "back", included: boolean): void { this.update(() => { if (kind === "front") this.state.request.includeFrontMatter = included; else this.state.request.includeBackMatter = included; }); }
   setVariable(kind: "BookTitle" | "Author", value: string): void { this.update(() => { if (this.state.request.custom?.variables) this.state.request.custom.variables[kind] = value; }); }
   setOutput(folder: string, filename: string): void { this.update(() => { this.state.request.exportFolder = folder.trim(); this.state.request.outputFilename = filename; }); }
-  notifyExternalModelChange(): void { this.invalidatePreparedSession(); }
   setDownloadAfterExport(value: boolean): void { this.state.request.downloadAfterExport = value; }
 
   canAdvance(): string[] {

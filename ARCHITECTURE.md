@@ -1,6 +1,6 @@
 # Compile Route Architecture
 
-Every production route crosses one root-to-model boundary: `CompilePreparationService.prepareAuthoritative()` in `src/compile-preparation.ts`. `VaultScanner` performs mechanical discovery only. No command, validator, or exporter may convert its raw `ScannedBook` independently.
+Every production route resolves a `TFolder` through `BookRootResolver` and crosses one root-to-model boundary: `CompilePreparationService.prepareAuthoritative()` in `src/compile-preparation.ts`. `VaultScanner` performs mechanical discovery only. No command, validator, or exporter may convert its raw `ScannedBook` independently.
 
 ## Composition and runtime boundaries
 
@@ -35,17 +35,23 @@ Every production route crosses one root-to-model boundary: `CompilePreparationSe
 
 ```text
 TFolder book root
+  -> BookRootResolver
+  -> CompilePreparationService
   -> VaultScanner mechanical discovery
   -> create/classify ContentPlan (or accept edited workspace plan)
   -> apply transparent containers, exclusions, roles, inclusion, and order
-  -> ManuscriptCompiler.buildModel / parser and cleaning
+  -> ManuscriptCompiler.buildModel
+  -> ManuscriptParser
+  -> ContentCleaningPipeline
   -> semantic Book
   -> statistics, warnings, exclusions, Markdown, fingerprints
   -> PreparedCompileSession
   -> workspace/legacy preview or validation
   -> ExportCoordinator fingerprint and overwrite checks
-  -> MarkdownExporter or DocxExporter + SafeBinaryWriter
-  -> CompileHistoryService
+  -> MarkdownExporter or DocxExporter
+  -> validateDocxBytes (DOCX in memory)
+  -> SafeBinaryWriter staged write/readback/replacement/final validation
+  -> CompileHistoryService after verified success/failure/cancellation
   -> ResultActionService / result view
 ```
 
@@ -56,6 +62,7 @@ SimpleCompileModal
   -> step renderer
   -> CompileWorkspaceController
   -> CompileCommandService.prepareGuided
+  -> BookRootResolver.require
   -> CompilePreparationService
   -> PreparedCompileSession
   -> buildExportPreviewViewModel(session)
@@ -78,3 +85,25 @@ The workspace plan wins over inference and legacy profile structure. Automatic r
 - Exporters never write history or open result UI.
 - Step renderers never scan, parse, export, or access filesystem/Electron bridges.
 - Native DOCX creation remains offline and requires no community plugin, Pandoc, shell, or external executable.
+- The production DOCX module exposes only semantic `Book` generation; no generic Markdown-to-DOCX production entry point remains.
+
+## Native DOCX formatting boundary
+
+`SimpleCompileRequest` carries the authoritative formatting selection. `resolveSimpleCompileRequest()` maps it to compatibility profile fields, `DocxExporter` passes those fields to `createManuscriptDocx()`, and `resolveDocxOptions()` repairs numeric compatibility values before XML generation. The generator consumes the prepared `Book`; it never reparses Markdown structure.
+
+| Active control | Request/profile field | WordprocessingML effect |
+| --- | --- | --- |
+| Vellum / Standard / Custom | `docxPreset` plus `DocxFormatting` | deterministic supported defaults or explicit values |
+| Font, size, line spacing, indent | `docxFont`, `docxFontSize`, `docxLineSpacing`, `docxFirstLineIndent` | style defaults, `BodyText`, and `FirstParagraph` properties |
+| Letter / A4 | `docxPageSize` | section page dimensions |
+| Chapter page breaks | `docxChapterPageBreak` | `pageBreakBefore` on the first displayed Chapter heading only |
+| Part headings | semantic Part plus `partDisplay` | Parts always start on a new page; number/title paragraphs are kept together |
+| Chapter headings | semantic Chapter plus `chapterDisplay` | Chapter Number/Title styles with no invented numbering |
+| Scene break | `sceneSeparator` | centred Scene Break paragraph only between included scenes |
+| Title page | `docxTitlePage` plus title/author variables | Title and Author styles, followed by one page break |
+| Table of contents | `tableOfContents` / `generateTableOfContents` | genuine Word TOC field; off by default |
+| Front/back matter inclusion | authoritative content plan plus matter flags | included matter notes use matter headings and page starts |
+| Part/Chapter inclusion | authoritative structural roles and `useParts` | only semantic nodes receive structural headings |
+| Scene titles | compatibility-only `includeSceneTitles` | functional for legacy profiles but not exposed in the normal workflow |
+
+The `Subtitle` style was removed because the semantic model has no supported subtitle field. Legacy custom heading templates, `includeSceneTitles`, and the stored `removeCallouts` field remain data-compatible; the active wording for the latter is **Convert callouts to plain text**. Pandoc/reference-document fields remain migration-only and are not active formatting controls. Margins are fixed at one inch, and separate front/back page-behaviour toggles are not exposed.

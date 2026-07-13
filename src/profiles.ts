@@ -25,6 +25,7 @@ export function repairSettings(settings: ManuscriptCompilerSettings): Manuscript
   const activeForMigration = repaired.profiles.find((item) => item.id === repaired.activeProfileId) ?? repaired.profiles[0];
   repaired.defaultStructurePreset ??= activeForMigration ? (activeForMigration.useParts ? (activeForMigration.chapterSource === "notes" ? "anthology" : "novel-parts") : activeForMigration.chapterSource === "notes" ? "chapter-notes" : "novel") : "novel-parts";
   repaired.defaultDocxStyle ??= repaired.defaultCompilePreset === "vellum" || /vellum/i.test(activeForMigration?.name ?? "") ? "vellum" : "standard";
+  if (!(repaired.defaultDocxStyle === "vellum" || repaired.defaultDocxStyle === "standard")) repaired.defaultDocxStyle = "standard";
   repaired.defaultExportFormat ??= "docx"; repaired.warnBeforeOverwrite ??= true; repaired.openAfterCompile ??= false; repaired.includeTitlePageByDefault ??= false; repaired.includeTableOfContentsByDefault ??= activeForMigration?.generateTableOfContents ?? false; repaired.showAdvancedOptions ??= false;
   if (!Array.isArray(repaired.exportHistory)) { repaired.exportHistory = []; warnings.push("Invalid export history was reset."); }
   if (!Array.isArray(repaired.compileLogs)) { repaired.compileLogs = []; warnings.push("Invalid compile logs were reset."); }

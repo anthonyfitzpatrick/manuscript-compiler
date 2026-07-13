@@ -117,7 +117,7 @@ export function compileInputSignature(request: SimpleCompileRequest, plan: Conte
   return hash(JSON.stringify({
     root: request.manuscriptRoot, preset: request.structurePreset, front: request.includeFrontMatter,
     back: request.includeBackMatter, format: request.outputFormat, docx: request.docxPreset,
-    formatting: request.formatting, partDisplay: request.partDisplay, chapterDisplay: request.chapterDisplay,
+    formatting: request.formatting, tableOfContents: request.tableOfContents, partDisplay: request.partDisplay, chapterDisplay: request.chapterDisplay,
     custom: request.custom, exportFolder: request.exportFolder, outputFilename: request.outputFilename,
     plan: plan.map(({ path, role, included, order, userOverride }) => ({ path, role, included, order, userOverride }))
   }));
@@ -169,6 +169,7 @@ function simpleRequestFromProfile(request: CompilePreparationRequest, plan: Cont
       chapterPageBreak: profile.docxChapterPageBreak ?? true,
       titlePage: profile.docxTitlePage ?? true
     },
+    tableOfContents: profile.generateTableOfContents,
     downloadAfterExport: profile.downloadAfterExport,
     partDisplay: profile.partDisplay,
     chapterDisplay: profile.chapterDisplay

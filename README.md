@@ -1,23 +1,26 @@
 # Manuscript Compiler
 
-Manuscript Compiler 0.9.1 compiles fiction written in an Obsidian vault into a clean, native DOCX for Vellum, Word, LibreOffice, editing, or submission. It works locally, does not require Pandoc, and never modifies source notes.
+Manuscript Compiler 0.9.2 turns fiction written in an Obsidian vault into a clean native DOCX for Vellum, Word, LibreOffice, editing, or submission. It works locally, does not require another community plugin or Pandoc, and never modifies source notes.
 
 > **Only explicitly included publishable content is exported. Vault organisation and project metadata are never manuscript content.**
 
-## Compile a Manuscript
+## Quick Start
 
-1. Run **Manuscript Compiler: Compile Manuscript** or select **Open Manuscript Compiler** in plugin settings.
-2. Select the actual book folder. The selected folder is the book root and never becomes a Part or Chapter.
-3. Review the Contents outline. Confirm front matter, transparent containers, Parts, Chapters, Scenes, and back matter; include, exclude, or reorder individual items as needed.
-4. Choose restrained DOCX formatting and clean Part/Chapter display styles.
-5. Review the final parsed output outline, exclusions, word count, and warnings, then select **Create DOCX**. The preview and export use the same semantic manuscript model.
-6. Save in the vault, save a platform copy, open the DOCX, or reveal it in the file manager where supported.
+1. Install and enable Manuscript Compiler.
+2. Run **Manuscript Compiler: Compile Manuscript**.
+3. Select the actual book folder.
+4. Review and correct **Contents**.
+5. Choose **Vellum** or **Standard Manuscript** formatting, or select supported Custom values.
+6. Review the exact final manuscript and press **Create DOCX**.
+7. Save the verified DOCX to the vault, then optionally save a copy to the computer, open it, or reveal it where supported.
+
+The selected folder is the book root and never becomes a Part or Chapter. The Contents step lets the author confirm front matter, transparent containers, Parts, Chapters, Scenes, back matter, inclusion, and order before any output is created.
 
 The four-step compile workspace is authoritative for that export. Existing profiles and settings are preserved for compatibility but cannot override explicit workspace choices.
 
 If an included source note changes after the final preview is prepared, export is blocked until **Refresh Preview** rebuilds the manuscript model. The plugin never silently exports source content that differs from the reviewed preview.
 
-All compile routes use this same preparation pipeline. **Compile Current Book**, **Compile Selected Folder**, profile-compatible compilation, the first-run sample, Markdown export, DOCX export, and **Validate Manuscript** all construct or consume one prepared semantic manuscript. Older command IDs remain available for hotkeys, but their former permissive scanner-to-export path no longer exists. Validation reports the exact semantic content that would be exported and writes no file.
+All compile routes use this same preparation path. **Compile Current Book**, **Compile Selected Folder**, profile-compatible compilation, the first-run sample, Markdown export, DOCX export, and **Validate Manuscript** all construct or consume one prepared semantic manuscript. Older command IDs remain available for hotkeys, but their former permissive scanner-to-export path no longer exists. Validation reports the exact semantic content that would be exported and writes no file.
 
 Internally, workspace state, command preparation, export execution, history, and platform result actions use separate focused services. This keeps the final semantic model and safe save guarantees unchanged while making cancellation and session invalidation consistent across the UI.
 
@@ -49,16 +52,20 @@ DOCX generation is native, offline, and model-driven. The exporter does not conv
 
 Generated Word paragraph styles include:
 
-- Title, Subtitle, and Author
+- Title and Author
 - Part Number and Part Title
 - Chapter Number and Chapter Title
 - Body Text and First Paragraph
 - Scene Break
 - Front Matter Heading and Back Matter Heading
 
-Parts and Chapters begin on new pages. Number and title can be shown separately, numerically, in words, as title only, or through a retained custom template. Missing numbers remain missing—zero is never invented. Body paragraphs use the chosen serif font, size, line spacing, and first-line indent; the first paragraph after a heading or scene break is unindented. Bold, italics, punctuation, accented characters, smart quotes, dashes, and Unicode are preserved.
+Parts always begin on a new page. Chapters begin on a new page by default; in Custom formatting this can be disabled without changing the Chapter Number or Chapter Title styles. Page breaks are paragraph properties on the first displayed heading, not synthetic blank paragraphs. Number and title can be shown separately, numerically, in words, as title only, or through a retained legacy-profile template. Missing numbers remain missing—zero is never invented.
 
-The default scene break is centred `* * *`. Headers, footers, page numbers, and a table of contents are not generated by default because Vellum handles final book layout.
+The deterministic **Vellum** preset uses Garamond 12 pt, 1.15 line spacing, a 0.3-inch body indent, Letter pages, clean separate word-number/title headings, Chapter page breaks, and no automatic TOC. **Standard Manuscript** uses Times New Roman 12 pt, double spacing, a 0.5-inch body indent, one-inch margins, Letter pages, and Chapter page breaks. Selecting an individual formatting value switches the workspace to **Custom**. Custom supports the exposed font, size, spacing, indent, Letter/A4, Chapter-break, title-page, scene-break, heading-display, and TOC choices; margins remain fixed at one inch.
+
+The title page is off by default. When enabled, it contains only the book title and author and ends with a page break. The optional table of contents is a genuine Word TOC field that must be updated in Word; it is off by default for Vellum. The default scene break is centred `* * *`; blank scene-break mode emits an empty Scene Break paragraph only between included scenes. Headers, footers, and page numbers are not generated because Vellum handles final book layout.
+
+Bold, italics, combined bold/italics, readable Markdown link text, inline-code text, punctuation, accented characters, smart quotes, dashes, and Unicode are preserved. Complex nested Markdown, tables, embedded media, and advanced layout are intentionally unsupported. **Convert callouts to plain text** removes the Obsidian callout marker and callout title while preserving its quoted body as readable text; ordinary blockquotes are not classified as callouts.
 
 ## Front and Back Matter
 
@@ -76,7 +83,7 @@ The plugin has no telemetry, network requests, cloud dependency, or online accou
 
 ## Verified and Recoverable Saving
 
-The complete DOCX package is generated in memory and structurally validated before the destination is touched. It is then written to a same-folder temporary file, read back, checked for matching length and checksum, and validated again before replacement. The saved destination is read and validated once more before export is reported as successful.
+The complete DOCX is generated in memory and checked before the destination is touched. It is then written to a same-folder temporary file, read back, compared with the generated file, and checked again before replacement. The saved destination is read and checked once more before export is reported as successful.
 
 Local filesystem vaults use a staged same-folder replacement designed to preserve the previous file if saving fails. Other vault adapters use staged verification and recovery where supported: the previous bytes are preserved in memory and in a temporary recovery backup until the new destination has passed verification. No other Obsidian plugin, Pandoc installation, shell command, or external executable is involved.
 
@@ -90,13 +97,14 @@ npm run typecheck
 npm test
 npm run test:safe-writer
 npm run test:docx
+npm run benchmark:large
 npm run build
 npm run package
 npm run package:validate
 npm audit
 ```
 
-The regression suite includes a realistic `Book 1 - Warden of Silence` vault tree with transparent manuscript containers, excluded project folders, dashboard notes, YAML properties, scene templates, synopsis/revision sections, front/back matter, Unicode prose, and multiple Parts and Chapters. The DOCX test inspects `document.xml` and `styles.xml` semantically and writes `.test-build/Warden-of-Silence-regression.docx` for manual inspection.
+The regression suite includes a realistic `Book 1 - Warden of Silence` vault tree with transparent manuscript containers, excluded project folders, dashboard notes, YAML properties, scene templates, synopsis/revision sections, front/back matter, Unicode prose, and multiple Parts and Chapters. The DOCX test inspects `document.xml` and `styles.xml` semantically and writes `.test-build/Warden-of-Silence-regression.docx` for manual inspection. The normal large-manuscript test uses a generous runaway guard and deterministic count/output assertions; `npm run benchmark:large` reports local timing without applying a desktop-specific pass/fail target.
 
 See [MANUAL_TESTING.md](MANUAL_TESTING.md) for the live Obsidian, Word/LibreOffice, and Vellum checklist. Automated tests do not substitute for those application-level checks.
 
@@ -111,4 +119,4 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for the command-to-preparation call graph
 
 ## Release Package
 
-`npm run package` creates `release/manuscript-compiler-0.9.1.zip` containing exactly `main.js`, `manifest.json`, and `styles.css`. `npm run package:validate` verifies archive contents and matching version metadata.
+`npm run package` creates `release/manuscript-compiler-0.9.2.zip` containing exactly `main.js`, `manifest.json`, and `styles.css`. `npm run package:validate` verifies archive contents and matching version metadata.
