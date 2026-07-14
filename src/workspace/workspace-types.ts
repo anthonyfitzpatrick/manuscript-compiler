@@ -1,5 +1,5 @@
 /**
- * Manuscript Compiler — four-step workspace state contracts.
+ * Manuscript Compiler — three-stage workspace state contracts.
  *
  * State is controller-owned and mutable. Views read it synchronously and request
  * mutations rather than retaining divergent copies.
@@ -8,8 +8,10 @@ import type { PreparedCompileSession } from "../compile-preparation";
 import type { ContentPlanItem } from "../content-plan";
 import type { OperationStatus } from "../operation-state";
 import type { DocxFormatting, SimpleCompileRequest } from "../simple-workflow";
+import type { ExportFormat } from "../export-types";
 
-export type CompileWorkspaceStep = "manuscript" | "contents" | "formatting" | "export";
+export const WORKSPACE_STEPS = ["manuscript", "contents", "create"] as const;
+export type CompileWorkspaceStep = typeof WORKSPACE_STEPS[number];
 /** Separates concise author guidance from log-only technical detail. */
 export interface WorkspaceError {
   message: string;
@@ -29,4 +31,5 @@ export interface CompileWorkspaceState {
   preparationStatus: OperationStatus;
   exportStatus: OperationStatus;
   error?: WorkspaceError;
+  exportFormat: ExportFormat;
 }

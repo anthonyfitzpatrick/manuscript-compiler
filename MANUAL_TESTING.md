@@ -1,115 +1,88 @@
 # Manuscript Compiler 0.9.2 Manual Release Checklist
 
-Record the date, tester, Obsidian version, operating system, Word/LibreOffice version, and Vellum version. Automated tests do not complete any item below.
+All items are intentionally unchecked. Record date, tester, Obsidian version, operating system, and application versions. Automated tests do not complete these gates.
 
-## Clean install
+## Installation and workflow
 
-- [ ] Install only `main.js`, `manifest.json`, and `styles.css` in `.obsidian/plugins/manuscript-compiler/`.
-- [ ] Upgrade an existing vault from the previous plugin version and confirm profiles, settings, and history remain usable.
-- [ ] Start once with deliberately malformed persisted settings and confirm recovery is actionable and does not prevent the plugin loading.
-- [ ] Enable Manuscript Compiler without enabling another community plugin.
-- [ ] Confirm first-run behaviour is understandable and does not require Pandoc or an external executable.
-- [ ] Open **Manuscript Compiler: Compile Manuscript** from the command palette.
-- [ ] Open the compiler from **Open Manuscript Compiler** in plugin settings.
-- [ ] Right-click a folder in File Explorer and confirm **Compile manuscript from this folder** appears; confirm it is absent for note menus.
-- [ ] Confirm the folder action opens the existing workspace, shows the exact clicked path, and begins scanning without another folder picker.
+- [ ] Install only `main.js`, `manifest.json`, and `styles.css` in a clean Obsidian vault.
+- [ ] Upgrade an existing vault from the prior plugin version; confirm profiles, history, and formatting choices survive.
+- [ ] Load malformed persisted settings and confirm bounded, actionable recovery.
+- [ ] Right-click a folder and confirm the exact root opens in **Manuscript → Contents → Create file**.
+- [ ] Confirm the command-palette and settings entry points use the same workspace.
+- [ ] Confirm no other community plugin, Pandoc, office suite, or executable is needed.
 
-## Real manuscript
+## Manuscript structure
 
-- [ ] Compile a novel with Parts and confirm Part, Chapter, and Scene structure.
-- [ ] Compile a novel without Parts and confirm Chapters are not wrapped in a synthetic visible Part.
-- [ ] Compile a large real-world manuscript and confirm preparation, preview, export, and cancellation remain responsive.
-- [ ] Select the actual book folder, not its `Manuscript` child.
-- [ ] Confirm the selected root is not displayed as a Part or Chapter.
-- [ ] Confirm `Manuscript` is suggested as a Transparent container and creates no heading.
-- [ ] Confirm nested `Manuscript/Book 1 - …` containers remain transparent while Part, Chapter, and Scene hierarchy is preserved.
-- [ ] Confirm the final report has non-zero Chapters and no orphan Scenes for a normally structured book.
-- [ ] Confirm mixed `Front and back matter`/`Font and back matter` and `Copyright notices` folders do not become Parts or Chapters.
-- [ ] Confirm About the Author, Acknowledgments/Acknowledgements, Also by…, and Back Cover Blurb are back matter after the manuscript.
-- [ ] Confirm Archive, Development, and Exports are visibly excluded with reasons.
-- [ ] Confirm dashboard and revision notes are visibly excluded.
-- [ ] Inspect and reorder individual front- and back-matter notes.
-- [ ] Change one folder or note role manually and confirm the outline updates.
-- [ ] Scroll halfway down a large Contents tree, change several roles and inclusion boxes, and confirm scroll position and keyboard focus remain stable.
-- [ ] Exclude a folder and confirm it collapses; re-enable it and confirm it remains collapsed until explicitly expanded.
-- [ ] Reorder two Scenes and confirm the order survives moving between steps.
-- [ ] Exclude and re-enable a parent folder; confirm prior child choices are preserved.
-- [ ] Confirm no Part 0 or Chapter 0 is shown.
+- [ ] Compile a novel with Parts.
+- [ ] Compile a novel without Parts.
+- [ ] Review front matter and back matter ordering.
+- [ ] Confirm transparent containers do not emit headings.
+- [ ] Confirm project notes and ignored folders remain excluded.
+- [ ] Exercise Correct structure: include/exclude, role correction, and Move up/down with mouse and keyboard.
+- [ ] Confirm ignored-note and warning review filters show only affected items.
+- [ ] Exclude and re-enable a folder; verify descendants, roles, choices, and order survive while the branch remains collapsed.
+- [ ] Edit an included note after preparation; confirm stale export is rejected until Refresh Preview.
+- [ ] Test a very large real manuscript in a narrow desktop pane and mobile-sized workspace.
 
-## Final preview
+## Universal delivery
 
-- [ ] Confirm the Export step shows the final semantic outline, counts, word count, exclusions, warnings, filename, and vault destination.
-- [ ] Compare Part, Chapter, and Scene counts with the Contents step.
-- [ ] Edit an included source note after preview preparation.
-- [ ] Confirm **Create DOCX** is blocked and the workspace remains open with **Refresh Preview**.
-- [ ] Refresh and confirm the updated source appears in the preview.
+- [ ] Confirm each successful action starts exactly one download/share flow.
+- [ ] Cancel or block the host download and confirm the UI remains retryable and truthful.
+- [ ] Repeat downloads and confirm no Blob URL or temporary anchor is retained.
+- [ ] Confirm no completed export, hidden copy, temporary output, or recovery file appears in the vault.
+- [ ] Confirm filenames are corrected when switching formats and reserved/invalid names are repaired.
+- [ ] Test download behaviour on Windows.
+- [ ] Test download behaviour on macOS.
+- [ ] Test download behaviour on Linux.
+- [ ] Test download/share behaviour on mobile.
 
-## Vellum DOCX
+## DOCX
 
-- [ ] Select Vellum and create a DOCX.
-- [ ] Confirm Vellum defaults to A4, a 0.75 cm first-line indent, and `#` scene breaks.
-- [ ] Inspect title-page enabled and disabled behaviour.
-- [ ] Confirm every Part begins on a new page without an unintended blank page.
-- [ ] Confirm Chapters begin on new pages with separate Chapter Number and Chapter Title styles.
-- [ ] Confirm scene breaks occur only between included Scenes.
-- [ ] Confirm the first paragraph after a Chapter or scene break is unindented and later Body Text is indented.
-- [ ] Search for YAML, Series/Book/Part/Chapter/Scene metadata, Dashboard, Synopsis, Revision Notes, Archive, Development, and Exports.
-- [ ] Import the DOCX into Vellum on macOS.
-- [ ] Confirm Vellum recognises Parts and Chapters and does not duplicate their titles.
-- [ ] Confirm Vellum places front matter before Parts and back matter after every manuscript Part.
+- [ ] Open DOCX in Microsoft Word and inspect title, matter, Parts, Chapters, page starts, First Paragraph, Body Text, and scene breaks.
+- [ ] Open DOCX in LibreOffice and inspect the same structure.
+- [ ] Import DOCX into Vellum and confirm Parts/Chapters are recognised without duplicate titles.
+- [ ] Exercise Vellum, Standard Manuscript, Custom, A4/Letter, title page, TOC, Unicode, and every scene-break choice.
 
-## Standard Manuscript
+## ODT
 
-- [ ] Select Standard Manuscript and confirm Times New Roman 12 pt.
-- [ ] Confirm A4, double spacing, a 1.27 cm first-line indent, 2.54 cm margins, and `* * *` scene breaks.
-- [ ] Confirm First Paragraph remains unindented.
-- [ ] Confirm Chapters start on new pages.
+- [ ] Open ODT in LibreOffice and inspect styles, page starts, title/matter order, paragraphs, emphasis, Unicode, and scene breaks.
+- [ ] Confirm A4/Letter and Standard Manuscript formatting behave as selected.
 
-## Custom formatting
+## PDF
 
-- [ ] Disable Chapter page breaks and confirm Chapters continue without forced page changes.
-- [ ] Compare Letter and A4 page sizes.
-- [ ] Change font, font size, line spacing, and first-line indent and inspect each result.
-- [ ] Test title page on and off.
-- [ ] Enable the TOC, update fields in Word/LibreOffice, and confirm it populates.
-- [ ] Test `#`, `*`, `***`, `* * *`, Blank line, and a custom/Unicode separator.
-- [ ] Confirm bold, italics, combined emphasis, links, smart quotes, dashes, accented characters, and non-Latin Unicode survive.
-- [ ] Confirm callout markers/titles become plain text while their body remains readable.
+- [ ] Open PDF in at least two independent viewers.
+- [ ] Confirm page size, wrapping, page flow, Parts/Chapters, matter, and scene breaks.
+- [ ] In each viewer, render, select, copy, and search `Östersund`, `Å Ä Ö å ä ö`, curly quotes, en/em dashes, `Café, naïve, façade, déjà vu`, and `© ® ™ € £ ¥`.
+- [ ] Confirm unsupported characters use the documented `?` fallback and produce one informational item, not mojibake or repeated warnings.
+- [ ] Confirm parentheses, backslashes, long wrapped paragraphs, and page breaks do not corrupt surrounding text.
+- [ ] Confirm no blank, duplicated, substituted, or missing glyphs within the documented WinAnsi character coverage.
+- [ ] Confirm A4 uses 2.54 cm margins and body lines use the full text measure without a narrow right-side void.
+- [ ] Confirm only the first line of later body paragraphs is indented; continuation lines return to the left margin, while first prose after Chapter headings and scene breaks is unindented.
+- [ ] Inspect Part/Chapter number-title spacing, heading-to-prose spacing, centred scene breaks, continuation pages, and bottom-margin clearance.
 
-## Saving and recovery
+## EPUB
 
-- [ ] Save a new DOCX destination in the vault.
-- [ ] Overwrite an existing DOCX and confirm the replacement is valid.
-- [ ] Cancel before **Finalising file…** and confirm the previous destination is unchanged.
-- [ ] Force a controlled save failure and confirm the previous file is restored or recovery guidance identifies the preserved backup.
-- [ ] Confirm no recognised temporary files remain after success or cancellation.
-- [ ] Use **Save a copy to computer** or the platform-equivalent save/share action.
-- [ ] Use **Open DOCX** where supported.
-- [ ] Use **Reveal in file manager** where supported.
-- [ ] Confirm result actions appear only after successful final verification.
-- [ ] Confirm Open, Reveal, and Save Copy are absent or fail closed on unsupported platforms.
-- [ ] Repeat save and recovery checks with a non-filesystem vault adapter.
+- [ ] Open EPUB in at least two EPUB 3 readers.
+- [ ] Confirm navigation, spine order, title/matter/Part/Chapter order, reflow, emphasis, Unicode, and scene breaks.
+- [ ] Run EPUBCheck separately if available and record its version/results; it is not a runtime requirement.
 
-## Privacy
+## HTML and XML
 
-- [ ] Review diagnostics and compile logs after successful, failed, and warning-producing compiles; confirm they contain no manuscript prose, note excerpts, private metadata values, or absolute local paths.
+- [ ] Open HTML offline in multiple browsers; confirm embedded styling, navigation, structure, Unicode, and no network requests.
+- [ ] Open XML in at least two XML-aware tools and inspect namespace, schema version, hierarchy, emphasis, escaping, and deterministic ordering.
+- [ ] Confirm XML contains no vault paths, YAML, settings, profile IDs, or diagnostics.
 
-## Platforms and applications
+## Privacy and independence
 
-- [ ] Obsidian Desktop on macOS.
-- [ ] Obsidian Desktop on Windows, when available.
-- [ ] Obsidian Desktop on Linux, when available.
-- [ ] Obsidian Mobile, when available.
-- [ ] Microsoft Word or LibreOffice visual page inspection.
-- [ ] Vellum import on macOS.
+- [ ] Review successful and failed history/log/diagnostics records for prose, private metadata, absolute paths, usernames, Blob URLs, and external destinations.
+- [ ] Observe network activity during preparation and all six exports; confirm no request is made.
+- [ ] Confirm no Electron, shell, external executable, or community-plugin API is invoked.
 
 ## Result record
 
-- Clean install completed: [ ] Yes [ ] No
-- Real manuscript and preview completed: [ ] Yes [ ] No
-- Vellum DOCX completed: [ ] Yes [ ] No
-- Standard and Custom DOCX completed: [ ] Yes [ ] No
-- Saving/recovery completed: [ ] Yes [ ] No
-- Platforms tested:
-- Issues found:
-- Evidence or screenshots:
+- Tester/date:
+- Obsidian/platform versions:
+- Applications/readers tested:
+- Formats passed:
+- Issues and reproduction steps:
+- Screenshots or evidence:

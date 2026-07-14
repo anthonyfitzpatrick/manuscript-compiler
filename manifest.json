@@ -3,7 +3,7 @@
   "name": "Manuscript Compiler",
   "version": "0.9.2",
   "minAppVersion": "1.5.0",
-  "description": "Compile explicitly selected publishable manuscript content to a clean native DOCX for Vellum or Word.",
+  "description": "Compile publishable manuscript content to native DOCX, ODT, PDF, EPUB, HTML, or XML files.",
   "author": "Anthony Fitzpatrick",
   "isDesktopOnly": false
 }

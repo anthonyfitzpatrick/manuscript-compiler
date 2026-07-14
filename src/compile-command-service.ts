@@ -5,7 +5,7 @@
  * previews/validation, and delegates export. main.ts routes compile commands here.
  * It calls BookRootResolver, CompilePreparationService, validation, and export.
  */
-import { Notice, TFolder, type App } from "obsidian";
+import { Notice, TFile, TFolder, type App } from "obsidian";
 import { BookRootResolver } from "./book-root-resolver";
 import { CompilationCancelledError } from "./cancellation";
 import { calculateSourceFingerprint, CompilePreparationService, type CompilePurpose, type CompileRoute, type PreparedCompileSession } from "./compile-preparation";
@@ -16,7 +16,7 @@ import { getObsidianVersion } from "./platform-compat";
 import type { CompileProfile, ManuscriptCompilerSettings } from "./settings";
 import { inferStructurePreset, type SimpleCompileRequest } from "./simple-workflow";
 import type { OperationStateController } from "./operation-state";
-import { MarkdownExporter } from "./exporter";
+import type { ExportFormat } from "./export-types";
 import { CompilationProgressModal, CompilePreviewModal, DiagnosticsReportModal, ValidationReportModal, showError } from "./ui";
 import { ManuscriptValidationService } from "./validation";
 
@@ -35,7 +35,7 @@ export class CompileCommandService {
   /** Rechecks source metadata so a preview cannot silently export stale files. */
   async preparedSessionIsCurrent(session: PreparedCompileSession): Promise<boolean> { return await calculateSourceFingerprint(this.app.vault, session.sourcePaths) === session.sourceFingerprint; }
   /** Delegates an already prepared session; this method never scans or rebuilds its Book. */
-  async exportPreparedSession(session: PreparedCompileSession): Promise<ExportExecutionResult> { return this.exporter.exportPreparedSession(session); }
+  async exportPreparedSession(session: PreparedCompileSession, format?: ExportFormat, filename?: string): Promise<ExportExecutionResult> { return this.exporter.exportPreparedSession(session, { format, filename }); }
 
   /** Runs the compatibility request flow through the same preparation and preview used by the workspace. */
   async compileRequest(request: SimpleCompileRequest): Promise<void> {
@@ -80,7 +80,7 @@ export class CompileCommandService {
     catch (error) { if (operation.signal.aborted) operation.cancel(); else operation.fail(); throw error; }
     finally { operation.settle(); externalSignal?.removeEventListener("abort", cancel); }
   }
-  private async saveDiagnostics(report: string): Promise<string> { const stamp = new Date().toISOString().replace(/[:.]/g, "-"); const path = `Manuscript Compiler Diagnostics/Diagnostics ${stamp}.md`; await new MarkdownExporter(this.app.vault).write(path, report); return path; }
+  private async saveDiagnostics(report: string): Promise<string> { const folder = "Manuscript Compiler Diagnostics"; if (!this.app.vault.getAbstractFileByPath(folder)) await this.app.vault.createFolder(folder); const stamp = new Date().toISOString().replace(/[:.]/g, "-"); const path = `${folder}/Diagnostics ${stamp}.md`; const existing = this.app.vault.getAbstractFileByPath(path); if (existing instanceof TFile) await this.app.vault.modify(existing, report); else await this.app.vault.create(path, report); return path; }
 }
 
 function modalPromise(factory: (finish: (value: boolean) => void) => { open(): void; onClose(): void }): Promise<boolean> { return new Promise((resolve) => { let settled = false; const finish = (value: boolean): void => { if (!settled) { settled = true; resolve(value); } }; const modal = factory(finish); const close = modal.onClose.bind(modal); modal.onClose = (): void => { close(); finish(false); }; modal.open(); }); }

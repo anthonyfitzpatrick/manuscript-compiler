@@ -33,11 +33,11 @@ export class ManuscriptParser {
    */
   async parse(scan: ScannedBook, settings: CompileOptions, signal?: AbortSignal): Promise<Book> {
     const warnings = [...scan.warnings];
-    if (scan.hierarchyDiagnostics?.length) console.warn("Manuscript Compiler hierarchy diagnostics", scan.hierarchyDiagnostics);
+    if (scan.hierarchyDiagnostics?.length) console.warn(`Manuscript Compiler found ${scan.hierarchyDiagnostics.length} hierarchy diagnostic(s).`);
     const unreadable = new Map<string, string>();
     const cache = new Map<string, ManuscriptDocument>();
     this.filterDurationMs = 0;
-    await mapConcurrent(scan.allMarkdown, 16, async (file) => { throwIfCancelled(signal); try { cache.set(file.path, await this.parseDocument(file, settings)); } catch (error) { if (signal?.aborted) throw error; const message = error instanceof Error ? error.message : String(error); unreadable.set(file.path, message); warnings.push(`Unreadable file “${file.path}”: ${message}`); } }, signal);
+    await mapConcurrent(scan.allMarkdown, 16, async (file) => { throwIfCancelled(signal); try { cache.set(file.path, await this.parseDocument(file, settings)); } catch (error) { if (signal?.aborted) throw error; const message = "Obsidian could not read this note."; unreadable.set(file.path, message); warnings.push(`Unreadable file “${file.path}”. ${message}`); } }, signal);
     const documents = (files: TFile[]): ManuscriptDocument[] => files.map((file) => cache.get(file.path)).filter((document): document is ManuscriptDocument => document !== undefined);
     const frontDocuments = documents(scan.frontMatter);
     const backDocuments = documents(scan.backMatter);
@@ -83,7 +83,7 @@ export class ManuscriptParser {
     const explicitlyIncluded = (settings as CompileProfile).explicitlyIncludedPaths?.includes(file.path) === true; const statusExcluded = !explicitlyIncluded && metadata.editingStatus?.trim().toLowerCase() === "excluded";
     const filterStarted = performance.now(); const filter = this.metadataFilter.matches(metadata, settings.metadataFilters); this.filterDurationMs += performance.now() - filterStarted;
     const excluded = statusExcluded || !explicitlyIncluded && !filter.included;
-    const exclusionReason = statusExcluded ? "Editing Status is Excluded" : filter.failedRule ? `${filter.failedRule.field} ${filter.failedRule.operator === "equals" ? "==" : "!="} ${filter.failedRule.value} did not match` : undefined;
+    const exclusionReason = statusExcluded ? "Editing Status is Excluded" : filter.failedRule ? `Excluded by metadata filter “${filter.failedRule.field}”.` : undefined;
     return { file, title: file.basename, number: settings.metadataOrdering ? extractNumber(metadata.scene) ?? extractNumber(file.basename) : extractNumber(file.basename), metadata, content: this.cleaner.clean(rawContent, settings).trim(), excluded, exclusionReason, metadataError: parsed.error };
   }
 
@@ -91,7 +91,7 @@ export class ManuscriptParser {
     const match = markdown.replace(/^\uFEFF/, "").match(/^---[\t ]*\r?\n([\s\S]*?)\r?\n(?:---|\.\.\.)[\t ]*(?:\r?\n|$)/);
     if (!match) return { metadata: { values: {} } };
     let yaml: unknown;
-    try { yaml = parseYaml(match[1]); } catch (error) { return { metadata: { values: {} }, error: error instanceof Error ? error.message : "YAML could not be parsed." }; }
+    try { yaml = parseYaml(match[1]); } catch { return { metadata: { values: {} }, error: "YAML frontmatter could not be parsed." }; }
     if (!yaml || typeof yaml !== "object" || Array.isArray(yaml)) return { metadata: { values: {} }, error: "YAML frontmatter must be a mapping." };
     const normalizedValues = Object.fromEntries(Object.entries(yaml as Record<string, unknown>).map(([key, value]) => [normalizeKey(key), value]));
     const scalar = (key: string): string | number | undefined => { const value = normalizedValues[key]; return typeof value === "string" || typeof value === "number" ? value : undefined; };

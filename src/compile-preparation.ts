@@ -13,13 +13,13 @@
 import { TFile, TFolder, type Vault } from "obsidian";
 import { ManuscriptCompiler } from "./compiler";
 import { applyContentPlan, classifyContentPlan, createContentPlan, isPlanItemIncluded, type ContentPlanItem } from "./content-plan";
-import { MarkdownExporter, type ExportProgressStage, type ExportRequest } from "./exporter";
 import type { Book, CompileResult, CompileWarning, ManuscriptStatistics } from "./model";
 import type { CompileProfile, StructurePreset } from "./settings";
 import { inchesToCentimetres } from "./measurements";
 import { applyContentPlanAuthority, applyWorkspacePlanAuthority, inferStructurePreset, resolveSimpleCompileRequest, type SimpleCompileRequest } from "./simple-workflow";
 import type { ScannedBook } from "./types";
 import { VaultScanner } from "./vault-scanner";
+import { exportFilename } from "./export-filename";
 
 /** Prose-free explanation of an item absent from the final Book. */
 export interface PreparedExclusion { path: string; name: string; reason: string; }
@@ -71,7 +71,7 @@ export interface PreparedCompileSession {
 export class CompilePreparationService {
   constructor(private readonly vault: Vault, private readonly baseProfile: CompileProfile, private readonly wordsPerMinute: number) {}
 
-  /** Prepares an edited four-step workspace request without altering its plan. */
+  /** Prepares an edited three-stage workspace request without altering its plan. */
   async prepare(request: SimpleCompileRequest, contentPlan: ContentPlanItem[], signal?: AbortSignal): Promise<PreparedCompileSession> {
     return this.prepareAuthoritative({ manuscriptRoot: request.manuscriptRoot, profile: this.baseProfile, structurePreset: request.structurePreset, contentPlan, simpleRequest: request, purpose: "preview", route: "guided" }, signal);
   }
@@ -109,7 +109,7 @@ export class CompilePreparationService {
       WordCount: statistics.totalWordCount,
       ChapterCount: statistics.chapterCount
     };
-    const paths = outputPaths(new MarkdownExporter(this.vault), profile, variables);
+    const paths = [exportFilename(profile.outputFilename, "docx", String(variables.BookTitle ?? book.title))];
     const result = compiler.compile(book, profile, paths[0] ?? "", this.wordsPerMinute, preparedAt, signal, statistics);
     result.timings = {
       totalMs: performance.now() - preparationStarted,
@@ -155,26 +155,20 @@ export async function calculateSourceFingerprint(vault: Vault, sourcePaths: stri
 }
 
 /** Creates exporter input while retaining `session.book` by reference. */
-export function createPreparedExportRequest(session: PreparedCompileSession, outputPath: string, keepTemporaryMarkdown: boolean, signal?: AbortSignal, onCommit?: () => void, onProgress?: (stage: ExportProgressStage) => void): ExportRequest {
+export function createPreparedExportRequest(session: PreparedCompileSession, outputPath: string, keepTemporaryMarkdown: boolean, signal?: AbortSignal, onCommit?: () => void, onProgress?: (stage: string) => void) {
   return { book: session.book, profile: session.profile, markdown: session.result.markdown, outputPath, variables: session.variables, keepTemporaryMarkdown, signal, onCommit, onProgress };
 }
 /** Fingerprints all author inputs that can change model or output preparation. */
 export function compileInputSignature(request: SimpleCompileRequest, plan: ContentPlanItem[]): string {
   return hash(JSON.stringify({
     root: request.manuscriptRoot, preset: request.structurePreset, front: request.includeFrontMatter,
-    back: request.includeBackMatter, format: request.outputFormat, docx: request.docxPreset,
+    back: request.includeBackMatter, docx: request.docxPreset,
     formatting: request.formatting, tableOfContents: request.tableOfContents, partDisplay: request.partDisplay, chapterDisplay: request.chapterDisplay,
-    custom: request.custom, exportFolder: request.exportFolder, outputFilename: request.outputFilename,
+    custom: request.custom,
     plan: plan.map(({ path, role, included, order, userOverride }) => ({ path, role, included, order, userOverride }))
   }));
 }
 export function preparedSessionMatchesInputs(session: PreparedCompileSession, request: SimpleCompileRequest, plan: ContentPlanItem[]): boolean { return session.inputSignature === compileInputSignature(request, plan); }
-
-function outputPaths(exporter: MarkdownExporter, profile: CompileProfile, variables: Record<string, string | number | undefined>): string[] {
-  const markdown = exporter.getOutputPath(profile.exportFolder, profile.outputFilename, variables, ".md");
-  const docx = exporter.getOutputPath(profile.exportFolder, profile.outputFilename, variables, ".docx");
-  return profile.exportTarget === "markdown-docx" ? [markdown, docx] : [profile.exportTarget === "docx" ? docx : markdown];
-}
 
 function collectExclusions(plan: ContentPlanItem[], book: Book, rootPath: string): PreparedExclusion[] {
   const values = new Map<string, PreparedExclusion>();

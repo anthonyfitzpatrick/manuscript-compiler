@@ -11,7 +11,7 @@ import { normalizeKey } from "./metadata-filter";
 
 /** Stateless semantic/output analysis run after model construction. */
 export class WarningEngine {
-  analyze(book: Book, profile: CompileProfile, outputPath: string): CompileWarning[] {
+  analyze(book: Book, profile: CompileProfile, _outputPath: string): CompileWarning[] {
     const issues: CompileWarning[] = book.warnings.map((message) => ({ severity: this.legacySeverity(message), code: "structure", message }));
     const chapters = book.parts.flatMap((part) => part.chapters);
     const scenes = [...book.orphanScenes, ...book.parts.flatMap((part) => [...part.orphanScenes, ...part.chapters.flatMap((chapter) => chapter.scenes)])];
@@ -25,14 +25,15 @@ export class WarningEngine {
     chapters.filter((chapter) => chapter.scenes.length > 0 && chapter.scenes.every((scene) => scene.excluded || !scene.content.trim())).forEach((chapter) => issues.push(this.warning("empty-chapter", `Chapter has no included content: “${chapter.title}”.`, chapter.path)));
     if (book.frontMatter.documents.length === 0) issues.push(this.info("missing-front-matter", "No front matter was detected."));
     if (book.backMatter.documents.length === 0) issues.push(this.info("missing-back-matter", "No back matter was detected."));
-    const rootPath = book.root.path.replace(/\/+$/g, "") || "/"; const outputInsideRoot = rootPath === "/" ? Boolean(outputPath) : outputPath === rootPath || outputPath.startsWith(`${rootPath}/`); if (outputInsideRoot) issues.push({ severity: "error", code: "output-inside-root", message: "The output file is inside the manuscript folder and may be compiled on a later run.", path: outputPath, suggestion: "Choose an export folder outside the manuscript root." });
     if (!profile.name.trim()) issues.push({ severity: "error", code: "invalid-profile", message: "The active profile has no name." });
     if (!profile.outputFilename.trim()) issues.push({ severity: "error", code: "invalid-output", message: "The active profile has no output filename." });
     if (!profile.partHeadingTemplate.trim() || !profile.chapterHeadingTemplate.trim()) issues.push(this.warning("invalid-template", "A heading template is empty; folder titles will be used."));
     profile.metadataFilters.forEach((rule) => { if (!rule.field.trim() || !rule.value.trim() || !["equals", "not-equals"].includes(rule.operator)) issues.push({ severity: "error", code: "invalid-filter", message: "A metadata filter has an invalid operator or an empty field/value." }); });
     scenes.filter((scene) => !scene.excluded && Object.keys(scene.metadata.values).length === 0).forEach((scene) => issues.push(this.info("missing-metadata", `Scene has no YAML metadata: “${scene.file.path}”.`, scene.file.path)));
     const usedMetadata = new Set(["part", "chapter", "scene", "order", "editingstatus", ...profile.metadataFilters.map((rule) => normalizeKey(rule.field))]);
-    scenes.forEach((scene) => { for (const [key, value] of Object.entries(scene.metadata.values)) { if (!usedMetadata.has(key)) issues.push({ severity: "information", code: "unused-metadata", message: `Metadata field “${key}” is not used by this profile.`, path: scene.file.path, suggestion: "Remove it if obsolete, or add a metadata filter that uses it." }); if (["part", "chapter", "scene", "order"].includes(key) && extractNumber(value) === undefined) issues.push({ severity: "warning", code: "invalid-metadata-value", message: `Metadata field “${key}” must contain a number.`, path: scene.file.path, suggestion: "Replace the value with a numeric ordering value." }); } });
+    let removedMetadataFields = 0;
+    scenes.forEach((scene) => { for (const [key, value] of Object.entries(scene.metadata.values)) { if (!scene.excluded && !usedMetadata.has(key)) removedMetadataFields += 1; if (["part", "chapter", "scene", "order"].includes(key) && extractNumber(value) === undefined) issues.push({ severity: "warning", code: "invalid-metadata-value", message: `Metadata field “${key}” must contain a number.`, path: scene.file.path, suggestion: "Replace the value with a numeric ordering value." }); } });
+    if (removedMetadataFields) issues.push(this.info("metadata-removed", `${removedMetadataFields.toLocaleString()} metadata field${removedMetadataFields === 1 ? "" : "s"} removed from manuscript.`));
     return this.deduplicate(issues);
   }
   filter(issues: CompileWarning[], minimum: WarningSeverity): CompileWarning[] { const rank: Record<WarningSeverity, number> = { information: 0, warning: 1, error: 2 }; return issues.filter((issue) => rank[issue.severity] >= rank[minimum]); }

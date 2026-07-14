@@ -7,7 +7,7 @@
  * controller so entry points cannot acquire different preparation paths.
  *
  * Called by Obsidian. Calls profile repair, UI registration, command/export/
- * history/action services, onboarding, and conservative output cleanup.
+ * history/download services and onboarding.
  * Invariant: application services are composed here once and then delegated to.
  */
 import { Notice, Plugin, TFolder } from "obsidian";
@@ -19,21 +19,19 @@ import type { CompileRoute, PreparedCompileSession } from "./compile-preparation
 import { COMMAND_IDS } from "./commands";
 import { OperationStateController } from "./operation-state";
 import { CompileHistoryService } from "./compile-history";
-import { ResultActionService } from "./result-actions";
 import { ExportCoordinator } from "./export-coordinator";
 import { CompileCommandService } from "./compile-command-service";
-import { SafeBinaryWriter } from "./safe-binary-writer";
 import { SimpleCompileModal } from "./compile-modal";
 import { FirstRunWizardModal } from "./wizards";
-import { FolderSuggestModal, ManuscriptCompilerSettingTab, showError } from "./ui";
+import { FolderSuggestModal, ManuscriptCompilerSettingTab } from "./ui";
 import { addCompileFolderMenuItem } from "./folder-context-menu";
+import type { ExportFormat } from "./export-types";
 
 /** Obsidian-owned plugin instance and composition root for one enabled lifecycle. */
 export default class ManuscriptCompilerPlugin extends Plugin {
   settings: ManuscriptCompilerSettings = { ...DEFAULT_SETTINGS };
   private readonly operations = new OperationStateController();
   private history!: CompileHistoryService;
-  private actions!: ResultActionService;
   private exporter!: ExportCoordinator;
   private commands!: CompileCommandService;
 
@@ -41,7 +39,6 @@ export default class ManuscriptCompilerPlugin extends Plugin {
   async onload(): Promise<void> {
     await this.loadSettings();
     this.composeServices();
-    await this.cleanupStaleOutputFiles();
     this.addSettingTab(new ManuscriptCompilerSettingTab(this.app, this));
     this.registerCommands();
     this.registerFolderContextMenu();
@@ -73,8 +70,6 @@ export default class ManuscriptCompilerPlugin extends Plugin {
   openCompiler(): void { new SimpleCompileModal(this.app, this).open(); }
   /** Opens the same workspace with the exact File Explorer folder selected as root. */
   async openCompilerForFolder(folder: TFolder): Promise<void> { new SimpleCompileModal(this.app, this, folder).open(); }
-  /** Opens a verified result through platform capabilities or presents an author-facing failure. */
-  async openExport(path: string): Promise<void> { if (!await this.actions.openExport(path)) showError(new Error("Obsidian could not open this export automatically. Open it from your file manager.")); }
   /** Clears both history and associated compile logs through their persistence service. */
   async clearHistory(): Promise<void> { await this.history.clearHistory(); }
   /** Compatibility facade retained for callers; all work is delegated to CompileCommandService. */
@@ -84,7 +79,7 @@ export default class ManuscriptCompilerPlugin extends Plugin {
   /** Rechecks a session's source fingerprint without mutating or rebuilding it. */
   async preparedSessionIsCurrent(session: PreparedCompileSession): Promise<boolean> { return this.commands.preparedSessionIsCurrent(session); }
   /** Exports the exact prepared session and converts coordinator failure into a UI-safe exception. */
-  async exportPreparedSession(session: PreparedCompileSession): Promise<void> { const result = await this.commands.exportPreparedSession(session); if (result.status === "failed") throw new Error(result.error); }
+  async exportPreparedSession(session: PreparedCompileSession, format?: ExportFormat, filename?: string): Promise<void> { const result = await this.commands.exportPreparedSession(session, format, filename); if (result.status === "failed") throw new Error(result.error); }
   /** Routes onboarding/sample compilation through the production command service. */
   async compileSampleManuscript(): Promise<void> { await this.commands.compileSampleManuscript(); }
   /** Retains the historical plugin facade while enforcing the unified explicit-root route. */
@@ -92,8 +87,7 @@ export default class ManuscriptCompilerPlugin extends Plugin {
 
   private composeServices(): void {
     this.history = new CompileHistoryService(() => this.settings, () => this.saveSettings(), this.manifest.version);
-    this.actions = new ResultActionService(this.app);
-    this.exporter = new ExportCoordinator(this.app, () => this.settings, () => this.saveSettings(), this.operations, this.history, this.actions);
+    this.exporter = new ExportCoordinator(this.app, () => this.settings, () => this.saveSettings(), this.operations, this.history);
     this.commands = new CompileCommandService(this.app, () => this.settings, () => this.getActiveProfile(), this.operations, this.exporter, this.manifest.version);
   }
 
@@ -109,13 +103,5 @@ export default class ManuscriptCompilerPlugin extends Plugin {
     this.registerEvent(this.app.workspace.on("file-menu", (menu, file) => {
       addCompileFolderMenuItem(menu, file, (folder) => { void this.openCompilerForFolder(folder); });
     }));
-  }
-
-  private async cleanupStaleOutputFiles(): Promise<void> {
-    try {
-      const result = await new SafeBinaryWriter(this.app.vault).cleanupStaleArtifacts(this.settings.defaultExportFolder);
-      if (result.removed.length) console.info(`Manuscript Compiler removed ${result.removed.length} stale temporary file(s).`);
-      if (result.preservedBackups.length) console.warn(`Manuscript Compiler preserved ${result.preservedBackups.length} recovery backup file(s) for manual review.`);
-    } catch (error) { console.warn("Manuscript Compiler could not complete stale temporary-file cleanup.", error); }
   }
 }

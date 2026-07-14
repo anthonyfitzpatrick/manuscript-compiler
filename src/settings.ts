@@ -3,12 +3,12 @@
  *
  * Shared by migration, workspace resolution, compiler services, and settings
  * UI. Historical fields remain for data compatibility even when inactive. New
- * defaults must remain native-DOCX, offline, A4/metric, and author-safe.
+ * defaults remain offline, browser-delivered, A4/metric, and author-safe.
  */
 export type OrderingMethod = "filename" | "metadata";
 export type WarningLevel = "information" | "warning" | "error";
 export type MetadataOperator = "equals" | "not-equals";
-export type ExportTarget = "markdown" | "docx" | "markdown-docx";
+export type ExportTarget = "markdown" | "docx" | "markdown-docx" | "odt" | "pdf" | "epub" | "html" | "xml";
 export type ChapterSource = "folders" | "notes";
 export type StructurePreset = "novel-parts" | "novel" | "chapter-notes" | "short-story" | "anthology" | "custom";
 export type DocxStylePreset = "vellum" | "standard" | "custom";
@@ -45,7 +45,7 @@ export interface CompileProfile extends CompileOptions {
 }
 export type StructuralDisplay = "word" | "numeric" | "word-title" | "numeric-title" | "title" | "custom";
 /** Repaired, bounded persisted summary; never contains manuscript prose. */
-export interface ExportHistoryEntry { id: string; timestamp: string; profile: string; manuscript: string; outputFiles: string[]; wordCount: number; success: boolean; cancelled?: boolean; message?: string; }
+export interface ExportHistoryEntry { id: string; timestamp: string; profile: string; manuscript: string; format?: ExportTarget; outputFiles: string[]; wordCount: number; success: boolean; cancelled?: boolean; message?: string; generationSucceeded?: boolean; validationPassed?: boolean; downloadStarted?: boolean; }
 export interface CompileLogEntry extends ExportHistoryEntry { exportFormats: ExportTarget; compilerVersion: string; pandocVersion?: string; durationMs: number; scanDurationMs: number; parseDurationMs: number; filterDurationMs: number; generationDurationMs: number; exportDurationMs: number; warnings: string[]; diagnostics?: string; }
 /** Plugin-owned persisted state loaded and saved only through the plugin lifecycle. */
 export interface ManuscriptCompilerSettings extends CompileOptions {
@@ -59,6 +59,8 @@ export interface ManuscriptCompilerSettings extends CompileOptions {
   defaultStructurePreset: StructurePreset; defaultDocxStyle: DocxStylePreset; warnBeforeOverwrite: boolean;
   defaultDocxPageSize: "letter" | "a4"; defaultDocxFirstLineIndentCm: number;
   openAfterCompile: boolean; includeTitlePageByDefault: boolean; includeTableOfContentsByDefault: boolean; showAdvancedOptions: boolean;
+  saveToVaultByDefault: boolean; rememberExternalSaveFolder: boolean; lastExternalSaveFolder: string; revealAfterCompile: boolean;
+  defaultDownloadFormat: "docx" | "odt" | "pdf" | "epub" | "html" | "xml";
   /* Stage 1/2 migration fields. */
   defaultManuscriptFolder: string; defaultExportFolder: string; defaultCompilePreset: "default" | "vellum";
 }
@@ -76,8 +78,9 @@ export const DEFAULT_SETTINGS: ManuscriptCompilerSettings = {
   showStatistics: true, readingWordsPerMinute: 250, minimumWarningLevel: "information",
   pandocExecutablePath: "", automaticallyDetectPandoc: false, defaultExportFormat: "docx", defaultReferenceDocx: "",
   keepTemporaryMarkdown: false, enableCompileLogs: true, maximumExportHistoryEntries: 50, exportHistory: [], compileLogs: [], configurationWarnings: [], onboardingCompleted: false,
-  defaultManuscriptFolder: "", defaultExportFolder: "Manuscript Exports", defaultCompilePreset: "default",
+  defaultManuscriptFolder: "", defaultExportFolder: "", defaultCompilePreset: "default",
   defaultStructurePreset: "novel-parts", defaultDocxStyle: "vellum", warnBeforeOverwrite: true, openAfterCompile: false,
   defaultDocxPageSize: "a4", defaultDocxFirstLineIndentCm: 0.75,
   includeTitlePageByDefault: false, includeTableOfContentsByDefault: false, showAdvancedOptions: false
+  , saveToVaultByDefault: false, rememberExternalSaveFolder: false, lastExternalSaveFolder: "", revealAfterCompile: false, defaultDownloadFormat: "docx"
 };

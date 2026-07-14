@@ -108,7 +108,6 @@ export async function classifyContentPlan(vault: Vault, plan: ContentPlanItem[])
   return plan;
 }
 
-/** Applies a folder matter role only to descendants that the author has not explicitly classified. */
 /** Propagates matter roles only to descendants without explicit overrides. */
 export function applyMatterRoleInheritance(plan: ContentPlanItem[], folderPath: string, role: ContentRole, previousRole?: ContentRole): void {
   const matterRole = role === "front-matter" || role === "back-matter" ? role : undefined;

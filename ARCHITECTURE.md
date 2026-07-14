@@ -1,174 +1,107 @@
-# Compile Route Architecture
+# Architecture
 
-This document is the maintainer handbook for the runtime architecture. The README explains the product to authors; this file explains where a developer can safely change it and which boundaries must remain intact.
+## Source-of-truth pipeline
 
-## Mental model
-
-The plugin deliberately has two models:
-
-- `ScannedBook` is a permissive physical discovery model. It describes what exists below a folder and is never safe to export directly.
-- `Book` is the semantic publishing model. It contains only prepared front matter, Parts, Chapters, Scenes, and back matter and is the sole input to renderers.
-
-`ContentPlanItem[]` is the bridge between them. Automatic inference proposes roles, while the Contents workspace records authoritative author corrections. This intermediate plan exists because vault organisation is not publishing structure: project folders, transparent containers, dashboards, and template notes can coexist beside manuscript prose.
-
-Every production route resolves a `TFolder` through `BookRootResolver` and crosses one root-to-model boundary: `CompilePreparationService.prepareAuthoritative()` in `src/compile-preparation.ts`. `VaultScanner` performs mechanical discovery only. No command, validator, or exporter may convert its raw `ScannedBook` independently.
-
-## Composition and runtime boundaries
-
-`src/main.ts` is the plugin composition root. It loads and repairs settings, constructs services, registers stable command IDs and the settings tab, runs conservative startup cleanup, and cancels the active global operation on unload.
-
-It also registers the documented workspace `file-menu` event through `registerEvent()`. `folder-context-menu.ts` adds the action only for `TFolder`; its callback delegates to `openCompilerForFolder()` and contains no scanning or preparation logic.
-
-- `CompileCommandService` resolves roots and coordinates guided, legacy, sample, validation, and diagnostics commands.
-- `CompilePreparationService` is the only root-to-`PreparedCompileSession` boundary.
-- `CompileWorkspaceController` owns four-step state, validation, invalidation, duplicate-click protection, and cancellable workspace operations.
-- Step renderers in `src/workspace/` own DOM controls and event wiring only.
-- `ExportCoordinator` verifies fingerprints, handles overwrite and progress UI, invokes exporters, and reports the outcome.
-- `CompileHistoryService` is the only export-history and compile-log persistence boundary; `history-storage.ts` repairs malformed persisted entries before UI use.
-- `ResultActionService` isolates open, reveal, and platform save-copy capabilities.
-- `SafeBinaryWriter` owns staged binary replacement, verification, rollback, and cleanup.
-- `OperationStateController` models idle, preparation, export, non-cancellable finalisation, cancellation, failure, and completion.
-
-## Entry-point map
-
-| Command or caller | Root resolution | Content plan | Preparation purpose | Consumer |
-| --- | --- | --- | --- | --- |
-| `compile-manuscript` / `SimpleCompileModal` | explicit workspace folder through the preparation service | edited workspace plan, authoritative | `preview` / `guided` | Export-step preview, then `exportPreparedSession()` |
-| File Explorer folder action | exact right-clicked `TFolder`; no ancestry inference | workspace scan, then edited authoritative plan | `preview` / `guided` | same four-step workspace and `exportPreparedSession()` |
-| `compileRequest()` compatibility caller | explicit request root | supplied plan, or safely inferred when absent | `preview` / `guided` | `exportPreparedSession()` |
-| `compile-current-book` | `BookRootResolver.configuredOrCurrent()` | safely inferred and classified | `compile` / `current-book` | final-model preview, then `exportPreparedSession()` |
-| `compile-selected-folder` | `BookRootResolver.selected()` | safely inferred and classified | `compile` / `selected-folder` | final-model preview, then `exportPreparedSession()` |
-| profile-compatible `compileFolder()` | `BookRootResolver.selected()` | safely inferred unless an authoritative plan is supplied | `compile` / `legacy-profile` | final-model preview, then `exportPreparedSession()` |
-| first-run sample compile | `BookRootResolver.require()` | safely inferred and classified | `compile` / `sample` | final-model preview, then `exportPreparedSession()` |
-| `validate-manuscript` | `BookRootResolver.configuredOrCurrent()` | safely inferred and classified | `validation` / `validation` | `ManuscriptValidationService.validate(session)`; no write |
-| Markdown and DOCX exporters | none | none | none | exact `PreparedCompileSession.book` and prepared Markdown only |
-
-`generate-diagnostics-report` is not a compile route and never reads manuscript content.
-
-## Authoritative pipeline
+The plugin has one manuscript interpretation path:
 
 ```text
-TFolder book root
-  -> BookRootResolver
-  -> CompilePreparationService
-  -> VaultScanner mechanical discovery
-  -> create/classify ContentPlan (or accept edited workspace plan)
-  -> apply transparent containers, exclusions, roles, inclusion, and order
-  -> ManuscriptCompiler.buildModel
-  -> ManuscriptParser
-  -> ContentCleaningPipeline
-  -> semantic Book
-  -> statistics, warnings, exclusions, Markdown, fingerprints
-  -> PreparedCompileSession
-  -> workspace/legacy preview or validation
-  -> ExportCoordinator fingerprint and overwrite checks
-  -> MarkdownExporter or DocxExporter
-  -> validateDocxBytes (DOCX in memory)
-  -> SafeBinaryWriter staged write/readback/replacement/final validation
-  -> CompileHistoryService after verified success/failure/cancellation
-  -> ResultActionService / result view
+TFolder manuscript root
+  → BookRootResolver
+  → CompilePreparationService
+  → VaultScanner (mechanical discovery only)
+  → ContentPlan inference and author corrections
+  → ManuscriptParser
+  → ContentCleaningPipeline
+  → semantic Book
+  → statistics, warnings, fingerprints, preview
+  → PreparedCompileSession
+  → SemanticDocument export projection
+  → selected native exporter
+  → format validator
+  → BrowserDownloadService
+  → privacy-safe history
 ```
 
-The guided UI call graph is:
+`ScannedBook` describes physical vault discovery and is never exportable. `ContentPlanItem[]` records inferred and corrected structure. `Book` is the publishing model and is the sole manuscript source for preview and every exporter. `SemanticDocument` is an export-oriented projection of that exact Book; it does not replace Book and cannot scan, parse, clean, or infer.
 
-```text
-SimpleCompileModal
-  -> step renderer
-  -> CompileWorkspaceController
-  -> CompileCommandService.prepareGuided
-  -> BookRootResolver.require
-  -> CompilePreparationService
-  -> PreparedCompileSession
-  -> buildExportPreviewViewModel(session)
-  -> CompileWorkspaceController.export
-  -> ExportCoordinator
+Changing a filename or export format does not invalidate or reconstruct the prepared Book. Changes affecting manuscript structure, content selection, cleaning, or semantic formatting invalidate the session. Export also verifies source-content and input fingerprints to reject stale previews.
+
+## Runtime boundaries
+
+- `main.ts` is the composition root and registers commands, settings, and the documented `file-menu` event.
+- `compile-preparation.ts` is the only root-to-`PreparedCompileSession` boundary.
+- `workspace/compile-workspace-controller.ts` owns three-stage state, invalidation, cancellation, and duplicate-action suppression.
+- Workspace step modules render DOM controls only.
+- `semantic-document.ts` creates one format-independent block/section projection.
+- `native-exporters.ts` contains DOCX, ODT, PDF, EPUB, HTML, and XML byte generators.
+- `export-validators.ts` is the validator registry used before delivery.
+- `export-coordinator.ts` verifies the session, generates, validates, starts one download, and records history.
+- `browser-download.ts` owns the complete Blob/object-URL/temporary-anchor lifecycle.
+- `compile-history.ts` owns bounded history and log persistence.
+
+No exporter accepts `ScannedBook`, a vault, a parser, or raw note paths. Exporters receive one `ManuscriptExportContext` containing the prepared session, its shared `SemanticDocument`, formatting, and a portable filename.
+
+## Export contracts
+
+`ExportFormat` is `docx | odt | pdf | epub | html | xml`. Each exporter returns `{ format, filename, mimeType, bytes, warnings }`. `EXPORTERS` and `EXPORT_VALIDATORS` are exhaustive registries keyed by that union.
+
+The coordinator order is fixed:
+
+1. Verify prepared-session fingerprints.
+2. Create one `SemanticDocument` from `session.book`.
+3. Generate bytes with the selected exporter.
+4. Validate bytes using the selected validator.
+5. Enter non-cancellable finalisation for download dispatch.
+6. Start one browser download.
+7. Record success only when dispatch reports it started.
+
+Download-started is not filesystem-persisted. No final external path, Downloads path, Blob URL, or vault destination is stored.
+
+## Format implementation
+
+DOCX retains the native WordprocessingML generator and structural validator. ODT and EPUB use `fflate` with the required first, uncompressed `mimetype` entry and controlled package paths. HTML and XML use UTF-8 `TextEncoder` output. PDF is generated internally as direct binary PDF objects, pages, content streams, xref, trailer, and EOF marker; it uses no runtime PDF dependency. PDF display codes use the built-in font's WinAnsi encoding, while a deterministic ToUnicode CMap maps every emitted byte back to Unicode for selection, search, and copy. Input is normalised to NFC; unsupported characters receive an intentional `?` glyph and one grouped informational issue rather than corrupting adjacent text.
+
+The PDF layout pass uses one centimetre/millimetre-to-point conversion, exact A4 or Letter dimensions, and `page width - left margin - right margin` as its text measure. Wrapping uses the emitted Times-Roman or Helvetica glyph widths in their 1000-unit coordinate system. Semantic blocks retain their own alignment, leading, spacing, keep-with-next rules, and first-line indentation; paragraph continuations use the full measure. Part/Chapter heading groups and scene breaks are kept with following content where space permits. Generated page dictionaries carry bounded layout measurements so the validator can reject implausibly narrow columns and out-of-bounds text without screenshot analysis.
+
+All ZIP entry names are constants or generated section filenames under controlled prefixes. User-controlled filenames never become ZIP paths. XML 1.0-invalid characters are removed, element text and attributes are escaped, HTML is escaped, and CSS font names are constrained before interpolation.
+
+The XML interchange structure uses:
+
+```xml
+<manuscript xmlns="https://manuscript-compiler.dev/schema" schemaVersion="1.0">
+  <metadata>…</metadata>
+  <frontMatter><document><scene><paragraph/></scene></document></frontMatter>
+  <body><part><chapter><scene><paragraph/></scene></chapter></part></body>
+  <backMatter>…</backMatter>
+</manuscript>
 ```
 
-The workspace plan wins over inference and legacy profile structure. Automatic routes always classify project folders, dashboards, revision notes, and empty cleaned notes before parsing. Legacy profiles can still supply formatting, output choices, matter preferences, and scene-break settings, but cannot bypass the content plan.
+Inline emphasis is represented with `span` elements carrying `bold` and/or `italic`. The schema deliberately excludes source paths, YAML, profile identifiers, settings, diagnostics, and compiler state.
 
-`createContentPlan()` records each detected role, recognises dedicated and mixed matter containers, and treats nested folders repeating the selected root name as transparent when they are not explicit Parts or Chapters. `applyContentPlan()` reconstructs the scan using each item’s nearest included Part/Chapter ancestor. Transparent folders therefore flatten only their own heading; they do not flatten or detach the structural descendants below them. Manual order is read from the authoritative global content order.
+## Output delivery and compatibility data
 
-## Why preview owns the final Book
+Completed exports exist in memory until `BrowserDownloadService` constructs a Blob. The service assigns anchor `href` and `download` as DOM properties, appends the anchor, clicks once, removes it, and revokes the object URL on both success and failure. There is no Electron, Node filesystem, or vault binary-write path.
 
-The parser and cleaner can exclude empty or malformed notes after the Contents plan has been edited. A plan-derived preview could therefore promise content that the exporter would later omit. Preparation resolves this by constructing one `PreparedCompileSession`: its `book` reference drives the outline, statistics, warnings, Markdown, and DOCX. Export verifies content-based source fingerprints and input fingerprints but does not rebuild the model. Equal-size source edits are therefore detected even when an adapter reports an unchanged or coarse timestamp. Treat prepared sessions as immutable snapshots even though TypeScript does not deep-freeze them.
+Fields such as `exportFolder`, `defaultExportFolder`, `saveToVaultByDefault`, external-path memory, overwrite/open/reveal settings, Pandoc fields, and legacy export targets remain only because deleting persisted fields would destroy user data or make migration non-idempotent. They are not active delivery controls and do not select an old route.
 
-## Content-cleaning boundary
+The explicit diagnostics command may write its redacted Markdown report through documented vault APIs. That path neither contains manuscript prose nor handles generated manuscript files.
 
-`ManuscriptParser` reads each included file and delegates mandatory manuscript-body cleaning to `filters.ts`. Body-heading extraction runs before optional syntax conversion. Structured metadata removal is deliberately limited to recognised property regions, tables, and note boundaries; broad “lines beginning with Book/Chapter” deletion would destroy valid fiction prose. Any new cleaner must be deterministic, prose-preserving, and covered by an exact leakage regression.
+## State and privacy invariants
 
-## Execution invariants
+- Only one global preparation/export operation can run.
+- Workspace preparation and export promises are deduplicated.
+- Cancellation is accepted before download finalisation and all locks settle in `finally` paths.
+- Validation failure blocks download.
+- History success follows validation and successful dispatch.
+- Normal warnings use stable categories/counts; metadata removal is Information.
+- Diagnostics and logs never retain prose, warning details, absolute paths, Blob URLs, environment variables, or private metadata values.
+- Exporters do not write history, settings, vault files, or UI.
 
-- The selected root names the book and is never a Part or Chapter.
-- An explicitly selected root is exact: no ancestor or nested child may replace it.
-- Transparent containers never emit headings.
-- The parser receives only a scan rewritten by an authoritative content plan.
-- Manual workspace inclusion, roles, and sibling order remain authoritative.
-- Zero is never invented for missing Part or Chapter numbers.
-- Preview, validation, Markdown, and DOCX consume the prepared semantic model; exporters never accept `ScannedBook`.
-- Source and input fingerprints are checked before export.
-- `SafeBinaryWriter` is the normal DOCX vault-save path.
-- Exporters never write history or open result UI.
-- Step renderers never scan, parse, export, or access filesystem/Electron bridges.
-- Native DOCX creation remains offline and requires no community plugin, Pandoc, shell, or external executable.
-- The production DOCX module exposes only semantic `Book` generation; no generic Markdown-to-DOCX production entry point remains.
+## Tests
 
-## Native DOCX formatting boundary
+- `tests/run.ts`: parsing, cleaning, inference, migration, state, privacy, UI view models, route identity, and repository hygiene.
+- `tests/docx-integration.ts`: semantic Word XML and package regression coverage.
+- `tests/exports.ts`: all exporter registries, formats, validators, escaping, forbidden-content checks, filenames, and browser-download cleanup.
+- `tests/large-manuscript-benchmark.ts`: prepares one large Book/SemanticDocument, then measures all six generators independently with a generous runaway guard.
 
-`SimpleCompileRequest` carries the authoritative formatting selection. `resolveSimpleCompileRequest()` maps it to compatibility profile fields, `DocxExporter` passes those fields to `createManuscriptDocx()`, and `resolveDocxOptions()` repairs numeric compatibility values before XML generation. The generator consumes the prepared `Book`; it never reparses Markdown structure.
-
-| Active control | Request/profile field | WordprocessingML effect |
-| --- | --- | --- |
-| Vellum / Standard / Custom | `docxPreset` plus `DocxFormatting` | deterministic supported defaults or explicit values |
-| Font, size, line spacing, indent | `docxFont`, `docxFontSize`, `docxLineSpacing`, `docxFirstLineIndentCm` | style defaults, `BodyText`, and `FirstParagraph` properties |
-| Letter / A4 | `docxPageSize` | section page dimensions |
-| Chapter page breaks | `docxChapterPageBreak` | `pageBreakBefore` on the first displayed Chapter heading only |
-| Part headings | semantic Part plus `partDisplay` | Parts always start on a new page; number/title paragraphs are kept together |
-| Chapter headings | semantic Chapter plus `chapterDisplay` | Chapter Number/Title styles with no invented numbering |
-| Scene break | `sceneSeparator` | centred Scene Break paragraph only between included scenes |
-| Title page | `docxTitlePage` plus title/author variables | Title and Author styles, followed by one page break |
-| Table of contents | `tableOfContents` / `generateTableOfContents` | genuine Word TOC field; off by default |
-| Front/back matter inclusion | authoritative content plan plus matter flags | included matter notes use matter headings and page starts |
-| Part/Chapter inclusion | authoritative structural roles and `useParts` | only semantic nodes receive structural headings |
-| Scene titles | compatibility-only `includeSceneTitles` | functional for legacy profiles but not exposed in the normal workflow |
-
-The `Subtitle` style was removed because the semantic model has no supported subtitle field. Legacy custom heading templates, `includeSceneTitles`, and the stored `removeCallouts` field remain data-compatible; the active wording for the latter is **Convert callouts to plain text**. Pandoc/reference-document fields remain migration-only and are not active formatting controls. Margins are fixed at one inch, and separate front/back page-behaviour toggles are not exposed.
-
-## Safe-saving transaction
-
-`createManuscriptDocx()` returns complete bytes and never accesses the vault. `DocxExporter` validates those bytes and passes them to `SafeBinaryWriter`, the only normal DOCX destination-writing path.
-
-On a local filesystem the writer stages in the destination directory, verifies readback, renames an existing destination to a backup, renames the temporary file into place, verifies the final file, then removes the backup. A failed replacement restores the backup. Generic adapters use the same validation stages but preserve original bytes and a recovery backup because their write APIs cannot promise rename atomicity. Cancellation is accepted before commit; after commit begins the writer must finish replacement or rollback.
-
-History success and Open/Reveal/Save Copy actions occur only after final verification. Persisted log warnings are structural code summaries rather than note text, paths, or parser excerpts; shareable diagnostics omit legacy warning details. Do not move those side effects into exporters or UI components.
-
-## Settings and migration
-
-`settings.ts` is the persisted schema. `profiles.ts` performs historical migration followed by repair. Migration retains obsolete fields when deleting them would lose user data, but retained Pandoc fields are inert. Both stages must remain idempotent: applying them twice must produce the same serialised settings.
-
-When adding a persisted field:
-
-1. Add a safe new-user default.
-2. Repair missing or malformed values without overwriting valid explicit values.
-3. Add a realistic old-settings migration test and run it twice.
-4. Decide whether the field belongs in the normal workspace, Advanced compatibility UI, or storage only.
-
-## Testing map
-
-- `tests/run.ts` is the broad unit/release suite: cleaning, parser, content plan, migrations, route identity, workspace state, privacy, and Warden semantic regressions.
-- `tests/docx-integration.ts` opens generated Word XML and asserts semantic styles, page behaviour, matter ordering, Unicode, and forbidden content.
-- `tests/safe-binary-writer.ts` injects failures at every save phase and proves rollback/cleanup.
-- `tests/large-manuscript-benchmark.ts` checks deterministic large-book correctness and reports parse/clean/Book, statistics, Markdown, and DOCX/ZIP timing.
-- `tests/golden/` protects stable Markdown output for representative structures.
-- `tests/fixtures/real-vault/` reproduces nested transparent containers and mixed matter that previously produced zero Chapters and orphan Scenes.
-
-Automated XML tests establish semantic structure, not visual pagination in Word/Vellum. Keep application-level checks in `MANUAL_TESTING.md` truthful and unchecked until performed.
-
-## Safe extension points
-
-- Add folder/note aliases in `content-plan.ts`, with fixture tests proving both inferred roles and final Book structure.
-- Add a deterministic warning in `warnings.ts`; keep blocking policy in `export-safety.ts`.
-- Add a supported DOCX option by carrying it from `SimpleCompileRequest` through resolved profile fields into `DocxOptions`, then assert its XML effect. Do not expose the control first.
-- Add a result capability behind `ResultActionService` and `platform-compat.ts`; UI should only render reported capabilities.
-- Add a cleaner in `filters.ts` only when it can distinguish authoring syntax from ordinary prose.
-
-Areas requiring cross-pipeline review are content-plan authority, Book shape, prepared-session identity/fingerprints, migration, DOCX styles, and SafeBinaryWriter commit order. These should not be changed as local conveniences.
+Automated package tests do not establish application interoperability. Live gates remain unchecked in `MANUAL_TESTING.md` until performed.

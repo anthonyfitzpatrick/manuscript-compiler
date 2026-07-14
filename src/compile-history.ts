@@ -6,6 +6,7 @@
  * directly, and records contain no manuscript prose.
  */
 import type { CompileResult } from "./model";
+import { redactTechnicalMessage } from "./diagnostics";
 import { profileId } from "./profiles";
 import { repairCompileLogs, repairExportHistory } from "./history-storage";
 import type { CompileLogEntry, ExportHistoryEntry, ExportTarget, ManuscriptCompilerSettings } from "./settings";
@@ -20,6 +21,7 @@ export interface HistoryRecord {
   outputFiles: string[];
   result?: CompileResult;
   message?: string;
+  generationSucceeded?: boolean; validationPassed?: boolean; downloadStarted?: boolean;
   timings?: Partial<Pick<CompileLogEntry, "scanDurationMs" | "parseDurationMs" | "filterDurationMs" | "generationDurationMs" | "exportDurationMs">>;
 }
 
@@ -44,13 +46,14 @@ export class CompileHistoryService {
     const settings = this.settings();
     const base: ExportHistoryEntry = {
       id: profileId(), timestamp: record.timestamp.toISOString(), profile: record.profile, manuscript: record.manuscript,
-      outputFiles: [...record.outputFiles], wordCount: record.result?.wordCount ?? 0, success,
-      cancelled: cancelled || undefined, message: success ? undefined : cancelled ? "Cancelled" : redactDiagnostic(record.message)
+      format: record.format, outputFiles: [...record.outputFiles], wordCount: record.result?.wordCount ?? 0, success,
+      cancelled: cancelled || undefined, message: success ? undefined : cancelled ? "Cancelled" : redactDiagnostic(record.message),
+      generationSucceeded: record.generationSucceeded, validationPassed: record.validationPassed, downloadStarted: record.downloadStarted
     };
     settings.exportHistory = [base, ...repairExportHistory(settings.exportHistory)].slice(0, Math.max(1, settings.maximumExportHistoryEntries));
     if (settings.enableCompileLogs) {
       const timings = { scanDurationMs: 0, parseDurationMs: 0, filterDurationMs: 0, generationDurationMs: 0, exportDurationMs: 0, ...record.timings };
-      const log: CompileLogEntry = { ...base, exportFormats: record.format, compilerVersion: this.compilerVersion, pandocVersion: "Built-in DOCX", durationMs: Date.now() - record.started, ...timings, warnings: warningSummary(record.result), diagnostics: redactDiagnostic(record.message) };
+      const log: CompileLogEntry = { ...base, exportFormats: record.format, compilerVersion: this.compilerVersion, durationMs: Date.now() - record.started, ...timings, warnings: warningSummary(record.result), diagnostics: redactDiagnostic(record.message) };
       settings.compileLogs = [log, ...this.getLogs()].slice(0, Math.max(1, settings.maximumExportHistoryEntries));
     }
     await this.save();
@@ -59,14 +62,11 @@ export class CompileHistoryService {
 
 function warningSummary(result?: CompileResult): string[] {
   const counts = new Map<string, number>();
-  for (const issue of result?.issues ?? []) counts.set(issue.code, (counts.get(issue.code) ?? 0) + 1);
+  for (const issue of result?.issues ?? []) if (issue.severity !== "information") counts.set(issue.code, (counts.get(issue.code) ?? 0) + 1);
   return [...counts.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([code, count]) => `${count} × ${code}`);
 }
 
 function redactDiagnostic(message?: string): string | undefined {
   if (!message) return;
-  return message.split(/\r?\n/)[0]
-    .replace(/[A-Za-z]:\\[^\s"”]+/g, "<path redacted>")
-    .replace(/\/(?:Users|home|private|tmp)\/[^\s"”]+/g, "<path redacted>")
-    .slice(0, 500);
+  return redactTechnicalMessage(message);
 }

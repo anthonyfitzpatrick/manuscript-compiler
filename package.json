@@ -1,17 +1,22 @@
 {
   "name": "obsidian-manuscript-compiler",
   "version": "0.9.2",
-  "description": "Validate, preview, and compile Obsidian book manuscripts to Markdown or DOCX.",
+  "description": "Validate, preview, and compile Obsidian book manuscripts to DOCX, ODT, PDF, EPUB, HTML, or XML.",
   "main": "main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",
     "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
     "typecheck": "tsc -noEmit -skipLibCheck",
     "test": "node esbuild.test.mjs",
-    "test:safe-writer": "node esbuild.safe-writer-test.mjs",
     "test:docx": "node esbuild.docx-test.mjs",
+    "test:odt": "node esbuild.exports-test.mjs odt",
+    "test:pdf": "node esbuild.exports-test.mjs pdf",
+    "test:epub": "node esbuild.exports-test.mjs epub",
+    "test:html": "node esbuild.exports-test.mjs html",
+    "test:xml": "node esbuild.exports-test.mjs xml",
+    "test:exports": "node esbuild.exports-test.mjs",
     "benchmark:large": "node esbuild.benchmark.mjs",
-    "package": "npm run typecheck && npm test && npm run test:safe-writer && npm run test:docx && npm run build && node scripts/package.mjs",
+    "package": "npm run typecheck && npm test && npm run test:docx && npm run test:exports && npm run build && node scripts/package.mjs",
     "package:validate": "node scripts/package.mjs --validate"
   },
   "keywords": [

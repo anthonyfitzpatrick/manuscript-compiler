@@ -2,55 +2,62 @@
 
 ## Current status
 
-Version 0.9.2 remains a release candidate. Live Obsidian/Vellum testing exposed a nested-container hierarchy and matter-classification defect; Step 8 corrects it with exact File Explorer root selection, structural-ancestor reconstruction, matter aliases, and a realistic regression fixture. The updated DOCX has not yet been manually re-imported into Vellum, so application-level confirmation remains required.
+Version 0.9.2 remains a prerelease candidate. Automated gates cover the shared prepared Book, six native generators, format validators, browser-download cleanup, privacy, migration, and release allowlist. Live interoperability and platform download testing remain release blockers; this document does not claim they were performed.
 
 ## Supported workflow
 
-- Select a book root in the four-step Compile Manuscript workspace.
-- Or right-click the exact File Explorer folder and choose **Compile manuscript from this folder**.
-- Review roles, inclusion, exclusions, transparent containers, and manual order.
-- Select Vellum, Standard Manuscript, or supported Custom DOCX formatting.
-- Review the exact prepared semantic manuscript.
-- Create a native DOCX, save it to the vault, and use platform result actions where supported.
-- Use the retained current-book, selected-folder, validation, sample, Markdown, and legacy-profile command routes through the same preparation service.
+- Select the exact book root through File Explorer, command palette, or settings.
+- Review the compact outline and use Correct structure only when needed.
+- Choose DOCX, ODT, PDF, EPUB, HTML, or XML.
+- Use only the formatting controls meaningful for that format.
+- Generate and validate bytes in memory, then start the host browser download/share flow.
 
-## Automated release gates completed
+No completed export is written into the Obsidian vault. There is no vault fallback, Electron path, external executable, network request, telemetry, or dependency on another community plugin. The host controls the final destination and the plugin cannot verify that external filesystem copy after download dispatch.
 
-- `npm run typecheck` — passed
-- `npm test` — 103 tests passed, including traversal-before-normalisation, equal-size stale-source detection, diagnostics/log privacy, malformed persistence repair, repository hygiene, and the real-vault nested-container/matter-role regression
-- `npm run test:safe-writer` — 18 tests passed
-- `npm run test:docx` — passed; original and real-vault Warden semantic structures inspected
-- `npm run benchmark:large` — 500 Chapters, 2,000 Scenes, and 2,000,000 words in 484 ms locally: parse/clean/Book 209 ms, statistics 114 ms, Markdown 37 ms, DOCX/ZIP 125 ms; timing is informational
-- `npm run build` — passed
-- `npm run package` — passed
-- `npm run package:validate` — passed
-- `npm audit` — 0 vulnerabilities
-- `git diff --check` — passed
+## Automated gates
+
+Run and record current output before publishing:
+
+- `npm run typecheck`
+- `npm test`
+- `npm run test:docx`
+- `npm run test:odt`
+- `npm run test:pdf`
+- `npm run test:epub`
+- `npm run test:html`
+- `npm run test:xml`
+- `npm run test:exports`
+- `npm run benchmark:large`
+- `npm run build`
+- `npm run package`
+- `npm run package:validate`
+- `npm audit`
+- `git diff --check`
 
 The release archive must be `release/manuscript-compiler-0.9.2.zip` and contain exactly `main.js`, `manifest.json`, and `styles.css`.
 
-## Independence and runtime assumptions
+## Runtime dependencies
 
-Manuscript Compiler performs no network requests, telemetry, cloud sync, shell execution, child-process execution, or community-plugin API access. Pandoc and other external executables are not invoked. Obsidian provides the host API. The only production npm dependency is bundled `fflate`, used to create and inspect ZIP-based DOCX packages offline.
-
-Local filesystem vaults receive the strongest same-folder staged replacement path. Other adapters use verified staged output and recovery where supported. Open, reveal, browser download, and platform share/save behaviour depends on the available Obsidian platform APIs.
+Obsidian supplies the host API. `fflate` is the sole bundled runtime package and is used for DOCX, ODT, and EPUB ZIP generation plus structural inspection. PDF, HTML, XML, filename handling, and download delivery add no runtime package.
 
 ## Known limitations
 
-- Word TOC fields require an update in Word or LibreOffice.
-- Complex nested Markdown, tables, embedded media, and advanced page layout are outside the fiction-manuscript renderer.
-- Ordinary blockquotes are preserved by cleaning but rendered as readable paragraphs rather than a dedicated Word quotation style.
-- Vellum recognition and visual pagination require application-level confirmation.
-- Matter inference covers documented aliases and ancestry; unusual names still require author review in Contents.
-- Mobile and non-filesystem adapter recovery cannot promise filesystem-atomic replacement.
+- Browser/host save prompts differ across Windows, macOS, Linux, and mobile.
+- Download dispatch is observable; final external persistence is not.
+- Internal PDF validation is structural, not a claim of full standards conformance.
+- Native PDF uses the built-in WinAnsi font repertoire with NFC normalisation and an exact ToUnicode map. Characters outside that repertoire use an intentional `?` fallback reported once as information; live viewer checks remain required.
+- Native PDF wrapping uses built-in Times-Roman/Helvetica metrics and verified A4/Letter point geometry. Automated layout checks do not replace visual inspection in Preview, Acrobat, browser, and Linux PDF viewers.
+- EPUB structural tests do not replace EPUBCheck and reader interoperability.
+- Word, LibreOffice, Vellum, PDF viewers, EPUB readers, browsers, and XML tools may expose application-specific behaviour not visible to byte-level tests.
+- Complex Markdown layout and embedded media remain outside the fiction-manuscript model.
 
-## Manual gates still required
+## Manual blockers before 1.0
 
-Complete every applicable unchecked item in `MANUAL_TESTING.md`, especially real-book detection, stale-preview blocking, overwrite recovery, Word/LibreOffice pagination, Vellum structure recognition, and available desktop/mobile platforms.
-
-## Remaining blockers before 1.0.0
-
-- Complete and record live Obsidian desktop testing on supported operating systems.
-- Complete Word or LibreOffice visual inspection and Vellum import testing.
-- Exercise mobile/non-filesystem save and recovery on real supported devices.
-- Resolve any defects discovered by those manual checks and repeat the automated release gates.
+- Complete all applicable items in `MANUAL_TESTING.md`.
+- Test download delivery on Windows, macOS, Linux, and mobile.
+- Inspect DOCX in Word/LibreOffice and import it into Vellum.
+- Inspect ODT in LibreOffice.
+- Inspect PDF and EPUB in at least two independent applications each.
+- Inspect standalone HTML offline in multiple browsers and XML in XML-aware tools.
+- Test a large real-world Unicode manuscript and confirm no vault output or Blob URL leak.
+- Resolve discovered defects and repeat every automated gate.

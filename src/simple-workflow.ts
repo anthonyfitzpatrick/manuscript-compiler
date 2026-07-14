@@ -1,5 +1,5 @@
 /**
- * Manuscript Compiler — four-step request and preset resolution.
+ * Manuscript Compiler — guided-workspace request and preset resolution.
  *
  * Translates concise author choices into a complete compatibility profile while
  * preserving the workspace plan as authoritative. Called by workspace state and
@@ -9,7 +9,7 @@ import type { CompileProfile, DocxStylePreset, ExportTarget, StructuralDisplay, 
 import type { ContentPlanItem } from "./content-plan";
 
 /** Controller-owned mutable formatting; centimetres are the canonical UI unit. */
-export interface DocxFormatting { font: string; fontSize: number; lineSpacing: number; firstLineIndentCm: number; pageSize: "letter" | "a4"; chapterPageBreak: boolean; titlePage: boolean; }
+export interface DocxFormatting { font: string; fontSize: number; lineSpacing: number; firstLineIndentCm: number; pageSize: "letter" | "a4"; pageMarginCm?: number; chapterPageBreak: boolean; titlePage: boolean; }
 
 export const DOCX_FORMATTING_PRESETS: Record<Exclude<DocxStylePreset, "custom">, Readonly<DocxFormatting>> = {
   vellum: { font: "Garamond", fontSize: 12, lineSpacing: 1.15, firstLineIndentCm: 0.75, pageSize: "a4", chapterPageBreak: true, titlePage: false },

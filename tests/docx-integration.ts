@@ -1,18 +1,15 @@
 /**
  * Native DOCX semantic integration suite.
  * Inspects WordprocessingML to protect styles, pagination, scene/paragraph state,
- * Unicode, matter order, Warden exclusions, validation, and staged output.
+ * Unicode, matter order, Warden exclusions, and validation.
  */
 import assert from "node:assert/strict";
-import { readFile, readdir, rename, rm, stat, writeFile } from "node:fs/promises";
-import path from "node:path";
 import { strFromU8, unzipSync } from "fflate";
 import { createManuscriptDocx, resolveDocxOptions, structuralLines, type DocxOptions } from "../src/docx";
 import { CompilePreparationService } from "../src/compile-preparation";
 import { createDefaultProfiles } from "../src/profiles";
 import { loadFixtureTree } from "./fixture-loader";
 import { validateDocxBytes } from "../src/docx-validator";
-import { SafeBinaryWriter, type SafeBinaryBackend } from "../src/safe-binary-writer";
 import { centimetresToTwips } from "../src/measurements";
 
 const loaded = await loadFixtureTree("samples/Book 1 - Warden of Silence");
@@ -22,11 +19,6 @@ const { book } = session;
 const baseOptions: DocxOptions = { title: "Warden of Silence", author: "Anthony Fitzpatrick", titlePage: true, font: "Times New Roman", fontSize: 12, lineSpacing: 2, firstLineIndentCm: 1.27, partDisplay: "word-title", chapterDisplay: "word-title", chapterPageBreak: true };
 const bytes = createManuscriptDocx(book, profile, baseOptions);
 assert.equal(validateDocxBytes(bytes).valid, true);
-const backend: SafeBinaryBackend = { kind: "filesystem", exists: async (value) => { try { await stat(value); return true; } catch { return false; } }, read: async (value) => new Uint8Array(await readFile(value)), write: async (value, data) => { await writeFile(value, data); }, rename: async (from, to) => { await rename(from, to); }, remove: async (value) => { await rm(value, { force: true }); }, list: async (folder) => (await readdir(folder)).map((name) => ({ path: path.join(folder, name), mtime: 0 })) };
-const stages: string[] = []; const outputPath = ".test-build/Warden-of-Silence-regression.docx"; const saved = await new SafeBinaryWriter(backend).writeValidated(outputPath, bytes, { token: "docx-integration", onProgress: (stage) => stages.push(stage) });
-assert.equal(saved.finalValidation.valid, true); assert.ok(stages.includes("Verifying temporary file")); assert.ok(stages.includes("Verifying saved DOCX"));
-const finalBytes = new Uint8Array(await readFile(outputPath)); assert.equal(validateDocxBytes(finalBytes).valid, true); assert.deepEqual(finalBytes, bytes);
-assert.equal((await readdir(".test-build")).some((name) => /Warden-of-Silence-regression\.docx\.manuscript-compiler-.*\.(?:tmp|backup)$/.test(name)), false);
 assert.equal(String.fromCharCode(...bytes.slice(0, 2)), "PK");
 const entries = unzipSync(bytes); for (const required of ["[Content_Types].xml", "_rels/.rels", "word/document.xml", "word/styles.xml", "docProps/core.xml"]) assert.ok(entries[required], `Missing ${required}`);
 const document = strFromU8(entries["word/document.xml"]); const styles = strFromU8(entries["word/styles.xml"]); const core = strFromU8(entries["docProps/core.xml"]);
@@ -109,6 +101,18 @@ assert.match(escapedTitle, /Fish &amp; &lt;Stars&gt; 雪/);
 assert.match(escapedTitle, /A &amp; B/);
 assert.match(paragraphs(escapedTitle, "Author")[0], /w:br w:type="page"/);
 
+const hostileText = `Fish & <Stars> > \"quote\" 'apostrophe' Östersund 雪 🚀\u0000\u0001\u0008\u000b\u000c\u001f\ufffe\uffff`;
+const hostileProfile = { ...profile, includeSceneTitles: true };
+const hostileScene = { ...book.parts[0].chapters[0].scenes[0], title: hostileText, content: `${hostileText}\n\n# ${hostileText}` };
+const hostileBook = { ...book, parts: [{ ...book.parts[0], title: hostileText, name: hostileText, chapters: [{ ...book.parts[0].chapters[0], title: hostileText, name: hostileText, scenes: [hostileScene] }] }] };
+const hostileEntries = unzipSync(createManuscriptDocx(hostileBook, hostileProfile, { ...baseOptions, title: hostileText, author: hostileText, font: hostileText, sceneSeparator: hostileText }));
+for (const [name, entry] of Object.entries(hostileEntries).filter(([name]) => name.endsWith(".xml"))) {
+  const xml = strFromU8(entry);
+  assert.doesNotMatch(xml, /[\u0000-\u0008\u000b\u000c\u000e-\u001f\ufffe\uffff]/, `${name} contains an XML 1.0-forbidden character`);
+}
+const hostileDocument = strFromU8(hostileEntries["word/document.xml"]); const hostileCore = strFromU8(hostileEntries["docProps/core.xml"]); const hostileStyles = strFromU8(hostileEntries["word/styles.xml"]);
+for (const xml of [hostileDocument, hostileCore, hostileStyles]) assert.match(xml, /Fish &amp; &lt;Stars&gt; &gt; &quot;quote&quot; &apos;apostrophe&apos; Östersund 雪 🚀/);
+
 const toc = documentFor({ tableOfContents: true });
 assert.match(toc, /w:instrText[^>]*> TOC \\o "1-3" \\h \\z \\u <\/w:instrText>/);
 assert.match(toc, /w:fldChar w:fldCharType="begin"/);
@@ -150,4 +154,4 @@ assert.match(realDocument, /w:pStyle w:val="PartNumber"[\s\S]*?Part One/); asser
 assert.ok(realDocument.indexOf("Copyright ebook edition") < realDocument.indexOf("Part One")); assert.ok(realDocument.indexOf("The answer arrived without warning") < realDocument.indexOf("About the Author"));
 for (const matter of ["About the Author", "Acknowledgments", "Also by Anthony Fitzpatrick", "Back Cover Blurb"]) { const paragraph = [...realDocument.matchAll(/<w:p[\s\S]*?<\/w:p>/g)].find((match) => match[0].includes(matter))?.[0] ?? ""; assert.doesNotMatch(paragraph, /w:pStyle w:val="(?:PartNumber|ChapterNumber)"/, matter); }
 assert.doesNotMatch(realDocument, />Manuscript<|>Front and back matter<|>Copyright notices<|Revision Notes|Internal summary/);
-process.stdout.write(`Built-in Warden regression DOCX passed (${bytes.length.toLocaleString()} bytes); wrote .test-build/Warden-of-Silence-regression.docx.\n`);
+process.stdout.write(`Built-in Warden regression DOCX passed (${bytes.length.toLocaleString()} bytes).\n`);

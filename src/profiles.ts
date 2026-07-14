@@ -12,7 +12,7 @@ import { repairCompileLogs, repairExportHistory } from "./history-storage";
 
 const VELLUM_OPTIONS = { ...DEFAULT_OPTIONS, orderingMethod: "metadata" as const, metadataOrdering: true, partHeadingTemplate: "Part {number}: {name}", chapterHeadingTemplate: "Chapter {number}: {name}", removeHtmlComments: true, removeDataviewBlocks: true, removeCallouts: true, stripInternalLinks: true };
 export function profileId(): string { return `profile-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`; }
-function profile(name: string, options = DEFAULT_OPTIONS, firstLineIndentCm = 1.27): CompileProfile { return { ...options, metadataFilters: options.metadataFilters.map((rule) => ({ ...rule })), id: profileId(), name, manuscriptRoot: "", exportFolder: "Manuscript Exports", outputFilename: "{BookTitle}.docx", variables: { BookTitle: "", Series: "", Author: "" }, exportTarget: "docx", referenceDocx: "", pandocMetadataFile: "", additionalPandocArguments: "", generateTableOfContents: false, keepIntermediateMarkdown: false, docxFirstLineIndentCm: firstLineIndentCm, docxPageSize: "a4" }; }
+function profile(name: string, options = DEFAULT_OPTIONS, firstLineIndentCm = 1.27): CompileProfile { return { ...options, metadataFilters: options.metadataFilters.map((rule) => ({ ...rule })), id: profileId(), name, manuscriptRoot: "", exportFolder: "", outputFilename: "{BookTitle}.docx", variables: { BookTitle: "", Series: "", Author: "" }, exportTarget: "docx", referenceDocx: "", pandocMetadataFile: "", additionalPandocArguments: "", generateTableOfContents: false, keepIntermediateMarkdown: false, docxFirstLineIndentCm: firstLineIndentCm, docxPageSize: "a4" }; }
 /** Creates fresh profiles; callers may mutate them without sharing nested arrays. */
 export function createDefaultProfiles(): CompileProfile[] { return [profile("Default"), profile("Vellum", VELLUM_OPTIONS, 0.75)]; }
 /** Copies mutable nested profile values and assigns a new stable identity. */
@@ -47,25 +47,35 @@ export function repairSettings(settings: ManuscriptCompilerSettings): Manuscript
   repaired.defaultDocxStyle ??= repaired.defaultCompilePreset === "vellum" || /vellum/i.test(activeForMigration?.name ?? "") ? "vellum" : "standard";
   if (!(repaired.defaultDocxStyle === "vellum" || repaired.defaultDocxStyle === "standard")) repaired.defaultDocxStyle = "standard";
   repaired.defaultExportFormat ??= "docx"; repaired.warnBeforeOverwrite ??= true; repaired.openAfterCompile ??= false; repaired.includeTitlePageByDefault ??= false; repaired.includeTableOfContentsByDefault ??= activeForMigration?.generateTableOfContents ?? false; repaired.showAdvancedOptions ??= false;
+  repaired.saveToVaultByDefault = repaired.saveToVaultByDefault === true; repaired.rememberExternalSaveFolder = repaired.rememberExternalSaveFolder === true; repaired.revealAfterCompile = repaired.revealAfterCompile === true; if (typeof repaired.lastExternalSaveFolder !== "string") repaired.lastExternalSaveFolder = "";
+  if (!["docx", "odt", "pdf", "epub", "html", "xml"].includes(repaired.defaultDownloadFormat)) repaired.defaultDownloadFormat = "docx";
   repaired.defaultDocxPageSize = activeForMigration?.docxPageSize === "letter" || activeForMigration?.docxPageSize === "a4" ? activeForMigration.docxPageSize : repaired.defaultDocxPageSize === "letter" ? "letter" : "a4";
   const migratedDefaultIndent = activeForMigration?.docxFirstLineIndentCm ?? (typeof activeForMigration?.docxFirstLineIndent === "number" ? inchesToCentimetres(activeForMigration.docxFirstLineIndent) : repaired.defaultDocxStyle === "vellum" ? 0.75 : 1.27);
   repaired.defaultDocxFirstLineIndentCm = clampCentimetres(migratedDefaultIndent, 0, 3.81, repaired.defaultDocxStyle === "vellum" ? 0.75 : 1.27);
   if (!Array.isArray(repaired.exportHistory)) { repaired.exportHistory = []; warnings.push("Invalid export history was reset."); }
   if (!Array.isArray(repaired.compileLogs)) { repaired.compileLogs = []; warnings.push("Invalid compile logs were reset."); }
-  repaired.exportHistory = repairExportHistory(repaired.exportHistory);
-  repaired.compileLogs = repairCompileLogs(repaired.compileLogs);
   if (!Number.isFinite(repaired.readingWordsPerMinute) || repaired.readingWordsPerMinute <= 0) { repaired.readingWordsPerMinute = 250; warnings.push("Reading speed was repaired to 250 words per minute."); }
   if (!Number.isInteger(repaired.maximumExportHistoryEntries) || repaired.maximumExportHistoryEntries <= 0) { repaired.maximumExportHistoryEntries = 50; warnings.push("Maximum export history was repaired to 50 entries."); }
+  repaired.exportHistory = repairExportHistory(repaired.exportHistory).slice(0, repaired.maximumExportHistoryEntries);
+  repaired.compileLogs = repairCompileLogs(repaired.compileLogs).slice(0, repaired.maximumExportHistoryEntries);
   repaired.profiles = repaired.profiles.map((candidate, index) => {
     const item = candidate;
-    const defaults = createDefaultProfiles()[0]; const merged = { ...defaults, ...item, variables: { ...defaults.variables, ...(item.variables ?? {}) }, metadataFilters: Array.isArray(item.metadataFilters) ? item.metadataFilters : [] };
+    const defaults = createDefaultProfiles()[0];
+    const variables = item.variables && typeof item.variables === "object" && !Array.isArray(item.variables) ? item.variables : {};
+    const merged = { ...defaults, ...item, variables: { ...defaults.variables, ...variables }, metadataFilters: Array.isArray(item.metadataFilters) ? item.metadataFilters : [] };
     const validation = validateProfile(merged); if (validation.errors.length) warnings.push(`Profile “${item.name || index + 1}” has configuration issues: ${validation.errors.join(" ")}`);
     if (!merged.id) { merged.id = profileId(); warnings.push(`Profile ${index + 1} was assigned a new identifier.`); }
     if (!merged.name?.trim()) { merged.name = `Recovered Profile ${index + 1}`; warnings.push(`Profile ${index + 1} was assigned a recovery name.`); }
-    if (!["markdown", "docx", "markdown-docx"].includes(merged.exportTarget)) { merged.exportTarget = "markdown"; warnings.push(`Profile “${merged.name}” export target was repaired to Markdown.`); }
+    if (!["markdown", "docx", "markdown-docx", "odt", "pdf", "epub", "html", "xml"].includes(merged.exportTarget)) { merged.exportTarget = "docx"; warnings.push(`Profile “${merged.name}” export target was repaired to DOCX.`); }
     for (const key of ["includeFrontMatter", "includeBackMatter", "includeSceneTitles", "metadataOrdering", "stripYamlFrontmatter", "removeObsidianComments", "removeHtmlComments", "removeDataviewBlocks", "removeCallouts", "stripInternalLinks", "generateTableOfContents", "keepIntermediateMarkdown", "useParts"] as const) if (typeof merged[key] !== "boolean") { (merged[key] as boolean) = defaults[key]; warnings.push(`Profile “${merged.name}” setting ${key} was repaired.`); }
     if (merged.chapterSource !== "folders" && merged.chapterSource !== "notes") { merged.chapterSource = "folders"; warnings.push(`Profile “${merged.name}” chapter source was repaired to folders.`); }
     for (const key of ["manuscriptRoot", "exportFolder", "outputFilename", "partHeadingTemplate", "chapterHeadingTemplate", "sceneSeparator", "referenceDocx", "pandocMetadataFile", "additionalPandocArguments"] as const) if (typeof merged[key] !== "string") { (merged[key] as string) = defaults[key]; warnings.push(`Profile “${merged.name}” setting ${key} was repaired.`); }
+    for (const key of ["BookTitle", "Series", "Author"] as const) if (typeof merged.variables[key] !== "string") { merged.variables[key] = defaults.variables[key]; warnings.push(`Profile “${merged.name}” variable ${key} was repaired.`); }
+    const validFilters = merged.metadataFilters.filter((rule) => !!rule && typeof rule === "object" && typeof rule.field === "string" && rule.field.trim() && typeof rule.value === "string" && (rule.operator === "equals" || rule.operator === "not-equals"));
+    if (validFilters.length !== merged.metadataFilters.length) warnings.push(`Profile “${merged.name}” contained invalid metadata filters, which were removed.`);
+    merged.metadataFilters = validFilters.map((rule) => ({ ...rule, id: typeof rule.id === "string" && rule.id ? rule.id : profileId() }));
+    if (!Array.isArray(merged.bodySectionAliases) || merged.bodySectionAliases.some((value) => typeof value !== "string")) { merged.bodySectionAliases = [...(defaults.bodySectionAliases ?? [])]; warnings.push(`Profile “${merged.name}” body-section aliases were repaired.`); }
+    else merged.bodySectionAliases = merged.bodySectionAliases.map((value) => value.trim().slice(0, 100)).filter(Boolean).slice(0, 50);
     for (const key of ["blankLinesBetweenSections", "blankLinesBetweenChapters"] as const) if (!Number.isInteger(merged[key]) || merged[key] < 0) { merged[key] = defaults[key]; warnings.push(`Profile “${merged.name}” setting ${key} was repaired.`); }
     const profileIndentDefault = /vellum/i.test(item.name ?? "") ? 0.75 : defaults.docxFirstLineIndentCm ?? 1.27;
     const metricIndent = typeof item.docxFirstLineIndentCm === "number" ? item.docxFirstLineIndentCm : typeof item.docxFirstLineIndent === "number" ? inchesToCentimetres(item.docxFirstLineIndent) : profileIndentDefault;
@@ -75,7 +85,7 @@ export function repairSettings(settings: ManuscriptCompilerSettings): Manuscript
   });
   if (!repaired.profiles.some((item) => item.id === repaired.activeProfileId)) { repaired.activeProfileId = repaired.profiles[0].id; warnings.push("Active profile selection was repaired."); }
   if (!repaired.profiles.some((item) => item.id === repaired.defaultProfileId)) { repaired.defaultProfileId = repaired.profiles[0].id; warnings.push("Default profile selection was repaired."); }
-  repaired.configurationWarnings = [...(Array.isArray(repaired.configurationWarnings) ? repaired.configurationWarnings : []), ...warnings].slice(-100);
+  repaired.configurationWarnings = [...(Array.isArray(repaired.configurationWarnings) ? repaired.configurationWarnings.filter((value): value is string => typeof value === "string") : []), ...warnings].slice(-100);
   return repaired;
 }
 /** Resolves active/default profile safely and creates defaults when necessary. */
@@ -93,7 +103,7 @@ export function validateProfile(value: unknown): { profile?: CompileProfile; err
   if (item.chapterSource !== undefined && item.chapterSource !== "folders" && item.chapterSource !== "notes") errors.push("chapterSource is invalid.");
   for (const key of ["blankLinesBetweenSections", "blankLinesBetweenChapters"] as const) if (item[key] !== undefined && (!Number.isInteger(item[key]) || (item[key] ?? -1) < 0)) errors.push(`${key} must be a non-negative integer.`);
   if (item.orderingMethod !== undefined && item.orderingMethod !== "filename" && item.orderingMethod !== "metadata") errors.push("orderingMethod is invalid.");
-  if (item.exportTarget !== undefined && !["markdown", "docx", "markdown-docx"].includes(item.exportTarget)) errors.push("exportTarget is invalid.");
+  if (item.exportTarget !== undefined && !["markdown", "docx", "markdown-docx", "odt", "pdf", "epub", "html", "xml"].includes(item.exportTarget)) errors.push("exportTarget is invalid.");
   for (const key of ["referenceDocx", "pandocMetadataFile", "additionalPandocArguments"] as const) if (item[key] !== undefined && typeof item[key] !== "string") errors.push(`${key} must be a string.`);
   for (const key of ["generateTableOfContents", "keepIntermediateMarkdown"] as const) if (item[key] !== undefined && typeof item[key] !== "boolean") errors.push(`${key} must be boolean.`);
   if (item.variables !== undefined && (typeof item.variables !== "object" || item.variables === null || Array.isArray(item.variables))) errors.push("variables must be an object.");

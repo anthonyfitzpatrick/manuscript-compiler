@@ -11,6 +11,7 @@ import { OperationStateController } from "../operation-state";
 import { docxFormattingForPreset, type DocxFormatting, type SimpleCompileRequest } from "../simple-workflow";
 import { validateSimpleCompileRequest } from "../simple-workflow";
 import type { StructuralDisplay, StructurePreset } from "../settings";
+import type { ExportFormat } from "../export-types";
 import { includedNoteCount, moveSibling, setItemIncluded, setItemRole } from "./content-tree";
 import type { CompileWorkspaceState, CompileWorkspaceStep, WorkspaceError } from "./workspace-types";
 
@@ -18,7 +19,7 @@ import type { CompileWorkspaceState, CompileWorkspaceStep, WorkspaceError } from
 export interface CompileWorkspaceServices {
   prepare(request: SimpleCompileRequest, plan: ContentPlanItem[], signal: AbortSignal): Promise<PreparedCompileSession>;
   sessionIsCurrent(session: PreparedCompileSession): Promise<boolean>;
-  export(session: PreparedCompileSession): Promise<void>;
+  export(session: PreparedCompileSession, format: ExportFormat, filename: string): Promise<void>;
 }
 
 /**
@@ -35,12 +36,12 @@ export class CompileWorkspaceController {
   private readonly childSnapshots = new Map<string, Map<string, { included: boolean; role: ContentRole; userOverride?: boolean }>>();
 
   constructor(request: SimpleCompileRequest, formatting: DocxFormatting, private readonly services: CompileWorkspaceServices) {
-    this.state = { step: "manuscript", request, contentPlan: [], formatting, scannedRoot: "", preparationStatus: "idle", exportStatus: "idle" };
+    this.state = { step: "manuscript", request, contentPlan: [], formatting, scannedRoot: "", preparationStatus: "idle", exportStatus: "idle", exportFormat: "docx" };
   }
 
-  /** Changes visible step and cancels preparation when leaving Export. */
+  /** Changes visible step and cancels preparation when leaving Create DOCX. */
   setStep(step: CompileWorkspaceStep): void {
-    if (step !== "export" && this.state.preparationStatus === "preparing") this.cancelActiveOperation();
+    if (step !== "create" && this.state.preparationStatus === "preparing") this.cancelActiveOperation();
     this.state.step = step;
   }
   /** Replaces the authoritative root and discards scan-dependent choices. */
@@ -100,14 +101,14 @@ export class CompileWorkspaceController {
   setTableOfContents(value: boolean): void { this.update(() => { this.state.request.tableOfContents = value; this.state.request.docxPreset = "custom"; }); }
   /** Replaces body-heading aliases used during note cleaning. */
   setBodyAliases(values: string[]): void { this.update(() => { if (this.state.request.custom) this.state.request.custom.bodySectionAliases = values; }); }
+  /** Includes note titles as body headings without changing note order or content. */
+  setIncludeSceneTitles(value: boolean): void { this.update(() => { if (this.state.request.custom) this.state.request.custom.includeSceneTitles = value; }); }
   /** Controls final matter-section inclusion without rewriting individual roles. */
   setMatter(kind: "front" | "back", included: boolean): void { this.update(() => { if (kind === "front") this.state.request.includeFrontMatter = included; else this.state.request.includeBackMatter = included; }); }
   /** Updates title-page variables that affect prepared DOCX output. */
   setVariable(kind: "BookTitle" | "Author", value: string): void { this.update(() => { if (this.state.request.custom?.variables) this.state.request.custom.variables[kind] = value; }); }
-  /** Updates validated vault destination inputs and invalidates preview metadata. */
-  setOutput(folder: string, filename: string): void { this.update(() => { this.state.request.exportFolder = folder.trim(); this.state.request.outputFilename = filename; }); }
-  /** Changes only a post-success action preference; it does not rebuild the Book. */
-  setDownloadAfterExport(value: boolean): void { this.state.request.downloadAfterExport = value; }
+  setExportFormat(value: ExportFormat): void { this.state.exportFormat = value; }
+  setDownloadFilename(value: string): void { this.state.request.outputFilename = value; }
 
   /** Returns author-facing blockers for the current step without side effects. */
   canAdvance(): string[] {
@@ -162,7 +163,7 @@ export class CompileWorkspaceController {
     this.state.exportStatus = "exporting";
     this.exportPromise = this.services.sessionIsCurrent(session).then(async (current) => {
       if (!current) { this.invalidatePreparedSession("The manuscript changed after the preview was prepared. Refresh the preview before creating the DOCX."); operation.fail(); return false; }
-      await this.services.export(session);
+      await this.services.export(session, this.state.exportFormat, this.state.request.outputFilename);
       this.state.exportStatus = "complete";
       operation.complete();
       return true;

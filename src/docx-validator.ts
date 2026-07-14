@@ -2,8 +2,8 @@
  * Manuscript Compiler — focused DOCX package validation.
  *
  * Checks the minimum ZIP and WordprocessingML structure before any save can be
- * trusted. Called by DocxExporter tests and SafeBinaryWriter before and after
- * replacement. This is intentionally not a full OOXML conformance validator.
+ * trusted. Called before browser download dispatch. This is intentionally not
+ * a full OOXML conformance validator.
  */
 import { unzipSync } from "fflate";
 

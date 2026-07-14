@@ -288,7 +288,15 @@ function cleanFont(value: string | undefined): string {
 }
 
 function escapeXml(value: string): string {
-  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
+  let valid = "";
+  for (const character of value) {
+    const codePoint = character.codePointAt(0) ?? 0;
+    if (codePoint === 0x09 || codePoint === 0x0a || codePoint === 0x0d
+      || codePoint >= 0x20 && codePoint <= 0xd7ff
+      || codePoint >= 0xe000 && codePoint <= 0xfffd
+      || codePoint >= 0x10000 && codePoint <= 0x10ffff) valid += character;
+  }
+  return valid.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
 }
 
 function text(value: string): Uint8Array {
