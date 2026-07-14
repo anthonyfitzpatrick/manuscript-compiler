@@ -5,6 +5,8 @@ Record the date, tester, Obsidian version, operating system, Word/LibreOffice ve
 ## Clean install
 
 - [ ] Install only `main.js`, `manifest.json`, and `styles.css` in `.obsidian/plugins/manuscript-compiler/`.
+- [ ] Upgrade an existing vault from the previous plugin version and confirm profiles, settings, and history remain usable.
+- [ ] Start once with deliberately malformed persisted settings and confirm recovery is actionable and does not prevent the plugin loading.
 - [ ] Enable Manuscript Compiler without enabling another community plugin.
 - [ ] Confirm first-run behaviour is understandable and does not require Pandoc or an external executable.
 - [ ] Open **Manuscript Compiler: Compile Manuscript** from the command palette.
@@ -14,6 +16,9 @@ Record the date, tester, Obsidian version, operating system, Word/LibreOffice ve
 
 ## Real manuscript
 
+- [ ] Compile a novel with Parts and confirm Part, Chapter, and Scene structure.
+- [ ] Compile a novel without Parts and confirm Chapters are not wrapped in a synthetic visible Part.
+- [ ] Compile a large real-world manuscript and confirm preparation, preview, export, and cancellation remain responsive.
 - [ ] Select the actual book folder, not its `Manuscript` child.
 - [ ] Confirm the selected root is not displayed as a Part or Chapter.
 - [ ] Confirm `Manuscript` is suggested as a Transparent container and creates no heading.
@@ -82,6 +87,12 @@ Record the date, tester, Obsidian version, operating system, Word/LibreOffice ve
 - [ ] Use **Open DOCX** where supported.
 - [ ] Use **Reveal in file manager** where supported.
 - [ ] Confirm result actions appear only after successful final verification.
+- [ ] Confirm Open, Reveal, and Save Copy are absent or fail closed on unsupported platforms.
+- [ ] Repeat save and recovery checks with a non-filesystem vault adapter.
+
+## Privacy
+
+- [ ] Review diagnostics and compile logs after successful, failed, and warning-producing compiles; confirm they contain no manuscript prose, note excerpts, private metadata values, or absolute local paths.
 
 ## Platforms and applications
 

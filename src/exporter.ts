@@ -23,7 +23,7 @@ export type ExportProgressStage = "Creating DOCX" | "Checking DOCX" | SafeSaveSt
  */
 export interface ExportRequest { book: Book; profile: CompileProfile; markdown: string; outputPath: string; variables: TemplateVariables; keepTemporaryMarkdown?: boolean; signal?: AbortSignal; onProgress?: (stage: ExportProgressStage) => void; onCommit?: () => void; }
 /** Verified per-format outcome consumed by ExportCoordinator. */
-export interface ExportResult { format: string; path: string; file?: TFile; stdout?: string; stderr?: string; }
+export interface ExportResult { format: string; path: string; file?: TFile; }
 /** Format adapter contract; implementations perform output only, never orchestration. */
 export interface Exporter { readonly format: string; export(request: ExportRequest): Promise<ExportResult>; }
 

@@ -85,7 +85,7 @@ Settings from earlier releases are repaired idempotently. Existing Letter select
 
 ## Privacy and Platform Support
 
-The plugin has no telemetry, network requests, cloud dependency, or online account. It uses Obsidian APIs and bundled `fflate` ZIP generation. DOCX creation works on supported Obsidian platforms; opening, revealing, browser-style saving, or platform share/save actions depend on platform capabilities.
+The plugin has no telemetry, network requests, cloud dependency, or online account. It uses Obsidian APIs and bundled `fflate` ZIP generation. Compile logs retain structural warning-code counts rather than note text or parser excerpts, and shareable diagnostics omit legacy warning detail. DOCX creation works on supported Obsidian platforms; opening, revealing, browser-style saving, or platform share/save actions depend on platform capabilities.
 
 ## Verified and Recoverable Saving
 
@@ -110,7 +110,7 @@ npm run package:validate
 npm audit
 ```
 
-The regression suite includes a realistic `Book 1 - Warden of Silence` vault tree with transparent manuscript containers, excluded project folders, dashboard notes, YAML properties, scene templates, synopsis/revision sections, front/back matter, Unicode prose, and multiple Parts and Chapters. The DOCX test inspects `document.xml` and `styles.xml` semantically and writes `.test-build/Warden-of-Silence-regression.docx` for manual inspection. The normal large-manuscript test uses a generous runaway guard and deterministic count/output assertions; `npm run benchmark:large` reports local timing without applying a desktop-specific pass/fail target.
+The regression suite includes a realistic `Book 1 - Warden of Silence` vault tree with transparent manuscript containers, excluded project folders, dashboard notes, YAML properties, scene templates, synopsis/revision sections, front/back matter, Unicode prose, and multiple Parts and Chapters. The DOCX test inspects `document.xml` and `styles.xml` semantically and writes `.test-build/Warden-of-Silence-regression.docx` for manual inspection. The normal large-manuscript test uses a generous runaway guard and deterministic count/output assertions; `npm run benchmark:large` reports separate parse/clean/Book, statistics, Markdown, and combined DOCX/ZIP timings without applying a desktop-specific pass/fail target.
 
 See [MANUAL_TESTING.md](MANUAL_TESTING.md) for the live Obsidian, Word/LibreOffice, and Vellum checklist. Automated tests do not substitute for those application-level checks.
 

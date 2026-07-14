@@ -9,7 +9,6 @@ export function createTestDocx(content: string, title = "Test Book"): Uint8Array
     title: "Scene 1",
     number: 1,
     metadata: { values: {} },
-    rawContent: content,
     content,
     excluded: false
   } as ManuscriptDocument;
@@ -18,7 +17,7 @@ export function createTestDocx(content: string, title = "Test Book"): Uint8Array
     frontMatter: { kind: "front", title: "Front Matter", documents: [] },
     parts: [{ title: "Book", name: title, path: "Book", synthetic: true, chapters: [{ title: "Chapter 1", name: "", number: 1, path: "Book/Chapter 1", scenes: [document], orphan: false }], orphanScenes: [] }],
     orphanScenes: [], backMatter: { kind: "back", title: "Back Matter", documents: [] },
-    includedFiles: [document.file], excludedFiles: [], warnings: [], issues: []
+    includedFiles: [document.file], excludedFiles: [], warnings: []
   } as Book;
   const profile = createDefaultProfiles()[0];
   profile.useParts = false;

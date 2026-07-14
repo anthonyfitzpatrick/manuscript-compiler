@@ -81,6 +81,8 @@ export class CompilePreparationService {
    * an invalid root/read/parse failure and never returns a partially prepared session.
    */
   async prepareAuthoritative(request: CompilePreparationRequest, signal?: AbortSignal): Promise<PreparedCompileSession> {
+    const preparationStarted = performance.now();
+    const scanStarted = performance.now();
     const folder = this.vault.getAbstractFileByPath(request.manuscriptRoot);
     if (!(folder instanceof TFolder)) throw new Error("The manuscript folder does not exist.");
     const suppliedPlan = request.contentPlan;
@@ -94,20 +96,29 @@ export class CompilePreparationService {
       ? applyWorkspacePlanAuthority(resolved, requestSnapshot)
       : applyContentPlanAuthority(resolved, folder.path, plan);
     const scannedBook = applyContentPlan(new VaultScanner().scan(folder), plan, profile);
+    const scanMs = performance.now() - scanStarted;
     const compiler = new ManuscriptCompiler(this.vault);
     const book = await compiler.buildModel(scannedBook, profile, signal);
     const preparedAt = new Date();
-    const preliminary = compiler.compile(book, profile, "", this.wordsPerMinute, preparedAt, signal);
+    const statistics = compiler.calculateStatistics(book, profile, this.wordsPerMinute);
     const variables = {
       ...profile.variables,
       BookTitle: profile.variables.BookTitle || book.title,
       Date: preparedAt.toISOString().slice(0, 10),
       Year: preparedAt.getFullYear(),
-      WordCount: preliminary.statistics.totalWordCount,
-      ChapterCount: preliminary.statistics.chapterCount
+      WordCount: statistics.totalWordCount,
+      ChapterCount: statistics.chapterCount
     };
     const paths = outputPaths(new MarkdownExporter(this.vault), profile, variables);
-    const result = compiler.compile(book, profile, paths[0] ?? "", this.wordsPerMinute, preparedAt, signal);
+    const result = compiler.compile(book, profile, paths[0] ?? "", this.wordsPerMinute, preparedAt, signal, statistics);
+    result.timings = {
+      totalMs: performance.now() - preparationStarted,
+      scanMs,
+      parseMs: Math.max(0, compiler.timings.parseDurationMs - compiler.timings.filterDurationMs),
+      filterMs: compiler.timings.filterDurationMs,
+      generationMs: compiler.timings.generationDurationMs,
+      exportMs: 0
+    };
     const planWarnings: CompileWarning[] = plan
       .filter((item) => isPlanItemIncluded(item, plan, folder.path) && item.warning)
       .map((item) => ({ severity: "warning", code: "content-plan-warning", message: `${item.name}: ${item.warning}`, path: item.path }));
@@ -128,27 +139,21 @@ export class CompilePreparationService {
   }
 }
 
-/**
- * Uses paths plus mtime/size for a lightweight stale-preview guard, falling back
- * to content hashing only when an adapter supplies no file statistics.
- */
+/** Hashes source contents so equal-size edits or coarse adapter timestamps cannot pass as current. */
 export async function calculateSourceFingerprint(vault: Vault, sourcePaths: string[]): Promise<string> {
-  const entries: string[] = [];
-  for (const path of [...sourcePaths].sort()) {
-    const file = vault.getAbstractFileByPath(path);
-    if (!(file instanceof TFile)) {
-      entries.push(`${path}:missing`);
-      continue;
+  const paths = [...sourcePaths].sort();
+  const entries = new Array<string>(paths.length); let next = 0;
+  const worker = async (): Promise<void> => {
+    while (next < paths.length) {
+      const index = next; next += 1; const path = paths[index];
+      const file = vault.getAbstractFileByPath(path);
+      entries[index] = file instanceof TFile ? `${path}:content:${hash(await vault.cachedRead(file))}` : `${path}:missing`;
     }
-    const stat = file.stat;
-    if (stat && Number.isFinite(stat.mtime)) entries.push(`${path}:${stat.mtime}:${stat.size}`);
-    else entries.push(`${path}:content:${hash(await vault.cachedRead(file))}`);
-  }
+  };
+  await Promise.all(Array.from({ length: Math.min(16, paths.length) }, () => worker()));
   return hash(entries.join("\n"));
 }
 
-/** Identity assertion used by regression tests; semantic equality is insufficient. */
-export function sessionMatchesBook(session: PreparedCompileSession, book: Book): boolean { return session.book === book; }
 /** Creates exporter input while retaining `session.book` by reference. */
 export function createPreparedExportRequest(session: PreparedCompileSession, outputPath: string, keepTemporaryMarkdown: boolean, signal?: AbortSignal, onCommit?: () => void, onProgress?: (stage: ExportProgressStage) => void): ExportRequest {
   return { book: session.book, profile: session.profile, markdown: session.result.markdown, outputPath, variables: session.variables, keepTemporaryMarkdown, signal, onCommit, onProgress };

@@ -28,7 +28,6 @@ export interface ManuscriptDocument {
   title: string;
   number?: number;
   metadata: DocumentMetadata;
-  rawContent: string;
   content: string;
   excluded: boolean;
   exclusionReason?: string;
@@ -80,7 +79,6 @@ export interface Book {
   includedFiles: TFile[];
   excludedFiles: Array<{ file: TFile; reason: string }>;
   warnings: string[];
-  issues: CompileWarning[];
   hierarchyDiagnostics?: HierarchyDiagnostic[];
 }
 

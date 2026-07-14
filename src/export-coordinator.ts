@@ -57,9 +57,11 @@ export class ExportCoordinator {
       if (docxPath) { progress.update("Creating DOCX"); outputFiles.push((await new DocxExporter(this.app.vault, markdownExporter).export(request(docxPath))).path); }
       throwIfCancelled(operation.signal);
       if (markdownPath) { progress.update("Writing Markdown export…"); outputFiles.push((await markdownExporter.export(request(markdownPath))).path); }
-      const report: CompileResult = { ...session.result, issues: visibleIssues, warnings: visibleIssues.map((issue) => issue.message), timings: { totalMs: Date.now() - started, scanMs: 0, parseMs: 0, filterMs: 0, generationMs: 0, exportMs: performance.now() - exportStarted } };
+      const exportMs = performance.now() - exportStarted;
+      const preparedTimings = session.result.timings ?? { totalMs: 0, scanMs: 0, parseMs: 0, filterMs: 0, generationMs: 0, exportMs: 0 };
+      const report: CompileResult = { ...session.result, issues: visibleIssues, warnings: visibleIssues.map((issue) => issue.message), timings: { ...preparedTimings, totalMs: preparedTimings.totalMs + (Date.now() - started), exportMs } };
       progress.finish();
-      await this.history.recordSuccess({ timestamp, started, profile: session.profile.name, manuscript: session.request.manuscriptRoot, format: session.profile.exportTarget, outputFiles, result: report, timings: { exportDurationMs: report.timings?.exportMs ?? 0 } });
+      await this.history.recordSuccess({ timestamp, started, profile: session.profile.name, manuscript: session.request.manuscriptRoot, format: session.profile.exportTarget, outputFiles, result: report, timings: { scanDurationMs: report.timings?.scanMs, parseDurationMs: report.timings?.parseMs, filterDurationMs: report.timings?.filterMs, generationDurationMs: report.timings?.generationMs, exportDurationMs: report.timings?.exportMs } });
       operation.complete();
       if (session.profile.downloadAfterExport && docxPath) await this.actions.saveCopyToComputer(docxPath);
       if (options.showResult !== false) this.showResult(outputFiles, docxPath, report);
@@ -74,8 +76,8 @@ export class ExportCoordinator {
         new Notice("Compilation cancelled. The previous output was not changed.");
         return { status: "cancelled", outputFiles };
       }
-      operation.fail(); const message = friendlyExportError(error);
-      await this.history.recordFailure({ timestamp, started, profile: session.profile.name, manuscript: session.request.manuscriptRoot, format: session.profile.exportTarget, outputFiles, result: session.result, message: error instanceof Error ? error.message : String(error) });
+      operation.fail(); const baseMessage = friendlyExportError(error); const message = outputFiles.length ? `${baseMessage} Already created: ${outputFiles.join(", ")}.` : baseMessage;
+      await this.history.recordFailure({ timestamp, started, profile: session.profile.name, manuscript: session.request.manuscriptRoot, format: session.profile.exportTarget, outputFiles, result: session.result, message });
       return { status: "failed", outputFiles, error: message };
     }
   }

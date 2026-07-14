@@ -13,5 +13,6 @@ export class FuzzySuggestModal<T> {}
 export class Modal {}
 export class Notice {}
 export class Setting {}
+export const apiVersion = "1.13.1";
 export const Platform = { isDesktopApp: true };
 export const normalizePath = (value: string): string => value;

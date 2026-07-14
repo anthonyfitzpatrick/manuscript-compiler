@@ -8,6 +8,7 @@
 import type { CompileProfile, ManuscriptCompilerSettings } from "./settings";
 import { DEFAULT_OPTIONS } from "./settings";
 import { clampCentimetres, inchesToCentimetres } from "./measurements";
+import { repairCompileLogs, repairExportHistory } from "./history-storage";
 
 const VELLUM_OPTIONS = { ...DEFAULT_OPTIONS, orderingMethod: "metadata" as const, metadataOrdering: true, partHeadingTemplate: "Part {number}: {name}", chapterHeadingTemplate: "Chapter {number}: {name}", removeHtmlComments: true, removeDataviewBlocks: true, removeCallouts: true, stripInternalLinks: true };
 export function profileId(): string { return `profile-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`; }
@@ -33,7 +34,14 @@ export function migrateSettings(settings: ManuscriptCompilerSettings): Manuscrip
 }
 /** Repairs malformed/current fields after migration and records configuration warnings. */
 export function repairSettings(settings: ManuscriptCompilerSettings): ManuscriptCompilerSettings {
-  const warnings: string[] = []; if (!Array.isArray(settings.profiles)) { settings.profiles = []; warnings.push("Invalid profile storage was recovered with default profiles."); } const repaired = migrateSettings(settings);
+  const warnings: string[] = [];
+  if (!Array.isArray(settings.profiles)) { settings.profiles = []; warnings.push("Invalid profile storage was recovered with default profiles."); }
+  else settings.profiles = settings.profiles.map((candidate, index) => {
+    if (candidate && typeof candidate === "object" && !Array.isArray(candidate)) return candidate;
+    warnings.push(`Invalid profile entry ${index + 1} was recovered.`);
+    return createDefaultProfiles()[0];
+  });
+  const repaired = migrateSettings(settings);
   const activeForMigration = repaired.profiles.find((item) => item.id === repaired.activeProfileId) ?? repaired.profiles[0];
   repaired.defaultStructurePreset ??= activeForMigration ? (activeForMigration.useParts ? (activeForMigration.chapterSource === "notes" ? "anthology" : "novel-parts") : activeForMigration.chapterSource === "notes" ? "chapter-notes" : "novel") : "novel-parts";
   repaired.defaultDocxStyle ??= repaired.defaultCompilePreset === "vellum" || /vellum/i.test(activeForMigration?.name ?? "") ? "vellum" : "standard";
@@ -44,10 +52,12 @@ export function repairSettings(settings: ManuscriptCompilerSettings): Manuscript
   repaired.defaultDocxFirstLineIndentCm = clampCentimetres(migratedDefaultIndent, 0, 3.81, repaired.defaultDocxStyle === "vellum" ? 0.75 : 1.27);
   if (!Array.isArray(repaired.exportHistory)) { repaired.exportHistory = []; warnings.push("Invalid export history was reset."); }
   if (!Array.isArray(repaired.compileLogs)) { repaired.compileLogs = []; warnings.push("Invalid compile logs were reset."); }
+  repaired.exportHistory = repairExportHistory(repaired.exportHistory);
+  repaired.compileLogs = repairCompileLogs(repaired.compileLogs);
   if (!Number.isFinite(repaired.readingWordsPerMinute) || repaired.readingWordsPerMinute <= 0) { repaired.readingWordsPerMinute = 250; warnings.push("Reading speed was repaired to 250 words per minute."); }
   if (!Number.isInteger(repaired.maximumExportHistoryEntries) || repaired.maximumExportHistoryEntries <= 0) { repaired.maximumExportHistoryEntries = 50; warnings.push("Maximum export history was repaired to 50 entries."); }
   repaired.profiles = repaired.profiles.map((candidate, index) => {
-    const item = candidate && typeof candidate === "object" ? candidate : createDefaultProfiles()[0]; if (item !== candidate) warnings.push(`Invalid profile entry ${index + 1} was recovered.`);
+    const item = candidate;
     const defaults = createDefaultProfiles()[0]; const merged = { ...defaults, ...item, variables: { ...defaults.variables, ...(item.variables ?? {}) }, metadataFilters: Array.isArray(item.metadataFilters) ? item.metadataFilters : [] };
     const validation = validateProfile(merged); if (validation.errors.length) warnings.push(`Profile “${item.name || index + 1}” has configuration issues: ${validation.errors.join(" ")}`);
     if (!merged.id) { merged.id = profileId(); warnings.push(`Profile ${index + 1} was assigned a new identifier.`); }

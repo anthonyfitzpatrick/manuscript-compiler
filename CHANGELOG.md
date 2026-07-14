@@ -4,6 +4,12 @@
 
 ### Fixed
 
+- Rejected `.` and `..` output segments before adapter path normalisation so traversal cannot be collapsed into an apparently safe vault path.
+- Changed stale-preview verification to hash source contents, detecting equal-size edits even when file timestamps do not change.
+- Removed tracked local plugin state from release sources and ignored future `data.json` files.
+- Repaired malformed profile, history, and log entries before migration or UI rendering.
+- Replaced the deprecated Electron version probe with Obsidian's documented API version and explicit desktop guards.
+- Removed stale hard-coded plugin version metadata from generated DOCX packages.
 - Fixed a real-vault hierarchy failure where a nested folder repeating the book name became a second Part, leaving valid Chapter Scenes orphaned and producing a zero Chapter count.
 - Transparent containers now reparent descendants to their nearest included structural ancestor without losing hierarchy, order, source paths, or explicit choices.
 - Mixed front/back matter, copyright containers, and common back-matter note names no longer become manuscript Parts, Chapters, or Scenes.
@@ -25,6 +31,9 @@
 
 ### Improved
 
+- Preparation now calculates statistics and renders Markdown once, records real scan/parse/cleaning/generation timings, and no longer retains a duplicate raw-prose copy for every parsed note.
+- Compile logs persist structural warning-code summaries and shareable diagnostics omit legacy warning details that may contain private metadata.
+- Release packaging now uses the audited `fflate` ZIP implementation already required by DOCX generation instead of maintaining a second ZIP writer and parser.
 - Added privacy-safe orphan hierarchy diagnostics and a realistic nested-container/mixed-matter Warden regression.
 - Final-model preview now shows the exact exported outline, statistics, warnings, exclusions, filename, and destination.
 - Output verification, rollback guidance, cancellation boundaries, partial-result handling, and history sequencing have stronger automated coverage.

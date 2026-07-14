@@ -24,7 +24,7 @@ It also registers the documented workspace `file-menu` event through `registerEv
 - `CompileWorkspaceController` owns four-step state, validation, invalidation, duplicate-click protection, and cancellable workspace operations.
 - Step renderers in `src/workspace/` own DOM controls and event wiring only.
 - `ExportCoordinator` verifies fingerprints, handles overwrite and progress UI, invokes exporters, and reports the outcome.
-- `CompileHistoryService` is the only export-history and compile-log persistence boundary.
+- `CompileHistoryService` is the only export-history and compile-log persistence boundary; `history-storage.ts` repairs malformed persisted entries before UI use.
 - `ResultActionService` isolates open, reveal, and platform save-copy capabilities.
 - `SafeBinaryWriter` owns staged binary replacement, verification, rollback, and cleanup.
 - `OperationStateController` models idle, preparation, export, non-cancellable finalisation, cancellation, failure, and completion.
@@ -90,7 +90,7 @@ The workspace plan wins over inference and legacy profile structure. Automatic r
 
 ## Why preview owns the final Book
 
-The parser and cleaner can exclude empty or malformed notes after the Contents plan has been edited. A plan-derived preview could therefore promise content that the exporter would later omit. Preparation resolves this by constructing one `PreparedCompileSession`: its `book` reference drives the outline, statistics, warnings, Markdown, and DOCX. Export verifies source and input fingerprints but does not rebuild the model. Treat prepared sessions as immutable snapshots even though TypeScript does not deep-freeze them.
+The parser and cleaner can exclude empty or malformed notes after the Contents plan has been edited. A plan-derived preview could therefore promise content that the exporter would later omit. Preparation resolves this by constructing one `PreparedCompileSession`: its `book` reference drives the outline, statistics, warnings, Markdown, and DOCX. Export verifies content-based source fingerprints and input fingerprints but does not rebuild the model. Equal-size source edits are therefore detected even when an adapter reports an unchanged or coarse timestamp. Treat prepared sessions as immutable snapshots even though TypeScript does not deep-freeze them.
 
 ## Content-cleaning boundary
 
@@ -119,7 +119,7 @@ The parser and cleaner can exclude empty or malformed notes after the Contents p
 | Active control | Request/profile field | WordprocessingML effect |
 | --- | --- | --- |
 | Vellum / Standard / Custom | `docxPreset` plus `DocxFormatting` | deterministic supported defaults or explicit values |
-| Font, size, line spacing, indent | `docxFont`, `docxFontSize`, `docxLineSpacing`, `docxFirstLineIndent` | style defaults, `BodyText`, and `FirstParagraph` properties |
+| Font, size, line spacing, indent | `docxFont`, `docxFontSize`, `docxLineSpacing`, `docxFirstLineIndentCm` | style defaults, `BodyText`, and `FirstParagraph` properties |
 | Letter / A4 | `docxPageSize` | section page dimensions |
 | Chapter page breaks | `docxChapterPageBreak` | `pageBreakBefore` on the first displayed Chapter heading only |
 | Part headings | semantic Part plus `partDisplay` | Parts always start on a new page; number/title paragraphs are kept together |
@@ -139,7 +139,7 @@ The `Subtitle` style was removed because the semantic model has no supported sub
 
 On a local filesystem the writer stages in the destination directory, verifies readback, renames an existing destination to a backup, renames the temporary file into place, verifies the final file, then removes the backup. A failed replacement restores the backup. Generic adapters use the same validation stages but preserve original bytes and a recovery backup because their write APIs cannot promise rename atomicity. Cancellation is accepted before commit; after commit begins the writer must finish replacement or rollback.
 
-History success and Open/Reveal/Save Copy actions occur only after final verification. Do not move those side effects into exporters or UI components.
+History success and Open/Reveal/Save Copy actions occur only after final verification. Persisted log warnings are structural code summaries rather than note text, paths, or parser excerpts; shareable diagnostics omit legacy warning details. Do not move those side effects into exporters or UI components.
 
 ## Settings and migration
 
@@ -157,7 +157,7 @@ When adding a persisted field:
 - `tests/run.ts` is the broad unit/release suite: cleaning, parser, content plan, migrations, route identity, workspace state, privacy, and Warden semantic regressions.
 - `tests/docx-integration.ts` opens generated Word XML and asserts semantic styles, page behaviour, matter ordering, Unicode, and forbidden content.
 - `tests/safe-binary-writer.ts` injects failures at every save phase and proves rollback/cleanup.
-- `tests/large-manuscript-benchmark.ts` checks deterministic large-book correctness and reports informative timing.
+- `tests/large-manuscript-benchmark.ts` checks deterministic large-book correctness and reports parse/clean/Book, statistics, Markdown, and DOCX/ZIP timing.
 - `tests/golden/` protects stable Markdown output for representative structures.
 - `tests/fixtures/real-vault/` reproduces nested transparent containers and mixed matter that previously produced zero Chapters and orphan Scenes.
 

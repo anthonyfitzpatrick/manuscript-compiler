@@ -14,7 +14,6 @@ import { TemplateEngine } from "./template-engine";
 import { centimetresToTwips, clampCentimetres } from "./measurements";
 
 const XML = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`;
-const DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
 /** Supported generator inputs. Callers may pass unresolved compatibility values. */
 export interface DocxOptions {
@@ -221,7 +220,7 @@ function packageDocx(document: string, options: ResolvedDocxOptions): Uint8Array
     "word/styles.xml": text(stylesXml(options)),
     "word/settings.xml": text(`${XML}<w:settings xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:compat/></w:settings>`),
     "docProps/core.xml": text(`${XML}<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>${escapeXml(options.title)}</dc:title><dc:creator>${escapeXml(options.author)}</dc:creator><cp:lastModifiedBy>Manuscript Compiler</cp:lastModifiedBy><dcterms:created xsi:type="dcterms:W3CDTF">${created}</dcterms:created><dcterms:modified xsi:type="dcterms:W3CDTF">${created}</dcterms:modified></cp:coreProperties>`),
-    "docProps/app.xml": text(`${XML}<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties"><Application>Manuscript Compiler</Application><AppVersion>0.9.2</AppVersion></Properties>`)
+    "docProps/app.xml": text(`${XML}<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties"><Application>Manuscript Compiler</Application></Properties>`)
   };
   return zipSync(files, { level: 6 });
 }
@@ -295,5 +294,3 @@ function escapeXml(value: string): string {
 function text(value: string): Uint8Array {
   return strToU8(value);
 }
-
-export { DOCX_MIME };

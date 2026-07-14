@@ -6,6 +6,8 @@ import { MarkdownGenerator } from "../src/markdown-generator";
 import { ManuscriptParser } from "../src/parser";
 import { createDefaultProfiles } from "../src/profiles";
 import { StatisticsEngine } from "../src/statistics";
+import { createManuscriptDocx } from "../src/docx";
+import { assertValidDocx } from "../src/docx-validator";
 
 const profile = createDefaultProfiles()[0];
 const content = `${"word ".repeat(999)}word`;
@@ -25,9 +27,18 @@ const parts = Array.from({ length: 10 }, (_, partIndex) => ({
   }))
 }));
 const scan = { root: { path: "Book", name: "Book" }, frontMatter: [], backMatter: [], looseScenes: [], parts, allMarkdown, warnings: [] } as never;
-const started = performance.now();
+const parseStarted = performance.now();
 const book = await new ManuscriptParser({ cachedRead: async () => content } as never).parse(scan, profile);
+const parseMs = performance.now() - parseStarted;
+const statisticsStarted = performance.now();
 const statistics = new StatisticsEngine().calculate(book, profile, 250);
+const statisticsMs = performance.now() - statisticsStarted;
+const markdownStarted = performance.now();
 const markdown = new MarkdownGenerator().generate(book, profile, statistics, new Date("2026-01-01T00:00:00Z"));
-const duration = performance.now() - started;
-process.stdout.write(`Large-manuscript benchmark: ${statistics.chapterCount} chapters, ${statistics.sceneCount} scenes, ${statistics.totalWordCount.toLocaleString()} words, ${markdown.length.toLocaleString()} characters in ${Math.round(duration)} ms.\n`);
+const markdownMs = performance.now() - markdownStarted;
+const docxStarted = performance.now();
+const docx = createManuscriptDocx(book, profile, { title: "Benchmark", author: "", titlePage: false });
+const docxMs = performance.now() - docxStarted;
+assertValidDocx(docx, "Large benchmark DOCX");
+const duration = parseMs + statisticsMs + markdownMs + docxMs;
+process.stdout.write(`Large-manuscript benchmark: ${statistics.chapterCount} chapters, ${statistics.sceneCount} scenes, ${statistics.totalWordCount.toLocaleString()} words, ${markdown.length.toLocaleString()} Markdown characters, ${docx.length.toLocaleString()} DOCX bytes in ${Math.round(duration)} ms (parse/clean/Book ${Math.round(parseMs)} ms; statistics ${Math.round(statisticsMs)} ms; Markdown ${Math.round(markdownMs)} ms; DOCX/ZIP ${Math.round(docxMs)} ms).\n`);

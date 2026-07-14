@@ -66,7 +66,7 @@ export class ManuscriptParser {
       root: scan.root, title: scan.root.name,
       frontMatter: { kind: "front", title: "Front Matter", documents: frontDocuments },
       parts, orphanScenes, backMatter: { kind: "back", title: "Back Matter", documents: backDocuments },
-      includedFiles, excludedFiles: [...uniqueExclusions.values()], warnings, issues: [], hierarchyDiagnostics: scan.hierarchyDiagnostics
+      includedFiles, excludedFiles: [...uniqueExclusions.values()], warnings, hierarchyDiagnostics: scan.hierarchyDiagnostics
     };
   }
 
@@ -84,7 +84,7 @@ export class ManuscriptParser {
     const filterStarted = performance.now(); const filter = this.metadataFilter.matches(metadata, settings.metadataFilters); this.filterDurationMs += performance.now() - filterStarted;
     const excluded = statusExcluded || !explicitlyIncluded && !filter.included;
     const exclusionReason = statusExcluded ? "Editing Status is Excluded" : filter.failedRule ? `${filter.failedRule.field} ${filter.failedRule.operator === "equals" ? "==" : "!="} ${filter.failedRule.value} did not match` : undefined;
-    return { file, title: file.basename, number: settings.metadataOrdering ? extractNumber(metadata.scene) ?? extractNumber(file.basename) : extractNumber(file.basename), metadata, rawContent, content: this.cleaner.clean(rawContent, settings).trim(), excluded, exclusionReason, metadataError: parsed.error };
+    return { file, title: file.basename, number: settings.metadataOrdering ? extractNumber(metadata.scene) ?? extractNumber(file.basename) : extractNumber(file.basename), metadata, content: this.cleaner.clean(rawContent, settings).trim(), excluded, exclusionReason, metadataError: parsed.error };
   }
 
   private readMetadata(markdown: string): { metadata: DocumentMetadata; error?: string } {

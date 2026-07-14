@@ -7,7 +7,7 @@
  */
 import { Vault } from "obsidian";
 import { MarkdownGenerator } from "./markdown-generator";
-import type { Book, CompileResult } from "./model";
+import type { Book, CompileResult, ManuscriptStatistics } from "./model";
 import { ManuscriptParser } from "./parser";
 import type { CompileProfile } from "./settings";
 import { StatisticsEngine } from "./statistics";
@@ -23,16 +23,18 @@ export class ManuscriptCompiler {
   readonly timings = { parseDurationMs: 0, filterDurationMs: 0, generationDurationMs: 0 };
   /** Parses the authoritative scan once; the resulting Book is retained by the prepared session. */
   async buildModel(scan: ScannedBook, profile: CompileProfile, signal?: AbortSignal): Promise<Book> { const started = performance.now(); const book = await this.parser.parse(scan, profile, signal); this.timings.parseDurationMs = performance.now() - started; this.timings.filterDurationMs = this.parser.filterDurationMs; return book; }
+  /** Calculates template variables once so preparation does not render Markdown twice. */
+  calculateStatistics(book: Book, profile: CompileProfile, wordsPerMinute: number): ManuscriptStatistics { return this.statistics.calculate(book, profile, wordsPerMinute); }
   /**
    * Derives deterministic statistics, warnings, and optional Markdown from an
    * existing Book. It must not rescan or replace that object because preview and
    * native DOCX export depend on object identity.
    */
-  compile(book: Book, profile: CompileProfile, outputPath: string, wordsPerMinute: number, compileDate = new Date(), signal?: AbortSignal): CompileResult {
+  compile(book: Book, profile: CompileProfile, outputPath: string, wordsPerMinute: number, compileDate = new Date(), signal?: AbortSignal, preparedStatistics?: ManuscriptStatistics): CompileResult {
     throwIfCancelled(signal);
-    const statistics = this.statistics.calculate(book, profile, wordsPerMinute);
+    const statistics = preparedStatistics ?? this.calculateStatistics(book, profile, wordsPerMinute);
     const generationStarted = performance.now(); const markdown = this.generator.generate(book, profile, statistics, compileDate); this.timings.generationDurationMs = performance.now() - generationStarted; throwIfCancelled(signal);
-    const issues = this.warnings.analyze(book, profile, outputPath); book.issues = issues;
+    const issues = this.warnings.analyze(book, profile, outputPath);
     return { markdown, parts: profile.useParts ? book.parts.length : 0, chapters: statistics.chapterCount, scenes: statistics.sceneCount,
       frontMatter: book.frontMatter.documents.filter((document) => !document.excluded && profile.includeFrontMatter).length,
       backMatter: book.backMatter.documents.filter((document) => !document.excluded && profile.includeBackMatter).length,

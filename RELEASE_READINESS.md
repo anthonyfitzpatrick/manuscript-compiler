@@ -17,14 +17,14 @@ Version 0.9.2 remains a release candidate. Live Obsidian/Vellum testing exposed 
 ## Automated release gates completed
 
 - `npm run typecheck` — passed
-- `npm test` — 97 tests passed, including the real-vault nested-container and matter-role regression
+- `npm test` — 103 tests passed, including traversal-before-normalisation, equal-size stale-source detection, diagnostics/log privacy, malformed persistence repair, repository hygiene, and the real-vault nested-container/matter-role regression
 - `npm run test:safe-writer` — 18 tests passed
 - `npm run test:docx` — passed; original and real-vault Warden semantic structures inspected
-- `npm run benchmark:large` — 500 Chapters, 2,000 Scenes, and 2,000,000 words in 373 ms locally; timing is informational
+- `npm run benchmark:large` — 500 Chapters, 2,000 Scenes, and 2,000,000 words in 484 ms locally: parse/clean/Book 209 ms, statistics 114 ms, Markdown 37 ms, DOCX/ZIP 125 ms; timing is informational
 - `npm run build` — passed
 - `npm run package` — passed
 - `npm run package:validate` — passed
-- `npm audit` — an earlier run reported 0 vulnerabilities; the final retry failed with `getaddrinfo ENOTFOUND registry.npmjs.org`
+- `npm audit` — 0 vulnerabilities
 - `git diff --check` — passed
 
 The release archive must be `release/manuscript-compiler-0.9.2.zip` and contain exactly `main.js`, `manifest.json`, and `styles.css`.
