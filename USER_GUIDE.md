@@ -94,45 +94,9 @@ Confirm the selected folder and choose the structure preset closest to the proje
 
 <!-- SCREENSHOT:04 -->
 
-<p style="color:#cc0000; font-size:1.5em; font-weight:bold; margin-bottom:0;">
-📸 SCREENSHOT REQUIRED — #04
-</p>
+![The Manuscript stage showing the selected book folder, detected structure, scan summary, and Review Structure action](docs/images/04-manuscript-screen.png)
 
-<p style="color:#cc0000; font-weight:bold;">
-CAPTURE
-</p>
-
-<p style="color:#cc0000;">
-Capture the initial Manuscript screen after opening the workflow, before changing any detected choices.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-SHOW
-</p>
-
-<ul style="color:#cc0000;">
-<li>The complete “Manuscript → Contents → Create file” stage indicator</li>
-<li>The manuscript-folder area</li>
-<li>The structure-preset selector</li>
-<li>The scan or folder summary area</li>
-<li>The Continue button and visible keyboard-focus treatment where practical</li>
-</ul>
-
-<p style="color:#cc0000; font-weight:bold;">
-PURPOSE
-</p>
-
-<p style="color:#cc0000;">
-Introduces the first workflow stage and identifies the choices that establish the manuscript root and initial structural interpretation.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-WHEN REPLACING
-</p>
-
-<p style="color:#cc0000;">
-Delete this entire placeholder and replace it with the final screenshot and caption.
-</p>
+*The Manuscript stage confirms the selected book folder and detected structure before you choose **Review Structure**.*
 
 ---
 
