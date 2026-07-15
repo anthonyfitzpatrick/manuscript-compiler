@@ -205,45 +205,9 @@ Click a card or focus the selected card and use Left/Right or Up/Down arrows. Ho
 
 <!-- SCREENSHOT:13 -->
 
-<p style="color:#cc0000; font-size:1.5em; font-weight:bold; margin-bottom:0;">
-📸 SCREENSHOT REQUIRED — #13
-</p>
+![DOCX selected with document style, indentation, scene break, title page, table of contents, and chapter controls](docs/images/13-docx-format.png)
 
-<p style="color:#cc0000; font-weight:bold;">
-CAPTURE
-</p>
-
-<p style="color:#cc0000;">
-Select DOCX on Create file and capture the selected card together with the controls and action that change for DOCX.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-SHOW
-</p>
-
-<ul style="color:#cc0000;">
-<li>The DOCX card in its obvious selected state</li>
-<li>The “Editable word-processing document” description</li>
-<li>The resolved filename ending in `.docx`</li>
-<li>The “Create and download DOCX” primary button</li>
-<li>The beginning of the DOCX formatting controls</li>
-</ul>
-
-<p style="color:#cc0000; font-weight:bold;">
-PURPOSE
-</p>
-
-<p style="color:#cc0000;">
-Shows how the selected format controls the filename, available formatting options, and final download action.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-WHEN REPLACING
-</p>
-
-<p style="color:#cc0000;">
-Delete this entire placeholder and replace it with the final screenshot and caption.
-</p>
+*Selecting DOCX reveals its document formatting controls and changes the primary action to **Create and download DOCX**.*
 
 ---
 
