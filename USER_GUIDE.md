@@ -294,45 +294,9 @@ Choose `#`, `*`, `***`, `* * *`, a styled blank line, or Custom. Scene separator
 
 <!-- SCREENSHOT:21 -->
 
-<p style="color:#cc0000; font-size:1.5em; font-weight:bold; margin-bottom:0;">
-📸 SCREENSHOT REQUIRED — #21
-</p>
+![The Scene break menu showing hash, asterisk, blank-line, and custom separator choices](docs/images/21-scene-break-options.png)
 
-<p style="color:#cc0000; font-weight:bold;">
-CAPTURE
-</p>
-
-<p style="color:#cc0000;">
-Open the Scene break selector for a presentation format and capture the available separator choices.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-SHOW
-</p>
-
-<ul style="color:#cc0000;">
-<li>The Scene break label</li>
-<li>The `#`, `*`, `***`, and `* * *` choices</li>
-<li>The styled blank-line and Custom choices</li>
-<li>One clearly selected separator</li>
-<li>The custom text field only if Custom is selected</li>
-</ul>
-
-<p style="color:#cc0000; font-weight:bold;">
-PURPOSE
-</p>
-
-<p style="color:#cc0000;">
-Shows how authors choose the visible separator placed between Scenes and reinforces that following prose resets to First Paragraph styling.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-WHEN REPLACING
-</p>
-
-<p style="color:#cc0000;">
-Delete this entire placeholder and replace it with the final screenshot and caption.
-</p>
+*Choose `#`, `*`, `***`, `* * *`, a blank line, or a custom separator between included Scenes. `* * *` is selected here.*
 
 ---
 
