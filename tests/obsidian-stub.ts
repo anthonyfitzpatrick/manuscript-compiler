@@ -10,10 +10,11 @@ export class Vault {}
 export class FileSystemAdapter {}
 export class App {}
 export class FuzzySuggestModal<T> {}
-const element = (): any => ({ setText() {}, empty() {}, createEl: () => element(), createDiv: () => element(), createSpan: () => element(), addClass() {}, remove() {}, setAttribute() {}, addEventListener() {}, querySelector: () => null, querySelectorAll: () => [], style: {}, dataset: {} });
+const element = (): any => ({ setText() {}, empty() {}, createEl: () => element(), createDiv: () => element(), createSpan: () => element(), prepend() {}, append() {}, addClass() {}, remove() {}, setAttribute() {}, addEventListener() {}, querySelector: () => null, querySelectorAll: () => [], style: {}, dataset: {}, win: { open() {} } });
 export class Modal { app: App; contentEl = element(); titleEl = element(); modalEl = element(); constructor(app: App) { this.app = app; } open(): void { (this as any).onOpen?.(); } close(): void { (this as any).onClose?.(); } }
 export class Notice {}
 class Button { buttonEl = element(); setButtonText(): this { return this; } setWarning(): this { return this; } setCta(): this { return this; } setDisabled(): this { return this; } onClick(): this { return this; } }
+export class ButtonComponent extends Button { constructor(_container?: unknown) { super(); } setTooltip(): this { return this; } setClass(): this { return this; } setIcon(): this { return this; } }
 export class Setting { constructor(_container?: unknown) {} setName(): this { return this; } setDesc(): this { return this; } addButton(callback: (button: Button) => void): this { callback(new Button()); return this; } addDropdown(): this { return this; } addToggle(): this { return this; } addText(): this { return this; } addSearch(): this { return this; } }
 export class PluginSettingTab { containerEl = element(); constructor(_app: App, _plugin: unknown) {} }
 export class TextAreaComponent { inputEl = element(); constructor(_container?: unknown) {} setValue(): this { return this; } onChange(): this { return this; } }

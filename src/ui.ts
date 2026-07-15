@@ -6,7 +6,7 @@
  * workspace. It calls plugin/service callbacks and must not implement scanning,
  * parsing, safe-write transactions, or platform filesystem bridges.
  */
-import { App, FuzzySuggestModal, Modal, Notice, PluginSettingTab, Setting, TextAreaComponent, TFolder } from "obsidian";
+import { App, ButtonComponent, FuzzySuggestModal, Modal, Notice, PluginSettingTab, Setting, TextAreaComponent, TFolder } from "obsidian";
 import type ManuscriptCompilerPlugin from "./main";
 import type { Chapter, CompilePreview, CompileWarning, ManuscriptDocument, Part } from "./model";
 import { duplicateProfile, validateProfile } from "./profiles";
@@ -17,6 +17,7 @@ import type { ValidationResult } from "./validation";
 import { ProfileWizardModal } from "./wizards";
 import { redactTechnicalMessage } from "./diagnostics";
 import { EXPORT_FORMAT_DETAILS, EXPORT_FORMATS, type ExportFormat } from "./export-types";
+import buyMeACoffeeArtwork from "./assets/bmc-button.svg";
 
 /** Reusable vault-folder picker for compatibility commands/settings. */
 export class FolderSuggestModal extends FuzzySuggestModal<TFolder> {
@@ -87,6 +88,17 @@ class ProfileJsonModal extends Modal {
 class ExportHistoryModal extends Modal { constructor(app: App, private readonly plugin: ManuscriptCompilerPlugin) { super(app); } onOpen(): void { this.titleEl.setText("Export history"); this.plugin.settings.exportHistory.forEach((entry) => { const details = this.contentEl.createEl("details"); details.createEl("summary", { text: `${entry.cancelled ? "—" : entry.success ? "✓" : "✗"} ${new Date(entry.timestamp).toLocaleString()} — ${(entry.format ?? "docx").toUpperCase()}` }); details.createEl("p", { text: `${entry.manuscript} · ${entry.wordCount.toLocaleString()} words` }); entry.outputFiles.forEach((filename) => details.createEl("p", { text: filename })); }); new Setting(this.contentEl).addButton((button) => button.setButtonText("Clear history and logs").setWarning().onClick(async () => { await this.plugin.clearHistory(); this.close(); })).addButton((button) => button.setButtonText("Close").onClick(() => this.close())); } }
 class CompileLogsModal extends Modal { constructor(app: App, private readonly plugin: ManuscriptCompilerPlugin) { super(app); } onOpen(): void { this.titleEl.setText("Compile logs"); this.plugin.settings.compileLogs.forEach((log) => { const details = this.contentEl.createEl("details"); details.createEl("summary", { text: `${log.cancelled ? "Cancelled" : log.success ? "Success" : "Failure"} — ${new Date(log.timestamp).toLocaleString()} — ${log.profile}` }); const pre = details.createEl("pre"); pre.setText([`Compiler: ${log.compilerVersion}`, `Manuscript: ${log.manuscript}`, `Formats: ${log.exportFormats}`, `Outputs: ${log.outputFiles.join(", ") || "None"}`, `Duration: ${log.durationMs} ms`, `Warnings: ${log.warnings.join(" | ") || "None"}`, log.diagnostics ? `Diagnostics:\n${log.diagnostics}` : ""].filter(Boolean).join("\n")); }); new Setting(this.contentEl).addButton((button) => button.setButtonText("Close").onClick(() => this.close())); } }
 
+const SUPPORT_ACTIONS = [
+  { label: "Report a bug", icon: "bug", notice: "Bug reporting portal coming soon." },
+  { label: "Feature request", icon: "lightbulb", notice: "Feature request portal coming soon." },
+  { label: "wolf359.app", icon: "globe", url: "https://wolf359.app" },
+  { label: "Wolf 359 Press", icon: "book-open", url: "https://wolf359.press" },
+  { label: "Buy me a coffee", icon: "coffee", url: "https://buymeacoffee.com/wolf359pressab" }
+] as const;
+const SUPPORT_CREATOR = "Anthony Fitzpatrick";
+const SUPPORT_COMPANY = "Wolf 359 Press AB";
+const SUPPORT_SECTION_TITLE = "Support & Links";
+
 /** Defaults/advanced compatibility settings; not the primary compile workspace. */
 export class ManuscriptCompilerSettingTab extends PluginSettingTab {
   constructor(app: App, private readonly plugin: ManuscriptCompilerPlugin) { super(app, plugin); }
@@ -110,6 +122,34 @@ export class ManuscriptCompilerSettingTab extends PluginSettingTab {
       settings.profiles.push(validation.profile); settings.activeProfileId = validation.profile.id; await this.saveAndRender();
     }).open()));
     new Setting(advanced).setName("Export records").addButton((button) => button.setButtonText(`History (${settings.exportHistory.length})`).onClick(() => new ExportHistoryModal(this.app, this.plugin).open())).addButton((button) => button.setButtonText(`Logs (${settings.compileLogs.length})`).onClick(() => new CompileLogsModal(this.app, this.plugin).open()));
+    this.renderSupportPanel(container);
+  }
+  /** Renders the non-configuring support footer after every persisted setting. */
+  private renderSupportPanel(parent: HTMLElement): void {
+    const panel = parent.createDiv({ cls: "manuscript-support-panel" });
+    new Setting(panel).setName(SUPPORT_SECTION_TITLE).setHeading();
+    const identity = panel.createDiv({ cls: "manuscript-support-identity" });
+    identity.createEl("strong", { cls: "manuscript-support-name", text: "Manuscript Compiler" });
+    identity.createEl("p", { text: `Version ${this.plugin.manifest.version}` });
+    identity.createEl("p", { text: `Created by ${SUPPORT_CREATOR}` });
+    identity.createEl("p", { text: SUPPORT_COMPANY });
+    const actions = panel.createDiv({ cls: "manuscript-support-actions" });
+    for (const action of SUPPORT_ACTIONS) {
+      const button = new ButtonComponent(actions).setButtonText(action.label).setTooltip(action.label).setClass("manuscript-support-button");
+      if (action.label === "Buy me a coffee") {
+        button.setClass("manuscript-support-button-coffee");
+        const icon = button.buttonEl.createSpan({ cls: "manuscript-support-bmc-icon", attr: { "aria-hidden": "true" } });
+        icon.createEl("img", { attr: { src: buyMeACoffeeArtwork, alt: "" } });
+        button.buttonEl.prepend(icon);
+      } else {
+        button.setIcon(action.icon);
+      }
+      button.buttonEl.setAttribute("aria-label", action.label);
+      button.onClick(() => {
+        if ("notice" in action) { new Notice(action.notice); return; }
+        button.buttonEl.win.open(action.url, "_blank", "noopener,noreferrer");
+      });
+    }
   }
   private text(parent: HTMLElement, name: string, value: string, change: (value: string) => void): void { new Setting(parent).setName(name).addText((text) => text.setValue(value).onChange(async (next) => { change(next.trim()); await this.plugin.saveSettings(); })); }
   private toggle(parent: HTMLElement, name: string, value: boolean, change: (value: boolean) => void): void { new Setting(parent).setName(name).addToggle((toggle) => toggle.setValue(value).onChange(async (next) => { change(next); await this.plugin.saveSettings(); })); }
