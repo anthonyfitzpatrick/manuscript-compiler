@@ -1,4 +1,15 @@
-/** Export-oriented projection of the final Book; it never scans or parses source files. */
+/**
+ * Manuscript Compiler — shared export-oriented semantic projection.
+ *
+ * Converts the prepared Book into ordered sections/blocks that distinguish
+ * structural headings, first/later paragraphs, scene breaks, and inline emphasis.
+ * Called once by ExportCoordinator and consumed by all exporters/validators. It
+ * does not own scanning, parsing, cleaning, ordering, delivery, or the Book model.
+ * Invariants: preserve Book order/content, never invent zero headings, reset first
+ * paragraphs after headings/breaks, and retain presentation neutrality. Functions
+ * are pure, deterministic, non-cancellable, and platform-independent; changes are
+ * cross-format and require complete exporter regression coverage.
+ */
 import type { Book, ManuscriptDocument } from "./model";
 import type { CompileProfile } from "./settings";
 import type { ExportFormattingOptions } from "./export-types";
@@ -13,6 +24,14 @@ export type SemanticBlock =
 export interface SemanticSection { id: string; kind: "title" | "front-matter" | "part" | "chapter" | "body" | "back-matter"; title: string; number?: number; parentId?: string; blocks: SemanticBlock[]; }
 export interface SemanticDocument { title: string; author: string; language: string; wordCount: number; sections: SemanticSection[]; }
 
+/**
+ * Projects one prepared Book into the shared exporter block model.
+ * @param book Exact semantic Book retained by PreparedCompileSession.
+ * @param profile Resolved structural/matter choices.
+ * @param options Shared presentation options.
+ * @param wordCount Prepared semantic word count.
+ * @returns A new deterministic projection; `book` is never mutated.
+ */
 export function createSemanticDocument(book: Book, profile: CompileProfile, options: ExportFormattingOptions, wordCount: number): SemanticDocument {
   const sections: SemanticSection[] = []; let id = 0; const next = (kind: SemanticSection["kind"], title: string, number?: number): SemanticSection => ({ id: `section-${++id}`, kind, title, number, blocks: [] });
   if (options.titlePage) { const section = next("title", options.title); section.blocks.push(heading("title", options.title), { ...heading("author", options.author), pageBreakAfter: true }); sections.push(section); }
@@ -33,14 +52,21 @@ function addScenes(blocks: SemanticBlock[], scenes: ManuscriptDocument[], profil
 function included(items: ManuscriptDocument[]): ManuscriptDocument[] { return items.filter((item) => !item.excluded && Boolean(item.content.trim())); }
 function heading(style: Extract<SemanticBlock, { kind: "heading" }>["style"], value: string, pageBreakBefore = false): Extract<SemanticBlock, { kind: "heading" }> { return { kind: "heading", style, inlines: [{ text: value }], pageBreakBefore }; }
 
+/**
+ * Converts already-cleaned document Markdown into paragraph/body-heading/break blocks.
+ * First-paragraph state resets after body headings and scene breaks. Pure and
+ * deterministic; this is inline presentation parsing, not manuscript detection.
+ */
 export function bodyBlocks(markdown: string): SemanticBlock[] {
   const output: SemanticBlock[] = []; let lines: string[] = []; let first = true;
   const flush = (): void => { const value = lines.join(" ").trim(); lines = []; if (value) { output.push({ kind: "paragraph", inlines: inlineMarkdown(value), first }); first = false; } };
   for (const raw of markdown.replace(/\r\n?/g, "\n").split("\n")) { const line = raw.trim(); if (!line) { flush(); continue; } if (/^(?:---+|\*\s*\*\s*\*|#)$/.test(line)) { flush(); output.push({ kind: "scene-break", text: "* * *" }); first = true; continue; } const match = /^#{1,6}\s+(.+)$/.exec(line); if (match) { flush(); output.push(heading("body-heading", match[1])); first = true; continue; } lines.push(line.replace(/^>\s?/, "").replace(/^[-*+]\s+/, "• ")); } flush(); return output;
 }
 
+/** Extracts supported emphasis, code text, and readable links without retaining link targets in plain output. */
 export function inlineMarkdown(value: string): SemanticInline[] {
   const output: SemanticInline[] = []; const pattern = /(\*\*\*|___)(.+?)\1|(\*\*|__)(.+?)\3|(?<!\*)\*([^*]+?)\*|_([^_]+?)_|\[([^\]]+)\]\(([^)]+)\)|`([^`]+)`/g; let offset = 0; let match: RegExpExecArray | null;
   while ((match = pattern.exec(value))) { if (match.index > offset) output.push({ text: value.slice(offset, match.index) }); if (match[2]) output.push({ text: match[2], bold: true, italic: true }); else if (match[4]) output.push({ text: match[4], bold: true }); else if (match[5] || match[6]) output.push({ text: match[5] ?? match[6], italic: true }); else if (match[7]) output.push({ text: match[7], href: match[8] }); else output.push({ text: match[9] ?? "" }); offset = match.index + match[0].length; } if (offset < value.length) output.push({ text: value.slice(offset) }); return output.length ? output : [{ text: value }];
 }
+/** Returns presentation-free visible text for validation; performs no unescaping or mutation. */
 export function plainText(block: SemanticBlock): string { return "inlines" in block ? block.inlines.map((item) => item.text).join("") : block.kind === "scene-break" ? block.text : ""; }

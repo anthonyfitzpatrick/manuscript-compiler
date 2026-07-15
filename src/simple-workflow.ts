@@ -4,6 +4,10 @@
  * Translates concise author choices into a complete compatibility profile while
  * preserving the workspace plan as authoritative. Called by workspace state and
  * CompilePreparationService; calls no vault or UI APIs.
+ * It owns preset-to-profile projection, not persisted migration, parsing, or
+ * export. Resolution is pure, deterministic, non-cancellable, and platform-neutral;
+ * invalid choices become structured validation messages upstream. Manual author
+ * changes must remain Custom and must not be reset by preset defaults.
  */
 import type { CompileProfile, DocxStylePreset, ExportTarget, StructuralDisplay, StructurePreset } from "./settings";
 import type { ContentPlanItem } from "./content-plan";

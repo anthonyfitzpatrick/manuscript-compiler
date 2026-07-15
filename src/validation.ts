@@ -4,6 +4,10 @@
  * Reports the exact Book, counts, exclusions, and issues that export would use.
  * Called by CompileCommandService. It consumes PreparedCompileSession and never
  * scans, rebuilds the Book, or writes output.
+ * It owns report projection, not format-byte validation, UI, delivery, or history.
+ * Validation is synchronous over immutable prepared data, deterministic,
+ * non-cancellable, and platform-neutral. Findings must remain structural and must
+ * not include manuscript prose, absolute paths, or private metadata.
  */
 import type { Vault } from "obsidian";
 import type { PreparedCompileSession, PreparedExclusion } from "./compile-preparation";

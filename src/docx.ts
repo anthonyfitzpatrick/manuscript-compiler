@@ -161,6 +161,11 @@ function addStructuralHeading(blocks: string[], kind: "Part" | "Chapter", item: 
   });
 }
 
+/**
+ * Resolves semantic number/title lines for one Part or Chapter display mode.
+ * @returns A fixed tuple of number line and title line; either can be empty.
+ * @remarks Pure and shared with SemanticDocument; never invents a zero number.
+ */
 export function structuralLines(kind: "Part" | "Chapter", item: Part | Chapter, display: StructuralDisplay, customTemplate: string): [string, string] {
   const number = item.number;
   const title = item.name && item.name !== item.title ? item.name : "";

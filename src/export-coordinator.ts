@@ -1,4 +1,18 @@
-/** Sole in-memory export coordinator: prepared Book → generator → validator → download. */
+/**
+ * Manuscript Compiler — terminal export transaction.
+ *
+ * Purpose: preserve the reviewed PreparedCompileSession through stale checks,
+ * shared projection, native generation, structural validation, download, and
+ * privacy-safe history. Owns orchestration and terminal truth, not manuscript
+ * interpretation or format internals. Called by command/workspace services;
+ * calls exporter/validator registries, BrowserDownloadService, and history.
+ *
+ * Invariants: `session.book` is never rebuilt; validation precedes delivery;
+ * success follows a started download; finalisation is non-cancellable; locks
+ * settle in `finally`. Failures become redacted author-facing results. The path
+ * is identical on desktop/mobile and must remain free of vault, Node, Electron,
+ * network, and external-process delivery.
+ */
 import { Notice, type App } from "obsidian";
 import { CompilationCancelledError } from "./cancellation";
 import { calculateSourceFingerprint, compileInputSignature, type PreparedCompileSession } from "./compile-preparation";
@@ -19,9 +33,25 @@ import { WarningEngine } from "./warnings";
 export interface ExportExecutionResult { status: "success" | "failed" | "cancelled"; outputFiles: string[]; report?: CompileResult; error?: string; downloadStarted?: boolean; validationPassed?: boolean; }
 export interface ExportExecutionOptions { showResult?: boolean; format?: ExportFormat; filename?: string; }
 
+/**
+ * Application-scoped owner of verified export execution.
+ *
+ * The coordinator owns no manuscript state and may process only a supplied
+ * prepared session. It persists safe defaults and terminal history as explicit
+ * side effects. Concurrent execution is rejected by OperationStateController;
+ * cancellation is honored until download finalisation begins.
+ */
 export class ExportCoordinator {
   constructor(private readonly app: App, private readonly settings: () => ManuscriptCompilerSettings, private readonly saveSettings: () => Promise<void>, private readonly operations: OperationStateController, private readonly history: CompileHistoryService, private readonly downloads = new BrowserDownloadService()) {}
 
+  /**
+   * Executes the complete verified export transaction for one prepared session.
+   * @param session Reviewed snapshot whose Book identity must be retained.
+   * @param options Optional format/filename/result-presentation choices.
+   * @returns Truthful terminal status and portable output names, never paths.
+   * @throws Only when the global operation slot is already occupied; generation,
+   * validation, delivery, and cancellation outcomes are converted to results.
+   */
   async exportPreparedSession(session: PreparedCompileSession, options: ExportExecutionOptions = {}): Promise<ExportExecutionResult> {
     const operation = this.operations.begin("exporting"); if (!operation) throw new Error("A manuscript preparation or compilation is already running.");
     const started = Date.now(); const timestamp = new Date(); const format = options.format ?? this.settings().defaultDownloadFormat; const details = EXPORT_FORMAT_DETAILS[format];
@@ -47,6 +77,7 @@ export class ExportCoordinator {
     } finally { operation.settle(); }
   }
 
+  /** Builds the legacy/read-only preview around the exact prepared Book without I/O. */
   previewFromSession(session: PreparedCompileSession): CompilePreview {
     const format = this.settings().defaultDownloadFormat; const filename = exportFilename(session.request.outputFilename, format, String(session.variables.BookTitle ?? session.book.title)); const issues = new WarningEngine().filter(session.warnings, this.settings().minimumWarningLevel);
     return { ...session.result, issues, warnings: issues.map((item) => item.message), book: session.book, outputPath: filename, outputFolder: "", outputFilename: filename, outputFormats: [EXPORT_FORMAT_DETAILS[format].label], outputPaths: [filename], docxEngine: "built-in", estimatedPages: Math.max(1, Math.ceil(session.result.wordCount / 300)), canExport: canProceedWithExport(session.warnings) };
@@ -56,4 +87,10 @@ export class ExportCoordinator {
   private async persistDefaults(session: PreparedCompileSession, format: ExportFormat): Promise<void> { const settings = this.settings(); settings.defaultManuscriptFolder = session.request.manuscriptRoot; settings.defaultStructurePreset = session.request.structurePreset; settings.defaultDownloadFormat = format; if (session.request.docxPreset !== "custom") settings.defaultDocxStyle = session.request.docxPreset; if (session.request.formatting) { settings.defaultDocxPageSize = session.request.formatting.pageSize; settings.defaultIndentParagraphs = session.request.formatting.indentParagraphs; settings.defaultDocxFirstLineIndentCm = session.request.formatting.firstLineIndentCm; } await this.saveSettings(); }
 }
 
+/**
+ * Converts an unknown terminal export error into concise author-facing text.
+ * Preserves actionable validation/download wording and performs no logging or
+ * persistence. Callers must redact sensitive technical details before passing
+ * them if an upstream error could contain paths or metadata.
+ */
 export function friendlyExportError(error: unknown): string { const message = error instanceof Error ? error.message : String(error); if (/validation/i.test(message)) return message; if (/blocked|download/i.test(message)) return message; return `The file could not be created. ${message}`; }

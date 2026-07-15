@@ -3,6 +3,10 @@
  *
  * Prevents duplicate preparation/export and gives each task one AbortController.
  * Finalisation disables cancellation so replacement or rollback can finish.
+ * Controllers and ExportCoordinator acquire handles; this module calls no vault,
+ * UI, generator, or persistence service. Invalid concurrent starts throw before
+ * side effects. State transitions are synchronous and platform-neutral. Always
+ * settle handles in `finally`, and never make terminal delivery cancellable.
  */
 export type OperationStatus = "idle" | "preparing" | "ready" | "exporting" | "finalising" | "cancelled" | "failed" | "complete";
 

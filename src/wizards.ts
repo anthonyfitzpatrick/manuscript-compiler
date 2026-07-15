@@ -4,6 +4,10 @@
  * Creates compatible saved defaults and profiles for first-run/advanced users.
  * It does not provide an alternative compile path; compilation still flows
  * through CompileCommandService and CompilePreparationService.
+ * Obsidian owns modal lifecycle; wizard instances own transient form state and
+ * persist only repaired settings through injected callbacks. They perform no note
+ * reads, export, or cancellation-sensitive work. Keep controls documented,
+ * focus-visible, sentence-case, and usable on narrow/mobile panes.
  */
 import { App, FuzzySuggestModal, Modal, Notice, Setting, TFolder } from "obsidian";
 import type ManuscriptCompilerPlugin from "./main";
@@ -22,6 +26,11 @@ class WizardFolderPicker extends FuzzySuggestModal<TFolder> {
 interface WizardChoices { name: string; manuscriptRoot: string; exportFolder: string; chapterSource: ChapterSource; useParts: boolean; sceneSeparators: boolean; includeFrontMatter: boolean; includeBackMatter: boolean; referenceDocx: string; vellum: boolean; structurePreset?: StructurePreset; }
 const initialChoices = (): WizardChoices => ({ name: "My Book", manuscriptRoot: "", exportFolder: "", chapterSource: "folders", useParts: true, sceneSeparators: true, includeFrontMatter: true, includeBackMatter: true, referenceDocx: "", vellum: true, structurePreset: "novel-parts" });
 
+/**
+ * Converts validated wizard choices into a fresh compatible profile.
+ * @returns A new profile with a unique ID and cloned defaults.
+ * @remarks Pure apart from ID generation; does not persist or compile the profile.
+ */
 export function profileFromWizard(choices: WizardChoices): CompileProfile {
   const base = createDefaultProfiles()[choices.vellum ? 1 : 0];
   return { ...base, id: profileId(), name: choices.name.trim() || (choices.vellum ? "Vellum" : "Standard"), manuscriptRoot: choices.manuscriptRoot, exportFolder: choices.exportFolder, chapterSource: choices.chapterSource, useParts: choices.useParts, sceneSeparator: choices.sceneSeparators ? "#" : "", includeFrontMatter: choices.includeFrontMatter, includeBackMatter: choices.includeBackMatter, referenceDocx: choices.referenceDocx, exportTarget: choices.referenceDocx ? "markdown-docx" : base.exportTarget };

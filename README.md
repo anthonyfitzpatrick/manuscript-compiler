@@ -6,6 +6,14 @@ Only content included in the reviewed manuscript structure is exported. Project 
 
 The workflow has three stages: **Manuscript → Contents → Create file**. Every format is generated locally in memory, validated, and handed to the host download/share flow. Completed exports are downloaded outside the vault; the plugin does not choose or remember the final destination.
 
+Documentation:
+
+- [User guide](USER_GUIDE.md) — installation, manuscript layout, complete workflow, formats, formatting, troubleshooting, and screenshot plan.
+- [Developer guide](DEVELOPER_GUIDE.md) — building, testing, architecture boundaries, extension procedures, security, and releases.
+- [Architecture](ARCHITECTURE.md) — source-of-truth pipeline, state ownership, exports, validation, privacy, and source map.
+- [Security policy](SECURITY.md) — offline guarantees, data handling, dependency policy, and private reporting.
+- [Manual release checklist](MANUAL_TESTING.md) — intentionally unchecked application/platform interoperability gates.
+
 ## Installation
 
 Until the plugin is listed in Obsidian's Community Plugins directory, download `main.js`, `manifest.json`, and `styles.css` from a GitHub release whose tag exactly matches the manifest version. Put the three files in a vault plugin folder named `manuscript-compiler`, reload Obsidian, and enable **Manuscript Compiler** under Community Plugins.
@@ -109,3 +117,5 @@ Automated structural validation is not a substitute for opening outputs in Word,
 - EPUB validation is structural and does not replace EPUBCheck or live reader testing.
 - Vellum import semantics require live Vellum testing.
 - Unusual authoring templates may require manual structure correction or body-heading aliases.
+
+For a full author-oriented explanation of these limits and recovery steps, see [USER_GUIDE.md](USER_GUIDE.md).

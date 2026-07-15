@@ -4,6 +4,10 @@
  * Counts only included, non-empty documents from the final Book. Preparation,
  * preview, validation, and reports share this result so raw discovery counts
  * cannot disagree with exported structure.
+ * It owns counting only, not tokenisation for parsing, Book mutation, logging, or
+ * persistence. Calls are pure, synchronous, deterministic, non-cancellable, and
+ * platform-neutral. Future counters must derive from semantic content and avoid
+ * quadratic rescans of large manuscripts.
  */
 import type { Book, ManuscriptStatistics, NamedStatistic } from "./model";
 import type { CompileProfile } from "./settings";

@@ -3,6 +3,10 @@
  *
  * Stores scroll, focus identity, and collapsed folders independently of compile
  * data. One modal owns one instance; changing roots intentionally resets it.
+ * Contents rendering reads/writes this ephemeral state; it calls no compiler,
+ * vault, settings, or export API. Methods are synchronous, non-throwing, and
+ * non-cancellable. Never persist note identities or allow presentation state to
+ * alter inclusion, roles, ordering, or mobile accessibility.
  */
 import type { ContentPlanItem } from "../content-plan";
 import type { ContentsReviewFilter } from "./workspace-view-model";

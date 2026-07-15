@@ -168,6 +168,11 @@ export function compileInputSignature(request: SimpleCompileRequest, plan: Conte
     plan: plan.map(({ path, role, included, order, userOverride }) => ({ path, role, included, order, userOverride }))
   }));
 }
+/**
+ * Tests whether current semantic inputs still match a prepared session.
+ * @returns `true` only when the deterministic input signature is unchanged.
+ * @remarks Pure; source-content freshness is checked separately and asynchronously.
+ */
 export function preparedSessionMatchesInputs(session: PreparedCompileSession, request: SimpleCompileRequest, plan: ContentPlanItem[]): boolean { return session.inputSignature === compileInputSignature(request, plan); }
 
 function collectExclusions(plan: ContentPlanItem[], book: Book, rootPath: string): PreparedExclusion[] {

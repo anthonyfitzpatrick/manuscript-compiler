@@ -3,6 +3,10 @@
  *
  * Converts PreparedCompileSession into display-only data. It reads session.book,
  * never ContentPlan structure, so preview describes the exact exported instance.
+ * Create file rendering calls this pure projection; it calls no parser, vault,
+ * exporter, or downloader. It owns no state, side effects, failure recovery, or
+ * cancellation. Preserve Book reference identity and bounded prose-safe summaries
+ * across desktop/mobile views.
  */
 import type { PreparedCompileSession, PreparedExclusion } from "../compile-preparation";
 import type { CompileWarning, ManuscriptStatistics } from "../model";
@@ -27,6 +31,12 @@ export interface ExportPreviewViewModel {
   outputPath: string;
 }
 
+/**
+ * Builds display-only preview data from the exact prepared Book.
+ * @param session Current prepared snapshot.
+ * @returns A new view model retaining `session.book` identity for verification.
+ * @remarks Pure; never reads ContentPlan as a substitute for semantic output.
+ */
 export function buildExportPreviewViewModel(session: PreparedCompileSession): ExportPreviewViewModel {
   const profile = session.profile;
   const matter = (documents: typeof session.book.frontMatter.documents, enabled: boolean): PreviewMatterItem[] => enabled

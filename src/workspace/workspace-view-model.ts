@@ -1,4 +1,13 @@
-/** Pure projections used by the compact three-stage workspace. */
+/**
+ * Manuscript Compiler — pure three-stage workspace projections.
+ *
+ * Derives counts, focused review groups, conservative identity text, warning
+ * categories, and folder labels from controller-owned state. Step renderers call
+ * these functions; no function owns DOM, vault access, preparation, or mutation.
+ * Results must remain prose-safe and deterministic so UI summaries cannot leak
+ * note content. Functions are non-throwing for repaired inputs, non-cancellable,
+ * and platform-neutral. Keep view policy here rather than duplicating it in views.
+ */
 import type { ContentPlanItem, ContentRole } from "../content-plan";
 import type { CompileWarning } from "../model";
 import { visibleRows } from "./content-tree";
@@ -18,6 +27,7 @@ export interface ManuscriptPlanSummary {
 
 export type ContentsReviewFilter = "outline" | "ignored" | "warnings";
 
+/** Returns deterministic structural counts without exposing note content. */
 export function manuscriptPlanSummary(plan: ContentPlanItem[], root: string): ManuscriptPlanSummary {
   const notes = plan.filter((item) => item.kind === "note");
   const rows = visibleRows(plan, root); const included = new Set(rows.filter((row) => row.included).map((row) => row.item.path));
@@ -37,6 +47,7 @@ export function manuscriptPlanSummary(plan: ContentPlanItem[], root: string): Ma
   };
 }
 
+/** Selects plan rows for one review filter without mutating plan state. */
 export function reviewItems(plan: ContentPlanItem[], root: string, filter: ContentsReviewFilter): ContentPlanItem[] {
   const included = new Set(visibleRows(plan, root).filter((row) => row.included).map((row) => row.item.path));
   if (filter === "ignored") return plan.filter((item) => item.kind === "note" && !included.has(item.path));
@@ -45,6 +56,7 @@ export function reviewItems(plan: ContentPlanItem[], root: string, filter: Conte
 }
 
 export interface IgnoredGroup { path: string; name: string; itemCount: number; reason: string; }
+/** Groups ignored notes under their highest ignored folder to keep review compact. */
 export function ignoredGroups(plan: ContentPlanItem[], root: string): IgnoredGroup[] {
   const ignored = reviewItems(plan, root, "ignored"); const byPath = new Map(plan.map((item) => [item.path, item]));
   const hasIgnoredAncestor = (item: ContentPlanItem): boolean => { let parent = byPath.get(item.parentPath); while (parent && parent.path !== root) { if (parent.kind === "folder" && (parent.role === "ignore" || parent.included === false)) return true; parent = byPath.get(parent.parentPath); } return false; };
@@ -57,35 +69,43 @@ export function ignoredGroups(plan: ContentPlanItem[], root: string): IgnoredGro
   return groups;
 }
 
+/** Removes a conservative `Book N` container prefix for display only. */
 export function cleanBookTitle(value: string): string {
   const trimmed = value.trim();
   return trimmed.replace(/^book\s+\d+\s*(?:[-–—:.]\s*)+/i, "").trim() || trimmed;
 }
 
+/** Resolves title precedence from repaired metadata, root metadata, then folder name. */
 export function resolveBookTitle(metadataTitle: unknown, rootTitle: unknown, folderName: string): string {
   const candidate = firstString(metadataTitle, rootTitle) || folderName;
   return cleanBookTitle(candidate) || "Manuscript";
 }
 
+/** Resolves author precedence without coercing non-string private metadata. */
 export function resolveAuthor(metadataAuthor: unknown, rootAuthor: unknown, profileAuthor: unknown): string {
   return firstString(metadataAuthor, rootAuthor, profileAuthor);
 }
 
+/** Returns whether the fallback current-folder action is meaningful for the launch route. */
 export function showUseCurrentFolder(hasResolvedFolder: boolean, launchedFromFolderContext: boolean): boolean {
   return !hasResolvedFolder && !launchedFromFolderContext;
 }
 
 export interface WarningCategory { code: string; label: string; count: number; }
+/** Aggregates stable warning codes for prose-safe UI summaries. */
 export function warningCategories(warnings: CompileWarning[], severity?: CompileWarning["severity"]): WarningCategory[] {
   const counts = new Map<string, number>();
   warnings.filter((warning) => !severity || warning.severity === severity).forEach((warning) => counts.set(warning.code, (counts.get(warning.code) ?? 0) + 1));
   return [...counts.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([code, count]) => ({ code, count, label: code.replace(/-/g, " ") }));
 }
 
+/** Selects warning/error items that require author attention. */
 export function attentionWarnings(warnings: CompileWarning[]): CompileWarning[] { return warnings.filter((warning) => warning.severity === "warning" || warning.severity === "error"); }
+/** Selects non-blocking information for the collapsed details area. */
 export function informationMessages(warnings: CompileWarning[]): CompileWarning[] { return warnings.filter((warning) => warning.severity === "information"); }
 
 export interface FolderIdentity { name: string; parentPath: string; }
+/** Splits a vault-relative path into a leaf name and privacy-safe parent display. */
 export function folderIdentity(path: string): FolderIdentity {
   const segments = path.split("/").filter(Boolean); return { name: segments.pop() || "Manuscript", parentPath: segments.join(" / ") };
 }

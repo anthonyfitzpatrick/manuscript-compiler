@@ -4,6 +4,10 @@
  * Resolves command roots, requests authoritative preparation, presents legacy
  * previews/validation, and delegates export. main.ts routes compile commands here.
  * It calls BookRootResolver, CompilePreparationService, validation, and export.
+ * It owns orchestration but not workspace state, semantic interpretation, bytes,
+ * delivery, or persistence. Async failures become Notices/results at service
+ * boundaries and cancellation follows the shared signal. Keep the same path on
+ * desktop/mobile; never introduce a second scanner-to-export route.
  */
 import { Notice, Platform, TFile, TFolder, type App } from "obsidian";
 import { BookRootResolver } from "./book-root-resolver";

@@ -51,6 +51,7 @@
 
 ### Improved
 
+- Added comprehensive maintainer documentation across production source boundaries, a professional author-focused user guide with exact screenshot requirements, a developer guide, an expanded architecture/source map, a security policy, and detailed contribution standards. This pass changes documentation only and introduces no runtime behavior or dependency.
 - Added a persistent **Indent first line of paragraphs** toggle for DOCX, ODT, EPUB, and HTML. Enabled output applies the existing indent size only to later body paragraphs; disabled output uses zero first-line indent while first paragraphs after headings and scene breaks remain zero in both modes. The size control is hidden when disabled, Markdown reports its portable-format limitation without changing output, and XML remains presentation-neutral.
 - Missing indentation-toggle settings migrate idempotently to enabled so existing output is preserved. Vellum and Standard Manuscript default to enabled, Custom retains its toggle and size, and the option uses the existing prepared-session/export path without a new dependency or executable.
 - Simplified the authoritative workspace to **Manuscript → Contents → Create file**, with a compact collapsed outline, focused ignored/warning reviews, and full item controls retained behind **Correct structure**.

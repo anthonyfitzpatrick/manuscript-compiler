@@ -3,6 +3,10 @@
  *
  * Produces deterministic Markdown from the same final Book used for DOCX. It
  * never infers structure from source Markdown and must preserve semantic order.
+ * Compiler calls it for compatibility previews/statistics; the first-class
+ * Markdown exporter uses SemanticDocument. Rendering owns text formatting only,
+ * performs no I/O, cannot cancel, and escapes no path or private metadata. Future
+ * maintenance must preserve canonical spacing and exactly one final newline.
  */
 import type { Book, Chapter, ManuscriptDocument, ManuscriptStatistics, Part } from "./model";
 import type { CompileProfile } from "./settings";

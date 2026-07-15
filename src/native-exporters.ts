@@ -1,4 +1,14 @@
-/** Native, offline generators for every visible export format. */
+/**
+ * Manuscript Compiler — native offline exporter implementations and registry.
+ *
+ * Adapts one SemanticDocument into DOCX, ODT, EPUB, HTML, Markdown, or XML bytes.
+ * Owns format packaging/markup and controlled escaping, not vault reads, semantic
+ * inference, validation, delivery, settings, or history. ExportCoordinator calls
+ * the exhaustive `EXPORTERS` registry. Generation either returns complete bytes
+ * or throws; no partial output is delivered. Transforms are in-memory, contain no
+ * cancellation boundary, network, remote asset, script, or platform API, and must
+ * remain deterministic across desktop/mobile.
+ */
 import { strToU8, zipSync } from "fflate";
 import { createManuscriptDocx } from "./docx";
 import { EXPORT_FORMAT_DETAILS, type GeneratedExport, type ManuscriptExporter, type ManuscriptExportContext, type ExportFormat } from "./export-types";
@@ -13,11 +23,13 @@ abstract class NativeExporter implements ManuscriptExporter {
   abstract generate(context: ManuscriptExportContext): Promise<GeneratedExport>;
 }
 
+/** Stateless adapter for the native WordprocessingML generator. */
 export class DocxMemoryExporter extends NativeExporter {
   readonly format = "docx" as const;
   async generate(context: ManuscriptExportContext): Promise<GeneratedExport> { const { session, options } = context; return this.result(context, createManuscriptDocx(session.book, session.profile, { ...options, partDisplay: session.profile.partDisplay, chapterDisplay: session.profile.chapterDisplay })); }
 }
 
+/** Stateless native OpenDocument package generator with controlled ZIP paths. */
 export class OdtExporter extends NativeExporter {
   readonly format = "odt" as const;
   async generate(context: ManuscriptExportContext): Promise<GeneratedExport> {
@@ -33,9 +45,12 @@ export class OdtExporter extends NativeExporter {
   }
 }
 
+/** Stateless standalone HTML5 generator with embedded local CSS only. */
 export class HtmlExporter extends NativeExporter { readonly format = "html" as const; async generate(context: ManuscriptExportContext): Promise<GeneratedExport> { return this.result(context, strToU8(htmlDocument(context.document, context.options))); } }
+/** Stateless presentation-neutral manuscript XML generator. */
 export class XmlExporter extends NativeExporter { readonly format = "xml" as const; async generate(context: ManuscriptExportContext): Promise<GeneratedExport> { return this.result(context, strToU8(xmlDocument(context.document))); } }
 
+/** Stateless EPUB 3 package generator with controlled manifest/spine entries. */
 export class EpubExporter extends NativeExporter {
   readonly format = "epub" as const;
   async generate(context: ManuscriptExportContext): Promise<GeneratedExport> {
@@ -84,6 +99,11 @@ function xmlDocumentSection(section: SemanticSection): string { return `<documen
 function xmlScenes(blocks: SemanticBlock[]): string { const scenes: SemanticBlock[][] = [[]]; for (const block of blocks) { if (block.kind === "scene-break") scenes.push([]); else scenes.at(-1)!.push(block); } return scenes.filter((scene) => scene.length).map((scene, index) => `<scene order="${index + 1}">${scene.map(xmlBlock).join("")}</scene>`).join(""); }
 function xmlBlock(block: SemanticBlock): string { if (block.kind === "page-break") return `<pageBreak/>`; if (block.kind === "scene-break") return `<sceneBreak>${xml(block.text)}</sceneBreak>`; const content = block.inlines.map((item) => item.bold || item.italic ? `<span${item.bold ? ` bold="true"` : ""}${item.italic ? ` italic="true"` : ""}>${xml(item.text)}</span>` : xml(item.text)).join(""); return block.kind === "paragraph" ? `<paragraph${block.first ? ` first="true"` : ""}>${content}</paragraph>` : `<heading type="${block.style}">${content}</heading>`; }
 
+/**
+ * Escapes text for XML/OOXML/ODT/EPUB element or attribute contexts after
+ * removing XML 1.0-forbidden characters. Pure and non-throwing; callers remain
+ * responsible for placing the returned text only in quoted/element contexts.
+ */
 export function xml(value: string): string { return cleanXml(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;"); }
 const xmlAttr = xml;
 function html(value: string): string { return cleanXml(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"); }

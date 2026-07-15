@@ -4,6 +4,10 @@
  * Parser and generators share these helpers. Explicit manual content order is
  * applied after automatic comparators. Missing numbers stay undefined; zero is
  * never used as a fallback.
+ * Content planning and parsing call these pure deterministic helpers. They own no
+ * vault reads, mutation, presentation, error reporting, or cancellation. Unicode
+ * and locale-independent fallback behavior must remain stable across platforms;
+ * do not silently replace explicit author order with inferred numbering.
  */
 import type { Chapter, ManuscriptDocument, Part } from "./model";
 const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });

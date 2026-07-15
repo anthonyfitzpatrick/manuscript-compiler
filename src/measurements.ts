@@ -3,6 +3,10 @@
  *
  * UI and persistence use centimetres; WordprocessingML uses twips. Centralised,
  * rounded conversion prevents formula duplication and migration drift.
+ * Settings resolution and DOCX generation call these pure helpers. They own no
+ * formatting policy, state, I/O, failure channel, or cancellation. Inputs are
+ * constrained upstream; conversions must remain deterministic across JavaScript
+ * engines and desktop/mobile builds.
  */
 const CENTIMETRES_PER_INCH = 2.54;
 const TWIPS_PER_INCH = 1440;

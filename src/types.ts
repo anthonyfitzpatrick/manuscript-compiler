@@ -4,6 +4,10 @@
  * Physical discovery records passed from VaultScanner to content-plan rewriting
  * and then ManuscriptParser. They are separate from the semantic model.
  * Production exporters must never accept these types.
+ * This declaration module owns no state, transformation, failure, cancellation,
+ * or side effects. Scanner/parser boundaries share it on desktop and mobile.
+ * Future fields must describe physical discovery only; publication semantics
+ * belong in the Book model and corrected plan.
  */
 import type { TFile, TFolder } from "obsidian";
 /** Relative-path-only orphan context safe for diagnostic logs. */

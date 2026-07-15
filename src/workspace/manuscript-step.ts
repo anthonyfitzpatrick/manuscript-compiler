@@ -3,6 +3,10 @@
  *
  * Shows the exact root, structure preset, and scan summary. It emits choices to
  * the modal/controller and performs no inference or scanning itself.
+ * CompileModal calls the renderer with controller-owned state and callbacks.
+ * It owns only transient DOM nodes; failures remain controller concerns and there
+ * is no cancellation phase. Use documented Obsidian APIs, preserve exact-root
+ * wording, keyboard focus, sentence case, narrow panes, and mobile behavior.
  */
 import { Setting, type TFolder } from "obsidian";
 import { STRUCTURE_PRESET_NAMES } from "../simple-workflow";
@@ -11,6 +15,7 @@ import type { CompileWorkspaceController } from "./compile-workspace-controller"
 import { folderIdentity, manuscriptPlanSummary, showUseCurrentFolder } from "./workspace-view-model";
 
 export interface ManuscriptStepActions { selectedFromFileExplorer?: boolean; chooseFolder(): void; useCurrentFolder(): void; changed(): void; }
+/** Renders root/preset selection and delegates every mutation to modal/controller callbacks. */
 export function renderManuscriptStep(container: HTMLElement, controller: CompileWorkspaceController, folder: TFolder | null, actions: ManuscriptStepActions): void {
   const state = controller.state;
   if (!folder) container.createEl("p", { cls: "manuscript-empty-state", text: "Choose the folder containing this book." });

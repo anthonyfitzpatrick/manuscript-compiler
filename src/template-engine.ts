@@ -3,6 +3,10 @@
  *
  * Used by output naming and retained custom heading templates. Unknown variables
  * resolve safely; this is interpolation, not a script runtime.
+ * It owns bounded placeholder substitution only and calls no evaluator, vault,
+ * filesystem, or network API. Expansion is pure, deterministic, non-throwing,
+ * non-cancellable, and platform-neutral. Never add expressions, code execution,
+ * environment access, or recursive expansion.
  */
 export type TemplateVariables = Record<string, string | number | undefined>;
 /** Stateless safe interpolator with no evaluation or side effects. */

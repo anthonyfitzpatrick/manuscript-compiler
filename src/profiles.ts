@@ -4,6 +4,10 @@
  * Called during plugin load and advanced profile editing. Migration preserves
  * old data while repair supplies safe current defaults and warnings. Both must
  * be idempotent and must not overwrite explicit user choices.
+ * This module owns schema evolution/normalisation, not saving, UI state, compile
+ * execution, or obsolete tool activation. Functions are synchronous and
+ * non-cancellable; malformed input is repaired or reported rather than trusted.
+ * Preserve compatibility fields as inert data and identical mobile behavior.
  */
 import type { CompileProfile, ManuscriptCompilerSettings } from "./settings";
 import { DEFAULT_OPTIONS } from "./settings";

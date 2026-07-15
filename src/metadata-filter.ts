@@ -3,6 +3,10 @@
  *
  * Evaluates persisted equality filters against parser-normalised metadata.
  * Called by ManuscriptParser. Explicit workspace inclusion remains authoritative.
+ * It owns comparison semantics only, never metadata discovery, logging, mutation,
+ * or ordering. Evaluation is pure, synchronous, non-throwing, non-cancellable,
+ * and platform-neutral. Future operators must not expose values in diagnostics or
+ * override a corrected ContentPlan decision.
  */
 import type { DocumentMetadata } from "./model";
 import type { MetadataFilterRule, MetadataOperator } from "./settings";

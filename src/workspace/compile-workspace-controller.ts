@@ -4,6 +4,10 @@
  * Owns author mutations, session invalidation, duplicate-operation prevention,
  * cancellation, and export dispatch. The modal renders state but does not own
  * compiler logic. Model/output changes invalidate the prepared session once.
+ * The modal calls this controller; it calls preparation and ExportCoordinator.
+ * It owns the active AbortController but not vault interpretation or generated
+ * bytes. Async failures become controller state without losing author choices.
+ * Preserve stale checks, Book identity, finalisation locks, and mobile parity.
  */
 import type { PreparedCompileSession } from "../compile-preparation";
 import { applyMatterRoleInheritance, type ContentPlanItem, type ContentRole } from "../content-plan";

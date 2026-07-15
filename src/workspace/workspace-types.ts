@@ -3,6 +3,10 @@
  *
  * State is controller-owned and mutable. Views read it synchronously and request
  * mutations rather than retaining divergent copies.
+ * These contracts are shared by modal, controller, and step renderers and call no
+ * runtime service. They own no lifecycle, I/O, failure handling, or cancellation.
+ * Prepared session identity and explicit dirty/stale state must remain visible;
+ * do not move semantic Book interpretation into view state.
  */
 import type { PreparedCompileSession } from "../compile-preparation";
 import type { ContentPlanItem } from "../content-plan";

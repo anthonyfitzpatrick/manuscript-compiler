@@ -1,7 +1,22 @@
-/** Repairs untrusted persisted history without retaining malformed entries. */
+/**
+ * Manuscript Compiler — persisted history/log repair boundary.
+ *
+ * Treats plugin storage as untrusted, whitelists bounded structural fields, and
+ * removes malformed/private legacy payloads before UI or diagnostics consume
+ * them. Called by settings repair and CompileHistoryService. It does not write
+ * settings, read notes, or infer outcomes. Functions are pure, idempotent,
+ * non-throwing, non-cancellable, and platform-neutral. Never expand the schema
+ * to retain prose, warning details, absolute paths, Blob URLs, or destinations.
+ */
 import type { CompileLogEntry, ExportHistoryEntry } from "./settings";
 import { redactTechnicalMessage } from "./diagnostics";
 
+/**
+ * Repairs unknown history input into a bounded privacy-safe array.
+ * @param entries Raw persisted value.
+ * @returns Sanitised entries; malformed values are discarded.
+ * @remarks Pure, idempotent, non-throwing, and free of manuscript reads.
+ */
 export function repairExportHistory(entries: unknown): ExportHistoryEntry[] {
   if (!Array.isArray(entries)) return [];
   return entries
@@ -9,6 +24,12 @@ export function repairExportHistory(entries: unknown): ExportHistoryEntry[] {
     .map((item, index) => historyEntry(item, index));
 }
 
+/**
+ * Repairs unknown compile-log input and redacts technical messages.
+ * @param entries Raw persisted value.
+ * @returns Bounded logs containing only approved structural fields.
+ * @remarks Pure and idempotent; it never records manuscript prose or paths.
+ */
 export function repairCompileLogs(entries: unknown): CompileLogEntry[] {
   if (!Array.isArray(entries)) return [];
   return entries

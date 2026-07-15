@@ -3,6 +3,10 @@
  *
  * Adds one documented menu item only for TFolder and delegates the exact clicked
  * object to main.ts. It contains no inference, preparation, or legacy compile path.
+ * main.ts registers and disposes the workspace event through plugin lifecycle.
+ * The callback has only transient menu side effects, performs no vault mutation,
+ * and has no cancellation phase. Preserve keyboard/menu accessibility and the
+ * same folder-only behavior on desktop and mobile hosts.
  */
 import { TFolder, type Menu, type TAbstractFile } from "obsidian";
 

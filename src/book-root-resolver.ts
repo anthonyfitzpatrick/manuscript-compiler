@@ -4,6 +4,10 @@
  * Explicit roots are returned exactly and never replaced by ancestors or
  * children. Legacy commands may infer from configuration or active-note ancestry.
  * The root names the Book but is never emitted as a structural node.
+ * Called by command preparation and the workspace; calls only Obsidian's vault
+ * tree API. Resolution is read-only, synchronous, non-cancellable, and identical
+ * on mobile. Failure is represented by `null`; future heuristics must never
+ * override an explicit folder selected from File Explorer.
  */
 import { normalizePath, TFile, TFolder, type Vault } from "obsidian";
 

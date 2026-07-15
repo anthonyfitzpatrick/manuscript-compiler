@@ -4,6 +4,10 @@
  * Owns modal lifecycle, step composition, folder selection, and DOM event wiring.
  * CompileWorkspaceController owns state/operations; step modules own controls.
  * Parser, exporter, history, and download logic do not belong here.
+ * main.ts creates one modal per workflow. Obsidian owns attachment/teardown;
+ * registered events and controller cancellation are released on close. Rendering
+ * errors must not create another compile path. DOM work uses documented APIs and
+ * remains focus-visible, narrow-pane safe, and mobile-compatible.
  */
 import { App, FuzzySuggestModal, Modal, normalizePath, Notice, TFile, TFolder } from "obsidian";
 import type ManuscriptCompilerPlugin from "./main";

@@ -4,6 +4,10 @@
  * Shared by migration, workspace resolution, compiler services, and settings
  * UI. Historical fields remain for data compatibility even when inactive. New
  * defaults remain offline, browser-delivered, A4/metric, and author-safe.
+ * The module declares data only; plugin load/save and migration live elsewhere.
+ * It performs no I/O, failure handling, cancellation, or platform probing.
+ * Persisted values are untrusted until repair. Never reuse legacy executable or
+ * vault-export fields as active behavior.
  */
 export type OrderingMethod = "filename" | "metadata";
 export type WarningLevel = "information" | "warning" | "error";

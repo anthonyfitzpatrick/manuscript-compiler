@@ -4,6 +4,10 @@
  * Checks the minimum ZIP and WordprocessingML structure before any save can be
  * trusted. Called before browser download dispatch. This is intentionally not
  * a full OOXML conformance validator.
+ * It owns a bounded structural verdict, not repair, generation, or compatibility
+ * promises for every word processor. Validation is synchronous, non-cancellable,
+ * read-only, and platform-neutral; malformed ZIP/XML returns errors rather than
+ * manuscript data. Keep checks aligned with the native package contract.
  */
 import { unzipSync } from "fflate";
 
@@ -33,4 +37,9 @@ export function validateDocxBytes(bytes: Uint8Array): DocxValidationResult {
   return { valid: errors.length === 0, errors };
 }
 
+/**
+ * Enforces the structural DOCX verdict for callers that require an exception.
+ * @throws Error containing bounded validator messages when bytes are invalid.
+ * @remarks Performs no mutation, repair, I/O, or manuscript logging.
+ */
 export function assertValidDocx(bytes: Uint8Array, context = "DOCX"): void { const result = validateDocxBytes(bytes); if (!result.valid) throw new Error(`${context} validation failed: ${result.errors.join(" ")}`); }

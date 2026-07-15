@@ -149,6 +149,14 @@ export class ManuscriptParser {
   }
 }
 
+/**
+ * Applies an asynchronous action with bounded workers and cancellation checkpoints.
+ * @param items Ordered work items; action completion order is not guaranteed.
+ * @param concurrency Maximum active workers, clamped to at least one.
+ * @param action Per-item operation; rejection stops the aggregate promise.
+ * @param signal Optional cancellation source checked before work acquisition.
+ * @throws The action error or `CompilationCancelledError`; never returns partial success metadata.
+ */
 export async function mapConcurrent<T>(items: T[], concurrency: number, action: (item: T) => Promise<void>, signal?: AbortSignal): Promise<void> {
   let next = 0; const worker = async (): Promise<void> => { while (next < items.length) { throwIfCancelled(signal); const index = next; next += 1; await action(items[index]); } };
   await Promise.all(Array.from({ length: Math.min(Math.max(1, concurrency), items.length) }, () => worker()));

@@ -26,6 +26,7 @@ jobs:
       - run: npm run test:odt
       - run: npm run test:epub
       - run: npm run test:html
+      - run: npm run test:markdown
       - run: npm run test:xml
       - run: npm run test:exports
       - run: npm run benchmark:large

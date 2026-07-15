@@ -1,4 +1,15 @@
-/** Universal final choices for one prepared Book and one validated download. */
+/**
+ * Manuscript Compiler — universal Create file stage renderer.
+ *
+ * Presents one prepared Book summary, exhaustive format selector, meaningful
+ * per-format controls, warnings, filename, and final action. Called by the modal;
+ * delegates all state changes/invalidation/export to CompileWorkspaceController.
+ * It owns DOM/accessibility only and never generates, validates, downloads, or
+ * persists bytes. Controls with no effect are hidden, radio-key navigation follows
+ * platform conventions, and Setting APIs provide labels/descriptions. Rendering is
+ * synchronous/non-cancellable and must remain focus-visible, scoped, and responsive
+ * on desktop/mobile. Future formats must update metadata, controls, and tests together.
+ */
 import { Setting } from "obsidian";
 import type { DocxStylePreset, StructuralDisplay } from "../settings";
 import { EXPORT_FORMAT_DETAILS, EXPORT_FORMATS, type ExportFormat } from "../export-types";
@@ -12,6 +23,10 @@ const paragraphIndentFormats = new Set<ExportFormat>(["docx", "odt", "epub", "ht
 const formatDescriptions: Record<ExportFormat, string> = { docx: "Microsoft Word document", odt: "OpenDocument Text", epub: "Ebook", html: "Standalone webpage", markdown: "Portable plain-text manuscript", xml: "Structured manuscript" };
 export interface CreateDocxStepActions { refresh(): void; changed(): void; rerender(): void; }
 
+/**
+ * Renders Create file from controller/prepared state and wires author choices.
+ * @remarks DOM-only side effects; generation and delivery remain in services.
+ */
 export function renderCreateDocxStep(container: HTMLElement, controller: CompileWorkspaceController, actions: CreateDocxStepActions): void {
   const state = controller.state; const request = state.request; const prepared = state.preparedSession ? buildExportPreviewViewModel(state.preparedSession) : undefined; const title = request.custom?.variables?.BookTitle?.trim() || prepared?.title || request.manuscriptRoot.split("/").pop() || "Manuscript"; const counts = manuscriptPlanSummary(state.contentPlan, request.manuscriptRoot); const format = state.exportFormat;
   container.createEl("h2", { text: "Create file" }); container.createEl("p", { cls: "manuscript-compact-note", text: "Your Markdown notes will not be changed." });
@@ -66,6 +81,7 @@ export function formatAfterKey(current: ExportFormat, key: string): ExportFormat
   return undefined;
 }
 
+/** Returns whether the selected presentation format can express first-line indentation portably. */
 export function supportsParagraphIndentation(format: ExportFormat): boolean { return paragraphIndentFormats.has(format); }
 
 function renderFormatting(container: HTMLElement, controller: CompileWorkspaceController, actions: CreateDocxStepActions, format: ExportFormat): void {

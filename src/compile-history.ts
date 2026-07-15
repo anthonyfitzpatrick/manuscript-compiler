@@ -4,6 +4,10 @@
  * Centralises bounded history repair and outcome recording. ExportCoordinator
  * calls it only after a truthful terminal state. Exporters never mutate settings
  * directly, and records contain no manuscript prose.
+ * The service owns bounded persistence updates, not generation or destination
+ * paths. Saves are asynchronous and serial at call sites; malformed storage is
+ * repaired rather than thrown. Cancellation records are explicit. Future fields
+ * must remain privacy-safe and work unchanged on desktop/mobile.
  */
 import type { CompileResult } from "./model";
 import { redactTechnicalMessage } from "./diagnostics";

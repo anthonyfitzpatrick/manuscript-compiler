@@ -1,4 +1,14 @@
-/** Structural validators run before browser download dispatch. */
+/**
+ * Manuscript Compiler — pre-delivery structural validation registry.
+ *
+ * Purpose: reject empty, malformed, unsafe, or semantically incomplete bytes
+ * before BrowserDownloadService can run. Validators inspect only supplied bytes
+ * and optional shared export context; they do not repair output, read the vault,
+ * or claim full external standards conformance. ExportCoordinator calls the
+ * exhaustive registry. Bad input returns deterministic errors rather than
+ * throwing. Validation is synchronous/non-cancellable and mobile-neutral.
+ * Future format changes must update generation and validation together.
+ */
 import { strFromU8, unzipSync } from "fflate";
 import { validateDocxBytes } from "./docx-validator";
 import type { ExportFormat, ExportValidationResult, ExportValidator, ManuscriptExportContext } from "./export-types";
@@ -16,6 +26,11 @@ class EpubValidator implements ExportValidator {
   validate(bytes: Uint8Array): ExportValidationResult { try { const files = unzipSync(bytes); if (firstZipEntry(bytes) !== "mimetype" || !firstZipEntryStored(bytes) || strFromU8(files.mimetype ?? new Uint8Array()) !== "application/epub+zip") return invalid("EPUB mimetype is invalid, compressed, or misplaced."); for (const name of ["META-INF/container.xml", "OEBPS/content.opf", "OEBPS/nav.xhtml", "OEBPS/style.css"]) if (!files[name]) return invalid(`EPUB entry ${name} is missing.`); const container = strFromU8(files["META-INF/container.xml"]); if (!wellFormedXml(container) || !container.includes(`full-path="OEBPS/content.opf"`)) return invalid("EPUB container rootfile is invalid."); const opf = strFromU8(files["OEBPS/content.opf"]); if (!wellFormedXml(opf)) return invalid("EPUB package document is malformed."); const ids = new Set([...opf.matchAll(/<item\s+id="([^"]+)"[^>]*href="([^"]+)"/g)].map((match) => match[1])); for (const match of opf.matchAll(/<item\s+id="[^"]+"[^>]*href="([^"]+)"/g)) if (!files[`OEBPS/${match[1]}`]) return invalid(`EPUB manifest target ${match[1]} is missing.`); for (const match of opf.matchAll(/<itemref\s+idref="([^"]+)"/g)) if (!ids.has(match[1])) return invalid(`EPUB spine reference ${match[1]} is invalid.`); const xhtmlEntries = Object.entries(files).filter(([name]) => name.endsWith(".xhtml")); const xhtml = xhtmlEntries.map(([, value]) => strFromU8(value)).join("\n"); if (!xhtmlEntries.every(([, value]) => wellFormedXml(strFromU8(value)))) return invalid("EPUB XHTML is malformed."); for (const match of xhtml.matchAll(/(?:src|href)=["']([^"'#]+)(?:#[^"']*)?["']/gi)) if (!/^[a-z]+:/i.test(match[1]) && !files[`OEBPS/${match[1]}`]) return invalid(`EPUB internal reference ${match[1]} is missing.`); if (/<script\b|(?:src|href)=["']https?:|url\(\s*https?:/i.test(xhtml)) return invalid("EPUB contains scripts or remote resources."); return valid(); } catch { return invalid("EPUB is not a readable ZIP package."); } }
 }
 class HtmlValidator implements ExportValidator { validate(bytes: Uint8Array): ExportValidationResult { const text = decode(bytes); if (!/^<!doctype html>/i.test(text) || !/<html\b[\s\S]*<head\b[\s\S]*<body\b/i.test(text)) return invalid("HTML document structure is incomplete."); if (!/<meta charset="utf-8">/i.test(text) || !/<title>[^<]+<\/title>/i.test(text) || !/<main>[\s\S]*<section\b/.test(text)) return invalid("HTML metadata or manuscript content is missing."); if (/<script\b|(?:src|href)=["']https?:|url\(\s*https?:/i.test(text)) return invalid("HTML contains scripts or remote resources."); return valid(); } }
+/**
+ * Verifies deterministic Markdown against the same SemanticDocument used for
+ * generation, including required structure, exclusions, UTF-8, and final newline.
+ * It owns no state or side effects and returns errors instead of throwing.
+ */
 export class MarkdownValidator implements ExportValidator {
   validate(bytes: Uint8Array, context?: ManuscriptExportContext): ExportValidationResult {
     const errors: string[] = []; let text = "";

@@ -1,4 +1,13 @@
-/** Shared contracts for validated, in-memory manuscript exports. */
+/**
+ * Manuscript Compiler — exhaustive in-memory export contracts.
+ *
+ * Defines the only supported format union, public format metadata, shared
+ * formatting, generator result, validator, and context boundaries. Called by
+ * UI, coordinator, exporters, validators, history, and tests. It deliberately
+ * exposes PreparedCompileSession/SemanticDocument rather than Vault or parser
+ * access. Registries must remain exhaustive and MIME/extension values exact.
+ * This module is pure, cannot fail or cancel, and is desktop/mobile neutral.
+ */
 import type { PreparedCompileSession } from "./compile-preparation";
 import type { CompileWarning } from "./model";
 import type { SemanticDocument } from "./semantic-document";

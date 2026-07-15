@@ -1,8 +1,22 @@
-/** Publication-ready Markdown rendered only from the prepared semantic document. */
+/**
+ * Manuscript Compiler — native semantic Markdown export.
+ *
+ * Renders publication-ready UTF-8 Markdown only from the shared SemanticDocument.
+ * It owns canonical headings, inline emphasis/link text, blank-line policy, and
+ * final newline. ExportCoordinator calls the exporter; MarkdownValidator checks
+ * the bytes. It does not scan, parse, clean, reorder, write files, or simulate
+ * visual indentation. Generation is deterministic, side-effect free, effectively
+ * synchronous despite the exporter interface, and identical on desktop/mobile.
+ */
 import { strToU8 } from "fflate";
 import { EXPORT_FORMAT_DETAILS, type GeneratedExport, type ManuscriptExporter, type ManuscriptExportContext } from "./export-types";
 import type { SemanticBlock, SemanticDocument, SemanticInline, SemanticSection } from "./semantic-document";
 
+/**
+ * Stateless adapter from the common exporter contract to semantic Markdown.
+ * Lifecycle is one `generate` call per export; no data survives the call and no
+ * cancellation checkpoint is needed because rendering is an in-memory transform.
+ */
 export class MarkdownExporter implements ManuscriptExporter {
   readonly format = "markdown" as const;
 
@@ -18,6 +32,12 @@ export class MarkdownExporter implements ManuscriptExporter {
 }
 
 /** Canonical renderer used by generation and context-aware validation. */
+/**
+ * Renders canonical Markdown from an already ordered semantic document.
+ * @param document Shared projection of the prepared Book.
+ * @returns Deterministic Markdown with no duplicate blank lines and one final newline.
+ * @remarks Pure; never adds YAML, presentation CSS, indentation workarounds, or paths.
+ */
 export function renderSemanticMarkdown(document: SemanticDocument): string {
   const output: string[] = [];
   const add = (value: string): void => {

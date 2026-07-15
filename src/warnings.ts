@@ -3,6 +3,10 @@
  *
  * Examines the final Book and resolved profile, never permissive scanner output.
  * Warnings are prose-free and author-facing; export-safety applies blocking policy.
+ * It owns deterministic analysis only, not UI severity presentation, persistence,
+ * or export decisions. Calls are pure, synchronous, non-cancellable, and portable.
+ * New warnings require stable codes and bounded details; never embed prose, YAML
+ * values, or absolute source paths.
  */
 import type { Book, CompileWarning, WarningSeverity } from "./model";
 import type { CompileProfile } from "./settings";

@@ -1,4 +1,15 @@
-/** Compact Contents review with an explicit full-control correction mode. */
+/**
+ * Manuscript Compiler — Contents-stage DOM renderer.
+ *
+ * Presents compact review and explicit correction controls over controller-owned
+ * ContentPlan state. Called by the workspace modal; calls pure tree/view-model
+ * helpers and controller mutations. It owns DOM rows and local event wiring, not
+ * detection, semantic data, preparation, or persistence. Local edits update rows
+ * while preserving focus/scroll; rendering failures stay within the modal and no
+ * async/cancellation work occurs here. Use documented Obsidian DOM/icon APIs,
+ * scoped CSS, native keyboard behavior, and narrow/mobile-safe layout. Never move
+ * compile logic or unsafe HTML into this view.
+ */
 import { setIcon, Setting } from "obsidian";
 import type { ContentPlanItem, ContentRole } from "../content-plan";
 import type { CompileWorkspaceController } from "./compile-workspace-controller";
@@ -10,6 +21,10 @@ const roleLabels: Record<ContentRole, string> = { "front-matter": "Front matter"
 interface RowRecord { element: HTMLElement; include: HTMLInputElement; description: HTMLElement; select: HTMLSelectElement; toggle?: HTMLButtonElement; up: HTMLButtonElement; down: HTMLButtonElement; }
 interface RowSnapshot { role: ContentRole; included: boolean; effective: boolean; reason?: string; order: number; first: boolean; last: boolean; }
 
+/**
+ * Renders the current Contents state and wires controls to controller mutations.
+ * @remarks Mutates only the supplied DOM/view state; compilation remains upstream.
+ */
 export function renderContentsStep(container: HTMLElement, controller: CompileWorkspaceController, viewState: ContentsTreeViewState): void {
   const { contentPlan: plan, request } = controller.state;
   viewState.prepare(request.manuscriptRoot, plan);
@@ -125,12 +140,14 @@ function renderCorrectionMode(container: HTMLElement, controller: CompileWorkspa
   if (viewState.focus) { const record = records.get(viewState.focus.path); const control = record && controlFor(record, viewState.focus.control); if (control && !control.closest<HTMLElement>(".manuscript-content-row")?.hidden) control.focus({ preventScroll: true }); }
 }
 
+/** Captures row-relevant plan state so local edits can update only changed DOM rows. */
 export function snapshotRows(plan: ContentPlanItem[], root: string): Map<string, RowSnapshot> {
   const effective = new Map(visibleRows(plan, root).map((row) => [row.item.path, row.included])); const siblings = new Map<string, ContentPlanItem[]>();
   plan.forEach((item) => siblings.set(item.parentPath, [...(siblings.get(item.parentPath) ?? []), item])); const positions = new Map<string, { first: boolean; last: boolean }>();
   siblings.forEach((items) => items.sort((a, b) => a.order - b.order).forEach((item, index) => positions.set(item.path, { first: index === 0, last: index === items.length - 1 })));
   return new Map(plan.map((item) => { const position = positions.get(item.path) ?? { first: true, last: true }; return [item.path, { role: item.role, included: item.included, effective: effective.get(item.path) === true, reason: item.exclusionReason, order: item.order, ...position }]; }));
 }
+/** Returns paths whose rendered row state changed; pure and deterministically ordered. */
 export function changedRowPaths(before: ReadonlyMap<string, RowSnapshot>, after: ReadonlyMap<string, RowSnapshot>): string[] { const changed: string[] = []; for (const [path, state] of after) if (!sameSnapshot(before.get(path), state)) changed.push(path); return changed; }
 function sameSnapshot(left: RowSnapshot | undefined, right: RowSnapshot): boolean { return left !== undefined && left.role === right.role && left.included === right.included && left.effective === right.effective && left.reason === right.reason && left.order === right.order && left.first === right.first && left.last === right.last; }
 function controlFor(record: RowRecord, control: ContentsControl): HTMLElement | undefined { if (control === "include") return record.include; if (control === "role") return record.select; if (control === "move-up") return record.up; if (control === "move-down") return record.down; return record.toggle; }

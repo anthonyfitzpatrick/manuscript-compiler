@@ -4,6 +4,8 @@
 
 Version 0.9.2 remains a prerelease candidate. Automated gates cover the shared prepared Book, six native generators, format validators, browser-download cleanup, privacy, migration, and release allowlist. Live interoperability and platform download testing remain release blockers; this document does not claim they were performed.
 
+Maintainer and author documentation is provided in `ARCHITECTURE.md`, `DEVELOPER_GUIDE.md`, `USER_GUIDE.md`, `SECURITY.md`, and `CONTRIBUTING.md`. Screenshot placeholders in the user guide remain publication work and are not claims of completed manual testing.
+
 ## Supported workflow
 
 - Select the exact book root through File Explorer, command palette, or settings.

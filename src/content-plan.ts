@@ -34,9 +34,21 @@ const transparentFolders = new Set(["manuscript", "draft", "drafts", "book", "co
 const excludedYamlKinds = new Set(["dashboard", "character", "location", "plotline", "research", "planning", "revision"]);
 const matterOrder: Record<string, number> = { "title page": 10, copyright: 20, "copyright notice": 20, "copyright notices": 20, dedication: 30, epigraph: 40, contents: 50, "table of contents": 50, foreword: 60, preface: 65, prologue: 70, "a note from elin": 90, acknowledgment: 100, acknowledgments: 100, acknowledgement: 100, acknowledgements: 100, "about the author": 110, "also by": 120, "also by the author": 120, newsletter: 130, "back cover blurb": 140, "reader note": 150, "author note": 160, "connect with the author": 170 };
 
+/**
+ * Normalises a vault item name for conservative classification comparisons.
+ * @param value File or folder display name.
+ * @returns Lowercase punctuation/number-prefix-insensitive comparison text.
+ * @remarks Pure and non-throwing; never use the result as an exported title.
+ */
 export function normalizedProjectName(value: string): string { return value.replace(/\.[^.]+$/, "").replace(/^\s*\d+[\s._—–-]*/, "").replace(/[_.—–-]+/g, " ").replace(/\s+/g, " ").trim().toLowerCase(); }
 
-/** Creates deterministic path/ancestry roles without reading note bodies. */
+/**
+ * Creates deterministic initial roles from path/ancestry without reading notes.
+ * @param root Exact manuscript root; it is deliberately absent from the result.
+ * @param preset Broad inference policy selected by the author.
+ * @returns Mutable plan ordered by deterministic sibling traversal.
+ * @remarks Reads the in-memory Obsidian tree only; no vault mutation or cancellation.
+ */
 export function createContentPlan(root: TFolder, preset: StructurePreset): ContentPlanItem[] {
   const items: ContentPlanItem[] = [];
   const normalizedRootName = normalizedProjectName(root.name);
@@ -95,7 +107,14 @@ function isBackMatterNote(normalized: string): boolean {
   return /^(?:a note from elin|about the author|acknowledg(?:e)?ments?|also by|back cover blurb|newsletter|reader note|author note|connect with the author)(?:\s|$)/i.test(normalized);
 }
 
-/** Reads note metadata/body and enriches the supplied mutable plan in place. */
+/**
+ * Enriches inferred note roles using YAML type and cleaned body presence.
+ * @param vault Obsidian read boundary.
+ * @param plan Mutable plan produced by `createContentPlan`.
+ * @returns The same plan reference after asynchronous classification.
+ * @throws Propagates vault read failures; performs no writes and has no partial rollback.
+ * @remarks Content is used only for classification and is never logged.
+ */
 export async function classifyContentPlan(vault: Vault, plan: ContentPlanItem[]): Promise<ContentPlanItem[]> {
   await Promise.all(plan.filter((item) => item.kind === "note" && item.role !== "ignore").map(async (item) => {
     const file = vault.getAbstractFileByPath(item.path); if (!(file instanceof TFile)) return; const raw = await vault.cachedRead(file);
@@ -108,7 +127,10 @@ export async function classifyContentPlan(vault: Vault, plan: ContentPlanItem[])
   return plan;
 }
 
-/** Propagates matter roles only to descendants without explicit overrides. */
+/**
+ * Propagates a changed matter role to untouched descendant notes.
+ * @remarks Mutates only `plan`; explicit author overrides remain authoritative.
+ */
 export function applyMatterRoleInheritance(plan: ContentPlanItem[], folderPath: string, role: ContentRole, previousRole?: ContentRole): void {
   const matterRole = role === "front-matter" || role === "back-matter" ? role : undefined;
   const wasMatter = previousRole === "front-matter" || previousRole === "back-matter";
@@ -118,6 +140,11 @@ export function applyMatterRoleInheritance(plan: ContentPlanItem[], folderPath: 
     item.exclusionReason = item.role === "ignore" ? item.exclusionReason : undefined;
   });
 }
+/**
+ * Resolves effective inclusion through ancestors to the exact root.
+ * @returns `false` when the item or any represented ancestor is excluded/ignored.
+ * @remarks Pure; missing ancestors do not invent an exclusion.
+ */
 export function isPlanItemIncluded(item: ContentPlanItem, plan: ContentPlanItem[], rootPath: string): boolean { const byPath = new Map(plan.map((candidate) => [candidate.path, candidate])); let current: ContentPlanItem | undefined = item; while (current) { if (!current.included || current.role === "ignore") return false; if (current.parentPath === rootPath) break; current = byPath.get(current.parentPath); } return true; }
 
 function frontmatter(markdown: string): Record<string, unknown> { const match = markdown.replace(/^\uFEFF/, "").match(/^---[\t ]*\r?\n([\s\S]*?)\r?\n(?:---|\.\.\.)[\t ]*(?:\r?\n|$)/); if (!match) return {}; try { const value: unknown = parseYaml(match[1]); if (!value || typeof value !== "object" || Array.isArray(value)) return {}; return Object.fromEntries(Object.entries(value).map(([key, item]) => [normalizedProjectName(key), item])); } catch { return {}; } }
@@ -126,6 +153,11 @@ function frontmatter(markdown: string): Record<string, unknown> { const match = 
  * Reconstructs scanner output using nearest included structural ancestors. This
  * is the transparent-container flattening boundary and must preserve source paths,
  * manual order, explicit roles, and uniqueness of descendants.
+ * @param scan Mechanical scanner output for one root.
+ * @param plan Authoritative corrected plan.
+ * @param profile Resolved structural profile.
+ * @returns A new scan shape suitable for the parser; source objects are not changed.
+ * @remarks Pure with respect to the vault. It does not read note content or cancel.
  */
 export function applyContentPlan(scan: ScannedBook, plan: ContentPlanItem[], profile: CompileProfile): ScannedBook {
   if (!plan.length) return scan;

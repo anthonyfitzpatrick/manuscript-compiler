@@ -4,6 +4,10 @@
  * Joins parsing with deterministic statistics, warning analysis, and Markdown
  * generation. CompilePreparationService owns this facade; exporters consume its
  * finished Book/result and never ask it to parse again.
+ * It owns no vault discovery, delivery, settings, or history. Compilation is
+ * asynchronous only because parsing reads notes, observes cancellation between
+ * bounded tasks, and propagates read failures without partial export. Keep Book
+ * identity and deterministic transformations consistent on desktop/mobile.
  */
 import { Vault } from "obsidian";
 import { MarkdownGenerator } from "./markdown-generator";

@@ -117,4 +117,9 @@ export class ManuscriptCompilerSettingTab extends PluginSettingTab {
 }
 
 function row(list: HTMLElement, label: string, value: string): void { list.createEl("dt", { text: label }); list.createEl("dd", { text: value }); }
+/**
+ * Presents an unknown failure through a redacted Notice and console message.
+ * Side effects are intentionally limited to author-visible diagnostics; raw
+ * errors that might contain private paths or metadata are never emitted.
+ */
 export function showError(error: unknown): void { const message = redactTechnicalMessage(error); new Notice(`Manuscript Compiler: ${message}`, 8000); console.error(`Manuscript Compiler: ${message}`); }

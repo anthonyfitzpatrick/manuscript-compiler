@@ -4,12 +4,21 @@
  * Produces configuration/platform summaries without reading manuscript notes.
  * Called by CompileCommandService and diagnostics UI. Absolute paths, metadata
  * filter values, and manuscript prose must never enter the report.
+ * The generator owns report formatting/redaction, not collection of note content,
+ * persistence, or delivery. Generation is deterministic for a supplied timestamp,
+ * synchronous, non-cancellable, and platform-neutral. Unknown technical errors
+ * must be reduced to bounded safe text before inclusion.
  */
 import type { CompileProfile, ManuscriptCompilerSettings } from "./settings";
 
 export interface DiagnosticsContext { pluginVersion: string; obsidianVersion: string; operatingSystem: string; profile: CompileProfile; settings: ManuscriptCompilerSettings; generatedAt?: Date; }
 /** Stateless redacted report builder; generated output is safe to share for support. */
 export class DiagnosticsReportGenerator {
+  /**
+   * Produces a shareable support report from configuration/structural summaries.
+   * @returns Deterministic Markdown for a supplied `generatedAt` value.
+   * @remarks Reads no notes and performs no persistence; private values remain redacted.
+   */
   generate(context: DiagnosticsContext): string {
     const { profile, settings } = context; const lastLog = settings.compileLogs[0]; const historySuccesses = settings.exportHistory.filter((entry) => entry.success).length;
     const warningCount = settings.compileLogs.reduce((total, log) => total + (Array.isArray(log.warnings) ? log.warnings.length : 0), 0);
