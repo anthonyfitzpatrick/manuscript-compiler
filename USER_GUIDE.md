@@ -213,45 +213,9 @@ Click a card or focus the selected card and use Left/Right or Up/Down arrows. Ho
 
 <!-- SCREENSHOT:14 -->
 
-<p style="color:#cc0000; font-size:1.5em; font-weight:bold; margin-bottom:0;">
-📸 SCREENSHOT REQUIRED — #14
-</p>
+![ODT selected with document style, indentation, scene break, title page, table of contents, and chapter controls](docs/images/14-odt-format.png)
 
-<p style="color:#cc0000; font-weight:bold;">
-CAPTURE
-</p>
-
-<p style="color:#cc0000;">
-Select ODT on Create file and capture the selected card together with the ODT filename and primary action.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-SHOW
-</p>
-
-<ul style="color:#cc0000;">
-<li>The ODT card in its obvious selected state</li>
-<li>The format description</li>
-<li>The resolved filename ending in `.odt`</li>
-<li>The “Create and download ODT” primary button</li>
-<li>First-line indentation controls available for ODT</li>
-</ul>
-
-<p style="color:#cc0000; font-weight:bold;">
-PURPOSE
-</p>
-
-<p style="color:#cc0000;">
-Identifies ODT as the editable OpenDocument choice and demonstrates its format-specific selection state.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-WHEN REPLACING
-</p>
-
-<p style="color:#cc0000;">
-Delete this entire placeholder and replace it with the final screenshot and caption.
-</p>
+*Selecting ODT reveals its OpenDocument formatting controls and changes the primary action to **Create and download ODT**.*
 
 ---
 
