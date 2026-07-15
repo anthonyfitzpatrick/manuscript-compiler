@@ -123,45 +123,9 @@ Choose the nearest preset and correct exceptions on Contents. Renaming the vault
 
 <!-- SCREENSHOT:06 -->
 
-<p style="color:#cc0000; font-size:1.5em; font-weight:bold; margin-bottom:0;">
-📸 SCREENSHOT REQUIRED — #06
-</p>
+![The Detected structure menu showing every available manuscript structure preset](docs/images/06-structure-presets.png)
 
-<p style="color:#cc0000; font-weight:bold;">
-CAPTURE
-</p>
-
-<p style="color:#cc0000;">
-Select “Novel with Parts” for a safe sample manuscript and capture the Manuscript screen after automatic detection has completed.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-SHOW
-</p>
-
-<ul style="color:#cc0000;">
-<li>“Novel with Parts” visibly selected</li>
-<li>The selected manuscript folder</li>
-<li>The detected structural summary or scan counts</li>
-<li>Front matter, Parts, Chapters, Scenes, back matter, and ignored project material represented in the sample</li>
-<li>The enabled Continue action</li>
-</ul>
-
-<p style="color:#cc0000; font-weight:bold;">
-PURPOSE
-</p>
-
-<p style="color:#cc0000;">
-Shows how a structure preset produces the initial automatic classification before the author reviews or corrects it.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-WHEN REPLACING
-</p>
-
-<p style="color:#cc0000;">
-Delete this entire placeholder and replace it with the final screenshot and caption.
-</p>
+*Choose the preset that most closely matches the book. **Novel with Parts** is selected here before reviewing the detected structure.*
 
 ---
 
