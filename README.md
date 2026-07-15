@@ -1,6 +1,4 @@
-# Manuscript Compiler
-
-<img src="logo.svg" alt="Manuscript Compiler semantic tree logo" width="96">
+# <img src="logo.svg" alt="Manuscript Compiler semantic tree logo" width="48"> Manuscript Compiler
 
 Manuscript Compiler 0.9.2 turns fiction in an Obsidian vault into DOCX, ODT, EPUB, standalone HTML, Markdown, or structured XML. It works offline, never changes source notes, and requires neither Pandoc nor another community plugin.
 
