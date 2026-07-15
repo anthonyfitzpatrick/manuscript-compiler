@@ -163,45 +163,9 @@ Keyboard users can Tab to controls, use Space/Enter on buttons and toggles, and 
 
 <!-- SCREENSHOT:09 -->
 
-<p style="color:#cc0000; font-size:1.5em; font-weight:bold; margin-bottom:0;">
-📸 SCREENSHOT REQUIRED — #09
-</p>
+![Correction mode with one chapter expanded into scenes and neighbouring chapters collapsed](docs/images/09-collapsed-structure.png)
 
-<p style="color:#cc0000; font-weight:bold;">
-CAPTURE
-</p>
-
-<p style="color:#cc0000;">
-Collapse a folder in correction mode and capture the resulting row without changing the folder's saved descendant choices.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-SHOW
-</p>
-
-<ul style="color:#cc0000;">
-<li>The collapsed-folder disclosure icon</li>
-<li>The folder name or safe sample name</li>
-<li>Its child-item count</li>
-<li>The folder's inclusion and type controls</li>
-<li>A nearby expanded folder for visual comparison</li>
-</ul>
-
-<p style="color:#cc0000; font-weight:bold;">
-PURPOSE
-</p>
-
-<p style="color:#cc0000;">
-Shows how large manuscript trees can be collapsed for easier review without clearing descendant roles or order.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-WHEN REPLACING
-</p>
-
-<p style="color:#cc0000;">
-Delete this entire placeholder and replace it with the final screenshot and caption.
-</p>
+*Collapse large branches to simplify structure review. Descendant inclusion, roles, and ordering remain saved while a branch is collapsed.*
 
 ---
 
