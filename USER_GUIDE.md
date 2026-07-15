@@ -282,45 +282,9 @@ The first-line indent size appears only when indentation is enabled. Markdown ha
 
 <!-- SCREENSHOT:20 -->
 
-<p style="color:#cc0000; font-size:1.5em; font-weight:bold; margin-bottom:0;">
-📸 SCREENSHOT REQUIRED — #20
-</p>
+![Paragraph indentation enabled with the first-line indent size menu open](docs/images/20-paragraph-indentation.png)
 
-<p style="color:#cc0000; font-weight:bold;">
-CAPTURE
-</p>
-
-<p style="color:#cc0000;">
-Create one side-by-side or two-panel image of the DOCX Formatting section with “Indent first line of paragraphs” enabled in one panel and disabled in the other.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-SHOW
-</p>
-
-<ul style="color:#cc0000;">
-<li>The exact “Indent first line of paragraphs” label and explanatory description</li>
-<li>The enabled toggle with “First-line indent (cm)” visible beneath it</li>
-<li>The disabled toggle with the indent-size control absent</li>
-<li>Scene break visible in both panels to show unrelated formatting remains available</li>
-<li>The statement that first paragraphs after headings and scene breaks remain flush left</li>
-</ul>
-
-<p style="color:#cc0000; font-weight:bold;">
-PURPOSE
-</p>
-
-<p style="color:#cc0000;">
-Explains that the toggle affects only later ordinary body paragraphs and demonstrates when the configured indent-size control appears.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-WHEN REPLACING
-</p>
-
-<p style="color:#cc0000;">
-Delete this entire placeholder and replace it with the final screenshot and caption.
-</p>
+*When paragraph indentation is enabled, choose **None**, **0.75 cm**, or **1.27 cm**. Disabling indentation hides this size control.*
 
 ---
 
