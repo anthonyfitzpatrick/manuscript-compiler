@@ -237,45 +237,9 @@ Click a card or focus the selected card and use Left/Right or Up/Down arrows. Ho
 
 <!-- SCREENSHOT:17 -->
 
-<p style="color:#cc0000; font-size:1.5em; font-weight:bold; margin-bottom:0;">
-📸 SCREENSHOT REQUIRED — #17
-</p>
+![Markdown selected with plain-text structure, indentation guidance, scene break, title page, and advanced content options](docs/images/17-markdown-format.png)
 
-<p style="color:#cc0000; font-weight:bold;">
-CAPTURE
-</p>
-
-<p style="color:#cc0000;">
-Select Markdown on Create file and capture its selected card and portability guidance.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-SHOW
-</p>
-
-<ul style="color:#cc0000;">
-<li>The Markdown card in its obvious selected state</li>
-<li>The “Portable plain-text manuscript” description</li>
-<li>The note that Markdown does not support portable first-line indentation</li>
-<li>The resolved filename ending in `.md`</li>
-<li>The “Create and download Markdown” primary button</li>
-</ul>
-
-<p style="color:#cc0000; font-weight:bold;">
-PURPOSE
-</p>
-
-<p style="color:#cc0000;">
-Explains Markdown's portable plain-text role and why print-specific indentation controls are absent.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-WHEN REPLACING
-</p>
-
-<p style="color:#cc0000;">
-Delete this entire placeholder and replace it with the final screenshot and caption.
-</p>
+*Markdown preserves portable plain-text structure, emphasis, and links, but does not support portable first-line indentation.*
 
 ---
 
