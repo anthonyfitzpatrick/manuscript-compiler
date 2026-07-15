@@ -274,46 +274,9 @@ The first-line indent size appears only when indentation is enabled. Markdown ha
 
 <!-- SCREENSHOT:19 -->
 
-<p style="color:#cc0000; font-size:1.5em; font-weight:bold; margin-bottom:0;">
-📸 SCREENSHOT REQUIRED — #19
-</p>
+![The Standard manuscript formatting preset with indentation, scene break, title page, table of contents, chapter start, and advanced formatting controls](docs/images/19-standard-formatting.png)
 
-<p style="color:#cc0000; font-weight:bold;">
-CAPTURE
-</p>
-
-<p style="color:#cc0000;">
-Select DOCX and capture the complete standard Formatting section before expanding Advanced formatting.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-SHOW
-</p>
-
-<ul style="color:#cc0000;">
-<li>The Document style preset selector</li>
-<li>Font, size, and line-spacing controls where displayed</li>
-<li>The paragraph-indentation control group</li>
-<li>The Scene break selector</li>
-<li>Title-page and chapter-page-start choices</li>
-<li>The collapsed Advanced formatting control</li>
-</ul>
-
-<p style="color:#cc0000; font-weight:bold;">
-PURPOSE
-</p>
-
-<p style="color:#cc0000;">
-Provides an overview of the ordinary format-specific controls authors use most often before creating a file.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-WHEN REPLACING
-</p>
-
-<p style="color:#cc0000;">
-Delete this entire placeholder and replace it with the final screenshot and caption.
-</p>
+*The Standard manuscript preset shows the ordinary document controls available before opening **Advanced formatting**.*
 
 ---
 
