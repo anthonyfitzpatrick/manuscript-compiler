@@ -306,45 +306,9 @@ Choose `#`, `*`, `***`, `* * *`, a styled blank line, or Custom. Scene separator
 
 <!-- SCREENSHOT:22 -->
 
-<p style="color:#cc0000; font-size:1.5em; font-weight:bold; margin-bottom:0;">
-📸 SCREENSHOT REQUIRED — #22
-</p>
+![Front matter correction controls with Copyright notices expanded above the manuscript Parts](docs/images/22-front-matter-structure.png)
 
-<p style="color:#cc0000; font-weight:bold;">
-CAPTURE
-</p>
-
-<p style="color:#cc0000;">
-Capture Contents for a safe sample with the front-matter branch expanded and correctly classified.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-SHOW
-</p>
-
-<ul style="color:#cc0000;">
-<li>The Front matter structural role</li>
-<li>A Copyright note</li>
-<li>A Dedication or Epigraph note</li>
-<li>Inclusion state and ordering</li>
-<li>The boundary between front matter and the first Part or Chapter</li>
-</ul>
-
-<p style="color:#cc0000; font-weight:bold;">
-PURPOSE
-</p>
-
-<p style="color:#cc0000;">
-Shows which notes become front matter and how their order is reviewed independently of the generated title page.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-WHEN REPLACING
-</p>
-
-<p style="color:#cc0000;">
-Delete this entire placeholder and replace it with the final screenshot and caption.
-</p>
+*Review front-matter inclusion, roles, and order separately from the manuscript Parts. The Copyright notices container is expanded here.*
 
 ---
 
