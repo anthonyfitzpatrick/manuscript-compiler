@@ -18,6 +18,7 @@ import { ProfileWizardModal } from "./wizards";
 import { redactTechnicalMessage } from "./diagnostics";
 import { EXPORT_FORMAT_DETAILS, EXPORT_FORMATS, type ExportFormat } from "./export-types";
 import buyMeACoffeeArtwork from "./assets/bmc-button.svg";
+import pluginLogo from "../logo.svg";
 
 /** Reusable vault-folder picker for compatibility commands/settings. */
 export class FolderSuggestModal extends FuzzySuggestModal<TFolder> {
@@ -129,10 +130,12 @@ export class ManuscriptCompilerSettingTab extends PluginSettingTab {
     const panel = parent.createDiv({ cls: "manuscript-support-panel" });
     new Setting(panel).setName(SUPPORT_SECTION_TITLE).setHeading();
     const identity = panel.createDiv({ cls: "manuscript-support-identity" });
-    identity.createEl("strong", { cls: "manuscript-support-name", text: "Manuscript Compiler" });
-    identity.createEl("p", { text: `Version ${this.plugin.manifest.version}` });
-    identity.createEl("p", { text: `Created by ${SUPPORT_CREATOR}` });
-    identity.createEl("p", { text: SUPPORT_COMPANY });
+    identity.createEl("img", { cls: "manuscript-support-logo", attr: { src: pluginLogo, alt: "", "aria-hidden": "true" } });
+    const identityText = identity.createDiv({ cls: "manuscript-support-identity-text" });
+    identityText.createEl("strong", { cls: "manuscript-support-name", text: "Manuscript Compiler" });
+    identityText.createEl("p", { text: `Version ${this.plugin.manifest.version}` });
+    identityText.createEl("p", { text: `Created by ${SUPPORT_CREATOR}` });
+    identityText.createEl("p", { text: SUPPORT_COMPANY });
     const actions = panel.createDiv({ cls: "manuscript-support-actions" });
     for (const action of SUPPORT_ACTIONS) {
       const button = new ButtonComponent(actions).setTooltip(action.label).setClass("manuscript-support-button");
