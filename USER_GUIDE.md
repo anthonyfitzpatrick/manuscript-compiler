@@ -326,46 +326,13 @@ Advanced formatting contains title/author overrides, typography where meaningful
 
 <!-- SCREENSHOT:24 -->
 
-<p style="color:#cc0000; font-size:1.5em; font-weight:bold; margin-bottom:0;">
-📸 SCREENSHOT REQUIRED — #24
-</p>
+![Advanced formatting with book and author overrides, font, font size, and line spacing](docs/images/24a-advanced-formatting-typography.png)
 
-<p style="color:#cc0000; font-weight:bold;">
-CAPTURE
-</p>
+*Advanced formatting begins with book and author overrides plus typography controls.*
 
-<p style="color:#cc0000;">
-Capture the complete Create file screen with DOCX selected and Advanced formatting expanded, using a safe sample title and author.
-</p>
+![Advanced formatting with page size, custom scene break, structural heading styles, manuscript body headings, and filename template](docs/images/24b-advanced-formatting-structure.png)
 
-<p style="color:#cc0000; font-weight:bold;">
-SHOW
-</p>
-
-<ul style="color:#cc0000;">
-<li>The prepared Book summary</li>
-<li>The selected DOCX card</li>
-<li>Standard Formatting controls</li>
-<li>Expanded font, size, spacing, page-size, Part-heading, and Chapter-heading controls</li>
-<li>The filename template and resolved `.docx` filename</li>
-<li>The “Create and download DOCX” primary button</li>
-</ul>
-
-<p style="color:#cc0000; font-weight:bold;">
-PURPOSE
-</p>
-
-<p style="color:#cc0000;">
-Provides the definitive overview of everything an author reviews on Create file before starting generation and download.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-WHEN REPLACING
-</p>
-
-<p style="color:#cc0000;">
-Delete this entire placeholder and replace it with the final screenshot and caption.
-</p>
+*The remaining controls set page size, scene breaks, structural heading styles, manuscript body headings, and the filename template.*
 
 ---
 
