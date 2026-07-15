@@ -82,44 +82,9 @@ You can also open Manuscript Compiler from the command palette or plugin setting
 
 <!-- SCREENSHOT:03 -->
 
-<p style="color:#cc0000; font-size:1.5em; font-weight:bold; margin-bottom:0;">
-📸 SCREENSHOT REQUIRED — #03
-</p>
+![Manuscript Compiler settings with defaults, advanced options, support links, and the Open compiler button](docs/images/03-plugin-settings.png)
 
-<p style="color:#cc0000; font-weight:bold;">
-CAPTURE
-</p>
-
-<p style="color:#cc0000;">
-Open Obsidian's command palette, search for Manuscript Compiler, and capture the available plugin command before executing it.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-SHOW
-</p>
-
-<ul style="color:#cc0000;">
-<li>The command palette search field</li>
-<li>A search term that clearly narrows the results to Manuscript Compiler</li>
-<li>The full command name used to open the workflow</li>
-<li>The highlighted command ready for keyboard or mouse activation</li>
-</ul>
-
-<p style="color:#cc0000; font-weight:bold;">
-PURPOSE
-</p>
-
-<p style="color:#cc0000;">
-Shows the alternative command-palette entry point when the author does not begin from a File Explorer folder.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-WHEN REPLACING
-</p>
-
-<p style="color:#cc0000;">
-Delete this entire placeholder and replace it with the final screenshot and caption.
-</p>
+*The Manuscript Compiler settings tab provides an **Open compiler** button alongside defaults, advanced profile tools, and support links.*
 
 ---
 
