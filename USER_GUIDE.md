@@ -135,45 +135,9 @@ Contents opens as a compact review, not an editing form. Summary cards show dete
 
 <!-- SCREENSHOT:07 -->
 
-<p style="color:#cc0000; font-size:1.5em; font-weight:bold; margin-bottom:0;">
-📸 SCREENSHOT REQUIRED — #07
-</p>
+![The Contents stage showing detected counts, review controls, and the collapsed manuscript outline](docs/images/07-contents-review.png)
 
-<p style="color:#cc0000; font-weight:bold;">
-CAPTURE
-</p>
-
-<p style="color:#cc0000;">
-Capture the Contents screen in normal review mode immediately after the sample manuscript has been scanned.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-SHOW
-</p>
-
-<ul style="color:#cc0000;">
-<li>All summary cards and their detected counts</li>
-<li>The primary “Correct structure” button and supporting text</li>
-<li>Front matter, one Part, one Chapter, and multiple Scenes in the outline</li>
-<li>The Ignored and Warnings review controls in their secondary state</li>
-<li>Enough of the page to show that correction controls are not yet expanded</li>
-</ul>
-
-<p style="color:#cc0000; font-weight:bold;">
-PURPOSE
-</p>
-
-<p style="color:#cc0000;">
-Shows the automatically detected manuscript structure before any manual correction and explains the normal Contents review state.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-WHEN REPLACING
-</p>
-
-<p style="color:#cc0000;">
-Delete this entire placeholder and replace it with the final screenshot and caption.
-</p>
+*Review the detected counts, ignored items, warnings, and manuscript outline before continuing or choosing **Correct structure**.*
 
 ---
 
