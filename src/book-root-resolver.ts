@@ -5,7 +5,7 @@
  * children. Legacy commands may infer from configuration or active-note ancestry.
  * The root names the Book but is never emitted as a structural node.
  */
-import { TFile, TFolder, type Vault } from "obsidian";
+import { normalizePath, TFile, TFolder, type Vault } from "obsidian";
 
 const BOOK_STRUCTURE_PATTERN = /^(?:part\b|(?:ebook |print )?(?:front|back) matter$|manuscript$|drafts?$|chapters$)/i;
 
@@ -14,7 +14,7 @@ export class BookRootResolver {
   constructor(private readonly vault: Vault) {}
 
   require(path: string, label = "manuscript folder"): TFolder {
-    const folder = this.vault.getAbstractFileByPath(path);
+    const folder = this.vault.getAbstractFileByPath(normalizePath(path));
     if (!(folder instanceof TFolder)) throw new Error(`The ${label} does not exist.`);
     return folder;
   }
@@ -25,7 +25,7 @@ export class BookRootResolver {
   /** Legacy commands may infer a root from saved configuration or current-file ancestry. */
   configuredOrCurrent(configuredPath: string, activeFile: TFile | null): TFolder | null {
     if (configuredPath.trim()) {
-      const configured = this.vault.getAbstractFileByPath(configuredPath.trim());
+      const configured = this.vault.getAbstractFileByPath(normalizePath(configuredPath.trim()));
       if (configured instanceof TFolder) return configured;
     }
     let folder = activeFile?.parent ?? null;

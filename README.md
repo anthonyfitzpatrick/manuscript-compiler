@@ -1,14 +1,20 @@
 # Manuscript Compiler
 
-Manuscript Compiler 0.9.2 turns fiction in an Obsidian vault into DOCX, ODT, PDF, EPUB, standalone HTML, or structured XML. It works offline, never changes source notes, and requires neither Pandoc nor another community plugin.
+Manuscript Compiler 0.9.2 turns fiction in an Obsidian vault into DOCX, ODT, EPUB, standalone HTML, Markdown, or structured XML. It works offline, never changes source notes, and requires neither Pandoc nor another community plugin.
 
 Only content included in the reviewed manuscript structure is exported. Project metadata, author notes, dashboards, and excluded notes are not manuscript content.
 
-## Quick Start
+The workflow has three stages: **Manuscript → Contents → Create file**. Every format is generated locally in memory, validated, and handed to the host download/share flow. Completed exports are downloaded outside the vault; the plugin does not choose or remember the final destination.
+
+## Installation
+
+Until the plugin is listed in Obsidian's Community Plugins directory, download `main.js`, `manifest.json`, and `styles.css` from a GitHub release whose tag exactly matches the manifest version. Put the three files in a vault plugin folder named `manuscript-compiler`, reload Obsidian, and enable **Manuscript Compiler** under Community Plugins.
+
+## Quick start
 
 1. In File Explorer, right-click the book folder and choose **Compile manuscript from this folder**.
 2. Review the detected structure and correct inclusion, roles, or order if needed.
-3. Choose DOCX, ODT, PDF, EPUB, HTML, or XML.
+3. Choose DOCX, ODT, EPUB, HTML, Markdown, or XML.
 4. Choose the formatting controls that apply to that format.
 5. Press **Create and download …**.
 6. Complete the save or share flow provided by Obsidian and the operating system.
@@ -21,12 +27,14 @@ If an included note or a semantic compile choice changes after preparation, expo
 
 - **DOCX** is native WordprocessingML for Word, Vellum, editing, and submission. Vellum and Standard Manuscript presets are fully supported.
 - **ODT** is a native OpenDocument Text ZIP package for LibreOffice and compatible editors.
-- **PDF** is a directly generated, fixed-layout A4 or Letter document with searchable Unicode text, built-in serif/sans-serif choices, and configurable margins. It is not browser-print output and uses no external executable.
 - **EPUB** is a native EPUB 3 reflowable package with container, package document, navigation, XHTML sections, and embedded CSS.
 - **HTML** is one offline HTML5 file with embedded CSS, semantic sections, and no JavaScript or remote assets.
+- **Markdown** is a deterministic, portable plain-text manuscript preserving semantic structure, emphasis, readable links, Unicode, and paragraph spacing.
 - **XML** is a deterministic interchange format in the `https://manuscript-compiler.dev/schema` namespace with `schemaVersion="1.0"`. It contains manuscript content and structure, but no vault paths, profile IDs, settings, or private YAML metadata.
 
-DOCX and ODT support document-style pagination controls. PDF uses fixed-layout controls. EPUB and HTML expose only meaningful reflowable controls. XML hides visual formatting controls. No visible control is intended to be inert.
+DOCX and ODT support document-style pagination controls. EPUB and HTML expose only meaningful reflowable controls. Markdown and XML expose structural content controls without print typography. No visible control is intended to be inert.
+
+The Create file screen offers **Indent first line of paragraphs** for DOCX, ODT, EPUB, and HTML. When enabled, the configured first-line indent applies only to later body paragraphs; the first paragraph after a structural heading or scene break remains unindented. When disabled, all body paragraphs—including copyright and other matter text—use zero first-line indent without changing paragraph or line spacing. The indent-size control is shown only while indentation is enabled. Markdown stays portable and does not simulate indentation with spaces, tabs, HTML, or CSS. XML stays presentation-neutral, so its consuming application controls paragraph indentation.
 
 ## Discovery and Cleaning
 
@@ -46,11 +54,25 @@ Completed manuscript exports are never written into the vault. Historical vault-
 
 The plugin has no Electron bridge, Node filesystem export path, network requests, telemetry, cloud service, remote assets, shell command, or external executable. `fflate` is the sole bundled runtime dependency and supplies ZIP creation/inspection.
 
+### Disclosures
+
+| Topic | Disclosure |
+| --- | --- |
+| External file access | Browser/host-controlled download only; the host chooses the destination. |
+| Network | None. Export, validation, and delivery initiation are offline. |
+| Accounts | None. |
+| Payments and advertising | None. |
+| Telemetry and analytics | None. |
+| Closed-source components | None. |
+| Runtime dependencies | `fflate` 0.8.3, bundled under its MIT licence. |
+| Vault writes | No manuscript export is written to the vault. The explicit diagnostics action can create a redacted Markdown support note. |
+| Mobile | The same browser download mechanism is attempted. Some mobile hosts may block or redirect downloads; no vault fallback is used. |
+
 History records bounded structural facts: time, title, format, filename, counts, generation/validation status, and whether download dispatch started. It does not record prose, Blob URLs, absolute paths, profile IDs, or warning details containing manuscript data.
 
 ## DOCX Presets
 
-Vellum defaults to Garamond 12 pt, 1.15 spacing, 0.75 cm first-line indent, A4, `#` scene breaks, separate Part/Chapter number and title styles, and Chapter page starts. Standard Manuscript defaults to Times New Roman 12 pt, double spacing, 1.27 cm indent, A4, `* * *` scene breaks, and Chapter page starts. Custom retains the applicable exposed values.
+Vellum defaults to Garamond 12 pt, 1.15 spacing, enabled 0.75 cm first-line indentation, A4, `#` scene breaks, separate Part/Chapter number and title styles, and Chapter page starts. Standard Manuscript defaults to Times New Roman 12 pt, double spacing, enabled 1.27 cm indentation, A4, `* * *` scene breaks, and Chapter page starts. Custom retains both the indentation toggle and its configured size along with the other applicable exposed values.
 
 DOCX includes native Title, Author, Front Matter Heading, Back Matter Heading, Part Number, Part Title, Chapter Number, Chapter Title, First Paragraph, Body Text, and Scene Break styles. No Part 0 or Chapter 0 is invented.
 
@@ -59,12 +81,13 @@ DOCX includes native Title, Author, Front Matter Heading, Back Matter Heading, P
 ```bash
 npm ci
 npm run typecheck
+npm run lint
 npm test
 npm run test:docx
 npm run test:odt
-npm run test:pdf
 npm run test:epub
 npm run test:html
+npm run test:markdown
 npm run test:xml
 npm run test:exports
 npm run benchmark:large
@@ -72,16 +95,17 @@ npm run build
 npm run package
 npm run package:validate
 npm audit
+git diff --check
 ```
 
 The release archive is `release/manuscript-compiler-0.9.2.zip` and contains exactly `main.js`, `manifest.json`, and `styles.css`.
 
-Automated structural validation is not a substitute for opening outputs in Word, Vellum, LibreOffice, multiple PDF/EPUB readers, and browsers. See [MANUAL_TESTING.md](MANUAL_TESTING.md).
+Automated structural validation is not a substitute for opening outputs in Word, Vellum, LibreOffice, multiple EPUB readers, text editors, and browsers. See [MANUAL_TESTING.md](MANUAL_TESTING.md).
 
 ## Known Limits
 
 - Browser/host download behaviour and prompts differ by platform, and the plugin cannot verify the final filesystem copy after dispatch.
-- The internal PDF validator checks structure, pages, text operators, and termination; it does not claim comprehensive PDF standards conformance.
+- On mobile, the host may block the download or route it through a platform share sheet. The plugin reports dispatch failure and does not write a fallback copy into the vault.
 - EPUB validation is structural and does not replace EPUBCheck or live reader testing.
 - Vellum import semantics require live Vellum testing.
 - Unusual authoring templates may require manual structure correction or body-heading aliases.

@@ -4,18 +4,21 @@
 
 ### Universal export workflow
 
-- Added native DOCX, ODT, PDF, EPUB 3, standalone HTML, and versioned manuscript XML exporters over one shared projection of the prepared semantic Book.
+- Added native DOCX, ODT, EPUB 3, standalone HTML, Markdown, and versioned manuscript XML exporters over one shared projection of the prepared semantic Book.
 - Added one validator registry and blocked browser delivery whenever the selected format fails structural validation.
 - Replaced every active vault/external-path output route with one platform-neutral Blob download service that removes temporary anchors and always revokes object URLs.
 - Removed completed-export vault writes, output folders, overwrite/open/reveal actions, Electron compatibility code, and the obsolete staged vault writer. Historical fields remain migration-only.
 - Added portable cross-format filename repair, accurate MIME types, per-format progressive formatting controls, format/download history flags, individual format test commands, and a six-format large-manuscript benchmark.
-- Added native ODT and EPUB ZIP structures using the existing `fflate` runtime dependency; HTML and XML use built-in UTF-8 encoding; PDF is generated internally without another package or executable.
+- Added native ODT and EPUB ZIP structures using the existing `fflate` runtime dependency; HTML, Markdown, and XML use built-in UTF-8 encoding.
 - Kept version 0.9.2 and preserved the existing manuscript detection, correction, cleaning, prepared-session, Vellum DOCX, privacy, and stale-preview behaviour.
 
 ### Fixed
 
-- Repaired native PDF text rendering: the generator no longer sends Unicode code units through an unembedded identity glyph map. It now emits deterministic WinAnsi glyph codes with an exact ToUnicode map, binary-safe stream lengths and xref offsets, and one informational fallback for unsupported characters.
-- Replaced the PDF generator's fixed-width `0.52em` wrapping estimate with the emitted Times-Roman/Helvetica 1000-unit glyph metrics, corrected A4 point dimensions, full-width margin math, block-aware pagination, one-line paragraph indentation, centred headings/scene breaks, and explicit Part/Chapter spacing.
+- Added the official Obsidian ESLint flat configuration, sentence-case command labels, supported lifecycle/DOM usage, strict TypeScript, scoped theme-safe CSS, and release pre-flight validation without changing command IDs or export semantics.
+- Traced the reported normal-weight, combined Part/Chapter lines to valid Markdown heading source being viewed as plain text. Markdown remains clean `#`/`##` syntax; rendered Markdown supplies its heading presentation.
+- Made HTML and EPUB Part/Chapter output use explicit combined or separate manuscript heading classes whose embedded stylesheet sets `font-weight: 700`, with no generic heading-weight rule and no later weight reset.
+- Verified ODT heading paragraphs reference named styles that explicitly declare bold while Author, body paragraphs, and scene separators retain their existing weight. XML remains semantic and presentation-neutral.
+- Left the native DOCX generator and its Vellum behaviour unchanged. This correction adds no runtime dependency, external tool, network route, or conversion step.
 - Enlarged Contents folder disclosure chevrons to 21 px with a 30 × 30 px native-button target without changing note markers, ordering arrows, keyboard operation, focus, or ARIA state.
 - Rejected `.` and `..` output segments before adapter path normalisation so traversal cannot be collapsed into an apparently safe vault path.
 - Changed stale-preview verification to hash source contents, detecting equal-size edits even when file timestamps do not change.
@@ -48,6 +51,8 @@
 
 ### Improved
 
+- Added a persistent **Indent first line of paragraphs** toggle for DOCX, ODT, EPUB, and HTML. Enabled output applies the existing indent size only to later body paragraphs; disabled output uses zero first-line indent while first paragraphs after headings and scene breaks remain zero in both modes. The size control is hidden when disabled, Markdown reports its portable-format limitation without changing output, and XML remains presentation-neutral.
+- Missing indentation-toggle settings migrate idempotently to enabled so existing output is preserved. Vellum and Standard Manuscript default to enabled, Custom retains its toggle and size, and the option uses the existing prepared-session/export path without a new dependency or executable.
 - Simplified the authoritative workspace to **Manuscript → Contents → Create file**, with a compact collapsed outline, focused ignored/warning reviews, and full item controls retained behind **Correct structure**.
 - Combined format selection, applicable formatting, warnings, resolved filename, and readiness in the final Create file stage; advanced formatting, templates, profiles, and records remain available through disclosures.
 - Added conservative metadata/folder title resolution, author fallback, privacy-safe warning categories, and platform-specific alternate-save wording without adding another compile or parse path.

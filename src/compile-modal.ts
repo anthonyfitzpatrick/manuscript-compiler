@@ -5,7 +5,7 @@
  * CompileWorkspaceController owns state/operations; step modules own controls.
  * Parser, exporter, history, and download logic do not belong here.
  */
-import { App, FuzzySuggestModal, Modal, Notice, TFile, TFolder } from "obsidian";
+import { App, FuzzySuggestModal, Modal, normalizePath, Notice, TFile, TFolder } from "obsidian";
 import type ManuscriptCompilerPlugin from "./main";
 import { classifyContentPlan, createContentPlan } from "./content-plan";
 import { docxFormattingForPreset, type DocxFormatting, type SimpleCompileRequest } from "./simple-workflow";
@@ -39,6 +39,7 @@ export class SimpleCompileModal extends Modal {
     const settings = plugin.settings; const profile = plugin.getActiveProfile();
     const formatting: DocxFormatting = docxFormattingForPreset(settings.defaultDocxStyle, settings.includeTitlePageByDefault);
     formatting.pageSize = settings.defaultDocxPageSize;
+    formatting.indentParagraphs = settings.defaultIndentParagraphs;
     formatting.firstLineIndentCm = settings.defaultDocxFirstLineIndentCm;
     const request: SimpleCompileRequest = { manuscriptRoot: selectedFolder?.path ?? (settings.defaultManuscriptFolder || profile.manuscriptRoot), structurePreset: settings.defaultStructurePreset, includeFrontMatter: true, includeBackMatter: true, exportFolder: "", outputFilename: this.filename(profile.outputFilename || "Manuscript.docx"), outputFormat: "docx", docxPreset: settings.defaultDocxStyle, downloadAfterExport: true, formatting, tableOfContents: settings.includeTableOfContentsByDefault, partDisplay: "word-title", chapterDisplay: "word-title", custom: { variables: { ...profile.variables }, sceneSeparator: profile.sceneSeparator, bodySectionAliases: [...(profile.bodySectionAliases ?? ["Scene", "Manuscript", "Text", "Draft", "Body"])] } };
     this.controller = new CompileWorkspaceController(request, formatting, { prepare: (next, plan, signal) => this.plugin.prepareCompileRequest(next, plan, signal), sessionIsCurrent: (session) => this.plugin.preparedSessionIsCurrent(session), export: (session, format, filename) => this.plugin.exportPreparedSession(session, format, filename) });
@@ -54,7 +55,7 @@ export class SimpleCompileModal extends Modal {
   onClose(): void { this.controller.close(); this.contentEl.empty(); }
 
   private render(): void {
-    const state = this.controller.state; const current = steps.indexOf(state.step); this.contentEl.empty(); this.titleEl.setText("Compile Manuscript");
+    const state = this.controller.state; const current = steps.indexOf(state.step); this.contentEl.empty(); this.titleEl.setText("Compile manuscript");
     const nav = this.contentEl.createDiv({ cls: "manuscript-compile-steps", attr: { role: "tablist", "aria-label": "Compile steps" } });
     labels.forEach((label, index) => { const button = nav.createEl("button", { text: `${index + 1}  ${label}`, cls: index === current ? "is-active" : index < current ? "is-complete" : "" }); button.setAttribute("role", "tab"); button.setAttribute("aria-selected", String(index === current)); button.disabled = index > current + 1 || index > 0 && !state.contentPlan.length; button.addEventListener("click", () => this.enterStep(steps[index])); });
     const body = this.contentEl.createDiv({ cls: "manuscript-compile-body" });
@@ -80,15 +81,15 @@ export class SimpleCompileModal extends Modal {
   private async prepare(force = false): Promise<void> { const promise = this.controller.prepare(force); this.render(); await promise; this.render(); }
   private async export(): Promise<void> { const promise = this.controller.export(); this.controller.detachExport(); const success = await promise; if (success) this.close(); else { this.render(); if (this.controller.state.error) new Notice(this.controller.state.error.message, 8000); } }
   private async createFinalDocument(): Promise<void> { if (!this.controller.state.preparedSession) { const session = await this.controller.prepare(); this.render(); if (!session) { if (this.controller.state.error) new Notice(this.controller.state.error.message, 8000); return; } } await this.export(); }
-  private folder(): TFolder | null { const item = this.app.vault.getAbstractFileByPath(this.controller.state.request.manuscriptRoot); return item instanceof TFolder ? item : null; }
-  private filename(value: string): string { return `${value.replace(/\.(?:docx|odt|pdf|epub|html?|xml|md)$/i, "") || "Manuscript"}.docx`; }
+  private folder(): TFolder | null { const path = this.controller.state.request.manuscriptRoot; if (!path.trim()) return null; const item = this.app.vault.getAbstractFileByPath(normalizePath(path)); return item instanceof TFolder ? item : null; }
+  private filename(value: string): string { return `${value.replace(/\.(?:docx|odt|epub|html?|markdown|xml|md)$/i, "") || "Manuscript"}.docx`; }
   private updateCreateButton(): void { const button = this.contentEl.querySelector<HTMLButtonElement>(".manuscript-create-button"); if (button) button.disabled = this.controller.state.preparationStatus === "preparing" || this.controller.state.exportStatus === "exporting"; }
   private markPreviewInvalidated(): void {
-    const card = this.contentEl.querySelector<HTMLElement>(".manuscript-ready-card"); if (card) { card.empty(); card.createEl("strong", { text: "Preview needs refresh" }); card.createEl("p", { text: "Preview inputs changed. Refresh the preview before creating the file." }); card.createEl("button", { text: "Refresh Preview", cls: "mod-cta" }).addEventListener("click", () => { void this.prepare(true); }); } this.updateCreateButton();
+    const card = this.contentEl.querySelector<HTMLElement>(".manuscript-ready-card"); if (card) { card.empty(); card.createEl("strong", { text: "Preview needs refresh" }); card.createEl("p", { text: "Preview inputs changed. Refresh the preview before creating the file." }); card.createEl("button", { text: "Refresh preview", cls: "mod-cta" }).addEventListener("click", () => { void this.prepare(true); }); } this.updateCreateButton();
   }
   private applyDocumentIdentity(folder: TFolder): void {
     const notes = folder.children.filter((item): item is TFile => item instanceof TFile && item.extension.toLowerCase() === "md");
-    const records = notes.map((file) => ({ file, frontmatter: this.app.metadataCache.getFileCache(file)?.frontmatter as Record<string, unknown> | undefined }));
+    const records = notes.map((file) => ({ file, frontmatter: recordValue(this.app.metadataCache.getFileCache(file)?.frontmatter) }));
     const rootRecord = records.find(({ file }) => cleanIdentity(file.basename) === cleanIdentity(folder.name));
     const projectRecord = records.find(({ frontmatter }) => isBookMetadata(frontmatter));
     const title = resolveBookTitle(metadataValue(projectRecord?.frontmatter, ["booktitle", "book title", "project title"]), metadataValue(rootRecord?.frontmatter, ["title", "booktitle", "book title"]), folder.name);
@@ -102,3 +103,4 @@ export class SimpleCompileModal extends Modal {
 function cleanIdentity(value: string): string { return value.replace(/\.[^.]+$/, "").replace(/[^a-z0-9]+/gi, " ").trim().toLowerCase(); }
 function metadataValue(record: Record<string, unknown> | undefined, keys: string[]): unknown { if (!record) return; const normalized = new Map(Object.entries(record).map(([key, value]) => [key.toLowerCase().replace(/[_-]+/g, " "), value])); for (const key of keys) { const value = normalized.get(key); if (typeof value === "string" && value.trim()) return value; } return; }
 function isBookMetadata(record: Record<string, unknown> | undefined): boolean { if (!record) return false; const type = metadataValue(record, ["type", "note type", "category"]); return typeof type === "string" && /^(?:book|project|manuscript)$/i.test(type.trim()) || metadataValue(record, ["booktitle", "book title", "project title"]) !== undefined; }
+function recordValue(value: unknown): Record<string, unknown> | undefined { return value !== null && typeof value === "object" && !Array.isArray(value) ? Object.fromEntries(Object.entries(value)) : undefined; }

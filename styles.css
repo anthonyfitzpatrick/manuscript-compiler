@@ -7,7 +7,7 @@
 .manuscript-compiler-report dt { font-weight: var(--font-semibold); }
 .manuscript-compiler-report dd { margin: 0; overflow-wrap: anywhere; }
 
-.modal-content:has(.manuscript-compiler-report) {
+.manuscript-compiler-preview .modal-content {
   max-height: 75vh;
   overflow-y: auto;
 }
@@ -62,7 +62,12 @@
 .manuscript-contents-summary > div { padding: var(--size-4-2); border-radius: var(--radius-s); background: var(--background-secondary); }
 .manuscript-contents-summary strong, .manuscript-contents-summary span { display: block; }
 .manuscript-contents-summary span { color: var(--text-muted); font-size: var(--font-ui-smaller); }
-.manuscript-contents-toolbar { display: flex; justify-content: flex-end; margin-bottom: var(--size-4-3); }
+.manuscript-contents-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--size-4-2) var(--size-4-4); margin-bottom: var(--size-4-4); padding: var(--size-4-3); border: 1px solid var(--background-modifier-border); border-radius: var(--radius-m); background: var(--background-secondary); }
+.manuscript-contents-toolbar p { flex: 1 1 240px; margin: 0; color: var(--text-muted); }
+.manuscript-correct-structure { display: inline-flex; align-items: center; justify-content: center; gap: var(--size-4-2); min-height: 44px; padding: var(--size-4-2) var(--size-4-5); font-size: var(--font-ui-medium); font-weight: var(--font-semibold); }
+.manuscript-correct-structure-icon { display: inline-flex; }
+.manuscript-correct-structure-icon svg { width: 18px; height: 18px; }
+.manuscript-correct-structure.is-active { box-shadow: 0 0 0 2px var(--interactive-accent-hover), inset 0 0 0 1px var(--text-on-accent); }
 .manuscript-review-sections { display: grid; gap: var(--size-4-2); margin: var(--size-4-3) 0; }
 .manuscript-review-row { display: grid; grid-template-columns: minmax(0, 1fr) max-content max-content; align-items: center; gap: var(--size-4-3); padding: var(--size-4-2) var(--size-4-3); border: 1px solid var(--background-modifier-border); border-radius: var(--radius-s); }
 .manuscript-compact-outline { border: 1px solid var(--background-modifier-border); border-radius: var(--radius-m); overflow: hidden; }
@@ -146,3 +151,4 @@
   .manuscript-compile-body .setting-item { flex-wrap: wrap; }
   .manuscript-compile-body .setting-item-control { width: 100%; justify-content: flex-start; flex-wrap: wrap; }
 }
+.manuscript-download-anchor { display: none; }

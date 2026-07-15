@@ -10,7 +10,7 @@
  * or scanner-to-export shortcuts are forbidden because they bypass author roles
  * and safe exclusions.
  */
-import { TFile, TFolder, type Vault } from "obsidian";
+import { normalizePath, TFile, TFolder, type Vault } from "obsidian";
 import { ManuscriptCompiler } from "./compiler";
 import { applyContentPlan, classifyContentPlan, createContentPlan, isPlanItemIncluded, type ContentPlanItem } from "./content-plan";
 import type { Book, CompileResult, CompileWarning, ManuscriptStatistics } from "./model";
@@ -83,7 +83,7 @@ export class CompilePreparationService {
   async prepareAuthoritative(request: CompilePreparationRequest, signal?: AbortSignal): Promise<PreparedCompileSession> {
     const preparationStarted = performance.now();
     const scanStarted = performance.now();
-    const folder = this.vault.getAbstractFileByPath(request.manuscriptRoot);
+    const folder = this.vault.getAbstractFileByPath(normalizePath(request.manuscriptRoot));
     if (!(folder instanceof TFolder)) throw new Error("The manuscript folder does not exist.");
     const suppliedPlan = request.contentPlan;
     const plan = suppliedPlan === undefined
@@ -204,6 +204,7 @@ function simpleRequestFromProfile(request: CompilePreparationRequest, plan: Cont
       font: profile.docxFont ?? "Times New Roman",
       fontSize: profile.docxFontSize ?? 12,
       lineSpacing: profile.docxLineSpacing ?? 2,
+      indentParagraphs: profile.docxIndentParagraphs ?? true,
       firstLineIndentCm: profile.docxFirstLineIndentCm ?? inchesToCentimetres(profile.docxFirstLineIndent ?? 0.5),
       pageSize: profile.docxPageSize ?? "a4",
       chapterPageBreak: profile.docxChapterPageBreak ?? true,

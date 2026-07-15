@@ -9,11 +9,11 @@ import type { CompileProfile, DocxStylePreset, ExportTarget, StructuralDisplay, 
 import type { ContentPlanItem } from "./content-plan";
 
 /** Controller-owned mutable formatting; centimetres are the canonical UI unit. */
-export interface DocxFormatting { font: string; fontSize: number; lineSpacing: number; firstLineIndentCm: number; pageSize: "letter" | "a4"; pageMarginCm?: number; chapterPageBreak: boolean; titlePage: boolean; }
+export interface DocxFormatting { font: string; fontSize: number; lineSpacing: number; indentParagraphs: boolean; firstLineIndentCm: number; pageSize: "letter" | "a4"; chapterPageBreak: boolean; titlePage: boolean; }
 
 export const DOCX_FORMATTING_PRESETS: Record<Exclude<DocxStylePreset, "custom">, Readonly<DocxFormatting>> = {
-  vellum: { font: "Garamond", fontSize: 12, lineSpacing: 1.15, firstLineIndentCm: 0.75, pageSize: "a4", chapterPageBreak: true, titlePage: false },
-  standard: { font: "Times New Roman", fontSize: 12, lineSpacing: 2, firstLineIndentCm: 1.27, pageSize: "a4", chapterPageBreak: true, titlePage: false }
+  vellum: { font: "Garamond", fontSize: 12, lineSpacing: 1.15, indentParagraphs: true, firstLineIndentCm: 0.75, pageSize: "a4", chapterPageBreak: true, titlePage: false },
+  standard: { font: "Times New Roman", fontSize: 12, lineSpacing: 2, indentParagraphs: true, firstLineIndentCm: 1.27, pageSize: "a4", chapterPageBreak: true, titlePage: false }
 };
 
 /** Returns a fresh deterministic preset; Custom copies the caller's values. */
@@ -67,7 +67,7 @@ export function resolveSimpleCompileRequest(request: SimpleCompileRequest, base:
     variables: { ...base.variables, ...(request.custom?.variables ?? {}) }, metadataFilters: base.metadataFilters.map((rule) => ({ ...rule })), referenceDocx: "", pandocMetadataFile: "", additionalPandocArguments: "",
     contentOrder: request.contentPlan?.filter((item) => item.included && item.role !== "ignore").map((item) => item.path),
     docxFont: formatting.font, docxFontSize: formatting.fontSize, docxLineSpacing: formatting.lineSpacing,
-    docxFirstLineIndentCm: formatting.firstLineIndentCm, docxPageSize: formatting.pageSize,
+    docxIndentParagraphs: formatting.indentParagraphs, docxFirstLineIndentCm: formatting.firstLineIndentCm, docxPageSize: formatting.pageSize,
     docxChapterPageBreak: formatting.chapterPageBreak, docxTitlePage: formatting.titlePage, downloadAfterExport: request.downloadAfterExport, skipLegacyPreview: request.contentPlan !== undefined,
     partDisplay: request.partDisplay ?? "word-title", chapterDisplay: request.chapterDisplay ?? "word-title", explicitlyIncludedPaths: request.contentPlan?.filter((item) => item.userOverride && item.included).map((item) => item.path), bodySectionAliases: request.custom?.bodySectionAliases ?? base.bodySectionAliases
   };

@@ -1,5 +1,5 @@
 /** Compact Contents review with an explicit full-control correction mode. */
-import { Setting } from "obsidian";
+import { setIcon, Setting } from "obsidian";
 import type { ContentPlanItem, ContentRole } from "../content-plan";
 import type { CompileWorkspaceController } from "./compile-workspace-controller";
 import { orderedPlan, visibleRows } from "./content-tree";
@@ -18,10 +18,13 @@ export function renderContentsStep(container: HTMLElement, controller: CompileWo
   container.createEl("p", { text: "Review the detected structure. Correct anything that is not right." });
   const summary = container.createDiv({ cls: "manuscript-contents-summary", attr: { "aria-label": "Manuscript contents summary" } });
   [[`${counts.includedNotes} of ${counts.totalNotes}`, "notes included"], [String(counts.parts), "Parts"], [String(counts.chapters), "Chapters"], [String(counts.scenes), "Scenes"], [String(counts.frontMatter), "Front Matter"], [String(counts.backMatter), "Back Matter"], [String(counts.ignoredNotes), "Ignored"]].forEach(([value, label]) => { const item = summary.createDiv(); item.createEl("strong", { text: value }); item.createSpan({ text: label }); });
-  const toolbar = container.createDiv({ cls: "manuscript-contents-toolbar" });
-  const correction = toolbar.createEl("button", { text: viewState.correctionMode ? "Finish correcting" : "Correct structure", cls: viewState.correctionMode ? "mod-cta" : "" });
+  const toolbar = container.createDiv({ cls: `manuscript-contents-toolbar${viewState.correctionMode ? " is-active" : ""}` });
+  const label = viewState.correctionMode ? "Finish correcting structure" : "Correct structure";
+  const correction = toolbar.createEl("button", { cls: `mod-cta manuscript-correct-structure${viewState.correctionMode ? " is-active" : ""}`, attr: { type: "button", "aria-label": label } });
+  const icon = correction.createSpan({ cls: "manuscript-correct-structure-icon", attr: { "aria-hidden": "true" } }); setIcon(icon, "list-tree"); correction.createSpan({ text: label });
   correction.setAttribute("aria-pressed", String(viewState.correctionMode));
   correction.addEventListener("click", () => { viewState.setCorrectionMode(!viewState.correctionMode); renderAgain(container, controller, viewState, undefined, true); });
+  toolbar.createEl("p", { text: "Change folder and note types, inclusion, and order." });
   if (viewState.correctionMode) renderCorrectionMode(container, controller, viewState);
   else renderReviewMode(container, controller, viewState, counts.ignoredNotes, counts.warnings, counts.ambiguous);
 }
@@ -63,7 +66,7 @@ function renderOutlineChildren(parent: HTMLElement, parentPath: string, controll
   (childrenByParent.get(parentPath) ?? []).forEach((item) => {
     if (!includedPaths.has(item.path) || item.role === "ignore") return;
     const hasChildren = item.kind === "folder" && item.role !== "chapter" && (childrenByParent.get(item.path) ?? []).some((candidate) => candidate.role !== "ignore");
-    const row = parent.createDiv({ cls: `manuscript-outline-row manuscript-outline-${item.role}${item.role === "transparent" ? " is-transparent" : ""}`, attr: { role: "treeitem" } }); row.style.setProperty("--manuscript-depth", String(depth));
+    const row = parent.createDiv({ cls: `manuscript-outline-row manuscript-outline-${item.role}${item.role === "transparent" ? " is-transparent" : ""}`, attr: { role: "treeitem" } }); row.setCssProps({ "--manuscript-depth": String(depth) });
     if (hasChildren) {
       createFolderToggle(row, item, viewState.isExpanded(item.path), () => { viewState.toggle(item.path); viewState.setFocus(item.path, "toggle"); renderAgain(parent.closest(".manuscript-compile-body") as HTMLElement, controller, viewState, item.path); });
     } else row.createSpan({ text: "•", cls: "manuscript-outline-marker", attr: { "aria-hidden": "true" } });
@@ -98,11 +101,11 @@ function renderCorrectionMode(container: HTMLElement, controller: CompileWorkspa
   };
   const syncOrderAndVisibility = (): void => { const items = byPath(); visibleRows(controller.state.contentPlan, request.manuscriptRoot).forEach(({ item }) => { const record = records.get(item.path); if (!record) return; record.element.hidden = !viewState.isVisible(item, items); tree.appendChild(record.element); }); };
   const refreshChangedRows = (before: Map<string, RowSnapshot>): void => { const after = snapshots(); const items = byPath(); changedRowPaths(before, after).forEach((path) => updateRow(path, after, items)); updateSummary(); };
-  const preserveInteraction = (element: HTMLElement, change: () => void): void => { const scrollTop = container.scrollTop; change(); container.scrollTop = scrollTop; viewState.setScrollTop(scrollTop); if (document.activeElement !== element) element.focus({ preventScroll: true }); };
+  const preserveInteraction = (element: HTMLElement, change: () => void): void => { const scrollTop = container.scrollTop; change(); container.scrollTop = scrollTop; viewState.setScrollTop(scrollTop); if (element.doc.activeElement !== element) element.focus({ preventScroll: true }); };
   summary.addButton((button) => button.setButtonText("Include all").onClick(() => { const before = snapshots(); controller.includeAll(); refreshChangedRows(before); })).addButton((button) => button.setButtonText("Exclude all").onClick(() => { const before = snapshots(); controller.excludeAllNotes(); refreshChangedRows(before); }));
   const initialItems = byPath();
   visibleRows(plan, request.manuscriptRoot).filter(({ item }) => viewState.isVisible(item, initialItems)).forEach(({ item, depth, included }) => {
-    const row = tree.createDiv({ cls: `manuscript-content-row ${included ? "" : "is-excluded"}`, attr: { role: "treeitem" } }); row.style.setProperty("--manuscript-depth", String(depth)); row.dataset.path = item.path;
+    const row = tree.createDiv({ cls: `manuscript-content-row ${included ? "" : "is-excluded"}`, attr: { role: "treeitem" } }); row.setCssProps({ "--manuscript-depth": String(depth) }); row.dataset.path = item.path;
     const include = row.createEl("input", { type: "checkbox" }); include.checked = included; include.setAttribute("aria-label", `${included ? "Exclude" : "Include"} ${item.name}`); rememberFocus(item.path, "include", include);
     const label = row.createDiv({ cls: "manuscript-content-name" }); let toggle: HTMLButtonElement | undefined;
     if (item.kind === "folder") { toggle = createFolderToggle(label, item, viewState.isExpanded(item.path)); rememberFocus(item.path, "toggle", toggle); } else label.createSpan({ text: "•", cls: "manuscript-content-icon" });

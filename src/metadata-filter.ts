@@ -7,7 +7,7 @@
 import type { DocumentMetadata } from "./model";
 import type { MetadataFilterRule, MetadataOperator } from "./settings";
 export interface FilterOperator { id: MetadataOperator; matches(actual: unknown, expected: string): boolean; }
-const normalize = (value: unknown): string => String(value ?? "").trim().toLowerCase();
+const normalize = (value: unknown): string => typeof value === "string" || typeof value === "number" || typeof value === "boolean" ? String(value).trim().toLowerCase() : "";
 const OPERATORS: Record<MetadataOperator, FilterOperator> = {
   equals: { id: "equals", matches: (actual, expected) => normalize(actual) === normalize(expected) },
   "not-equals": { id: "not-equals", matches: (actual, expected) => normalize(actual) !== normalize(expected) }

@@ -5,7 +5,7 @@
  * previews/validation, and delegates export. main.ts routes compile commands here.
  * It calls BookRootResolver, CompilePreparationService, validation, and export.
  */
-import { Notice, TFile, TFolder, type App } from "obsidian";
+import { Notice, Platform, TFile, TFolder, type App } from "obsidian";
 import { BookRootResolver } from "./book-root-resolver";
 import { CompilationCancelledError } from "./cancellation";
 import { calculateSourceFingerprint, CompilePreparationService, type CompilePurpose, type CompileRoute, type PreparedCompileSession } from "./compile-preparation";
@@ -66,7 +66,7 @@ export class CompileCommandService {
   /** Validates the exact semantic model export would consume and never writes output. */
   async validateManuscript(): Promise<void> { try { const folder = this.currentRoot(); if (!folder) throw new Error("Set a manuscript root in the active compile profile, or open a note inside a recognisable book folder."); const session = await this.prepareAutomatic(folder, this.activeProfile(), "validation", "validation"); const result = await new ManuscriptValidationService(this.app.vault, this.settings()).validate(session); new ValidationReportModal(this.app, folder.path, result).open(); } catch (error) { showError(error); } }
   /** Builds a privacy-limited configuration report; manuscript prose is never included. */
-  async generateDiagnostics(): Promise<void> { try { const report = new DiagnosticsReportGenerator().generate({ pluginVersion: this.pluginVersion, obsidianVersion: getObsidianVersion(), operatingSystem: navigator.userAgent, profile: this.activeProfile(), settings: this.settings() }); new DiagnosticsReportModal(this.app, report, () => this.saveDiagnostics(report)).open(); } catch (error) { showError(error); } }
+  async generateDiagnostics(): Promise<void> { try { const report = new DiagnosticsReportGenerator().generate({ pluginVersion: this.pluginVersion, obsidianVersion: getObsidianVersion(), operatingSystem: platformName(), profile: this.activeProfile(), settings: this.settings() }); new DiagnosticsReportModal(this.app, report, () => this.saveDiagnostics(report)).open(); } catch (error) { showError(error); } }
 
   private currentRoot(): TFolder | null { return this.roots.configuredOrCurrent(this.activeProfile().manuscriptRoot || this.settings().defaultManuscriptFolder, this.app.workspace.getActiveFile()); }
   private prepareAutomatic(folder: TFolder, profile: CompileProfile, purpose: CompilePurpose, route: CompileRoute, contentPlan?: ContentPlanItem[], signal?: AbortSignal): Promise<PreparedCompileSession> {
@@ -80,7 +80,8 @@ export class CompileCommandService {
     catch (error) { if (operation.signal.aborted) operation.cancel(); else operation.fail(); throw error; }
     finally { operation.settle(); externalSignal?.removeEventListener("abort", cancel); }
   }
-  private async saveDiagnostics(report: string): Promise<string> { const folder = "Manuscript Compiler Diagnostics"; if (!this.app.vault.getAbstractFileByPath(folder)) await this.app.vault.createFolder(folder); const stamp = new Date().toISOString().replace(/[:.]/g, "-"); const path = `${folder}/Diagnostics ${stamp}.md`; const existing = this.app.vault.getAbstractFileByPath(path); if (existing instanceof TFile) await this.app.vault.modify(existing, report); else await this.app.vault.create(path, report); return path; }
+  private async saveDiagnostics(report: string): Promise<string> { const folder = "Manuscript Compiler Diagnostics"; if (!this.app.vault.getAbstractFileByPath(folder)) await this.app.vault.createFolder(folder); const stamp = new Date().toISOString().replace(/[:.]/g, "-"); const path = `${folder}/Diagnostics ${stamp}.md`; const existing = this.app.vault.getAbstractFileByPath(path); if (existing instanceof TFile) await this.app.vault.process(existing, () => report); else await this.app.vault.create(path, report); return path; }
 }
 
-function modalPromise(factory: (finish: (value: boolean) => void) => { open(): void; onClose(): void }): Promise<boolean> { return new Promise((resolve) => { let settled = false; const finish = (value: boolean): void => { if (!settled) { settled = true; resolve(value); } }; const modal = factory(finish); const close = modal.onClose.bind(modal); modal.onClose = (): void => { close(); finish(false); }; modal.open(); }); }
+function modalPromise(factory: (finish: (value: boolean) => void) => { open(): void }): Promise<boolean> { return new Promise((resolve) => { let settled = false; const finish = (value: boolean): void => { if (!settled) { settled = true; resolve(value); } }; factory(finish).open(); }); }
+function platformName(): string { if (Platform.isIosApp) return "iOS"; if (Platform.isAndroidApp) return "Android"; if (Platform.isWin) return "Windows"; if (Platform.isLinux) return "Linux"; if (Platform.isMacOS) return "macOS"; return Platform.isMobileApp ? "Mobile" : "Unknown"; }

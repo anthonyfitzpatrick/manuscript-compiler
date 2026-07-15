@@ -24,6 +24,7 @@ export interface DocxOptions {
   font?: string;
   fontSize?: number;
   lineSpacing?: number;
+  indentParagraphs?: boolean;
   firstLineIndentCm?: number;
   pageSize?: "letter" | "a4";
   chapterPageBreak?: boolean;
@@ -37,6 +38,7 @@ export interface ResolvedDocxOptions extends DocxOptions {
   font: string;
   fontSize: number;
   lineSpacing: number;
+  indentParagraphs: boolean;
   firstLineIndentCm: number;
   pageSize: "letter" | "a4";
   chapterPageBreak: boolean;
@@ -65,6 +67,7 @@ export function resolveDocxOptions(options: DocxOptions): ResolvedDocxOptions {
     font: cleanFont(options.font),
     fontSize: clamp(options.fontSize, 8, 24, 12),
     lineSpacing: clamp(options.lineSpacing, 0.8, 3, 2),
+    indentParagraphs: options.indentParagraphs !== false,
     firstLineIndentCm: clampCentimetres(options.firstLineIndentCm, 0, 3.81, 1.27),
     pageSize: options.pageSize === "letter" ? "letter" : "a4",
     chapterPageBreak: options.chapterPageBreak !== false,
@@ -271,7 +274,7 @@ function stylesXml(options: ResolvedDocxOptions): string {
   const font = escapeXml(options.font);
   const size = Math.round(options.fontSize * 2);
   const line = Math.round(options.lineSpacing * 240);
-  const indent = centimetresToTwips(options.firstLineIndentCm);
+  const indent = options.indentParagraphs ? centimetresToTwips(options.firstLineIndentCm) : 0;
   const style = (id: string, name: string, basedOn: string, paragraphProperties: string, runProperties = ""): string => `<w:style w:type="paragraph" w:styleId="${id}"><w:name w:val="${name}"/>${basedOn === id ? "" : `<w:basedOn w:val="${basedOn}"/>`}<w:next w:val="${id === "BodyText" ? "BodyText" : "FirstParagraph"}"/><w:qFormat/><w:pPr>${paragraphProperties}</w:pPr>${runProperties ? `<w:rPr>${runProperties}</w:rPr>` : ""}</w:style>`;
   const centered = `<w:jc w:val="center"/><w:ind w:firstLine="0"/>`;
   return `${XML}<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="${font}" w:hAnsi="${font}" w:eastAsia="${font}"/><w:sz w:val="${size}"/><w:lang w:val="en-US"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="0" w:line="${line}" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults>${style("Normal", "Normal", "Normal", `<w:spacing w:after="0" w:line="${line}" w:lineRule="auto"/>`)}${style("Title", "Title", "Normal", `${centered}<w:spacing w:before="3600" w:after="480"/>`, `<w:b/><w:sz w:val="40"/>`)}${style("Author", "Author", "Normal", `${centered}<w:spacing w:before="480"/>`, `<w:sz w:val="28"/>`)}${style("PartNumber", "Part Number", "Normal", `${centered}<w:spacing w:before="1440" w:after="240"/>`, `<w:b/><w:sz w:val="32"/>`)}${style("PartTitle", "Part Title", "Normal", `${centered}<w:spacing w:after="720"/>`, `<w:b/><w:sz w:val="32"/>`)}${style("ChapterNumber", "Chapter Number", "Normal", `${centered}<w:spacing w:before="720" w:after="180"/>`, `<w:b/><w:sz w:val="28"/>`)}${style("ChapterTitle", "Chapter Title", "Normal", `${centered}<w:spacing w:after="720"/>`, `<w:b/><w:sz w:val="28"/>`)}${style("BodyText", "Body Text", "Normal", `<w:spacing w:after="0" w:line="${line}" w:lineRule="auto"/><w:ind w:firstLine="${indent}"/>`)}${style("FirstParagraph", "First Paragraph", "BodyText", `<w:spacing w:after="0" w:line="${line}" w:lineRule="auto"/><w:ind w:firstLine="0"/>`)}${style("SceneBreak", "Scene Break", "Normal", `${centered}<w:spacing w:before="240" w:after="240"/>`)}${style("FrontMatterHeading", "Front Matter Heading", "Normal", `${centered}<w:spacing w:before="720" w:after="480"/>`, `<w:b/><w:sz w:val="28"/>`)}${style("BackMatterHeading", "Back Matter Heading", "Normal", `${centered}<w:spacing w:before="720" w:after="480"/>`, `<w:b/><w:sz w:val="28"/>`)}</w:styles>`;

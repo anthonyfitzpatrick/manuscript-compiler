@@ -195,5 +195,5 @@ export class CompileWorkspaceController {
 }
 
 function workspaceError(message: string, detail?: unknown): WorkspaceError {
-  return { message, suggestion: "Review the manuscript choices and refresh the preview.", technicalDetail: detail instanceof Error ? detail.message : detail === undefined ? undefined : String(detail), severity: "error", recoverable: true };
+  return { message, suggestion: "Review the manuscript choices and refresh the preview.", technicalDetail: detail instanceof Error ? detail.message : typeof detail === "string" ? detail : undefined, severity: "error", recoverable: true };
 }

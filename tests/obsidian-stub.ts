@@ -20,3 +20,4 @@ export class TextAreaComponent { inputEl = element(); constructor(_container?: u
 export const apiVersion = "1.13.1";
 export const Platform = { isDesktopApp: true, isMobile: false };
 export const normalizePath = (value: string): string => value;
+export const setIcon = (_element: HTMLElement, _icon: string): void => undefined;

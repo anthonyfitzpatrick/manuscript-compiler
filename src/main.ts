@@ -59,7 +59,7 @@ export default class ManuscriptCompilerPlugin extends Plugin {
     this.settings = repairSettings(loaded);
     if (raw && raw.defaultStructurePreset === undefined) this.settings.defaultStructurePreset = inferStructurePreset(this.getActiveProfile());
     await this.saveSettings();
-    if (this.settings.configurationWarnings.length > previousWarnings) new Notice("Manuscript Compiler repaired invalid settings. Run Validate Manuscript for details.", 8000);
+    if (this.settings.configurationWarnings.length > previousWarnings) new Notice("Manuscript Compiler repaired invalid settings. Run validate manuscript for details.", 8000);
   }
 
   /** Persists the complete repaired settings object through Obsidian's plugin storage. */
@@ -92,11 +92,11 @@ export default class ManuscriptCompilerPlugin extends Plugin {
   }
 
   private registerCommands(): void {
-    this.addCommand({ id: COMMAND_IDS.compileManuscript, name: "Compile Manuscript", callback: () => this.openCompiler() });
-    this.addCommand({ id: COMMAND_IDS.compileCurrentBook, name: "Compile Current Book", callback: () => { void this.commands.compileCurrentBook(); } });
-    this.addCommand({ id: COMMAND_IDS.compileSelectedFolder, name: "Compile Selected Folder", callback: () => { new FolderSuggestModal(this.app, (folder) => { void this.commands.compileFolder(folder, undefined, [], "selected-folder"); }).open(); } });
-    this.addCommand({ id: COMMAND_IDS.validateManuscript, name: "Validate Manuscript", callback: () => { void this.commands.validateManuscript(); } });
-    this.addCommand({ id: COMMAND_IDS.generateDiagnostics, name: "Generate Diagnostics Report", callback: () => { void this.commands.generateDiagnostics(); } });
+    this.addCommand({ id: COMMAND_IDS.compileManuscript, name: "Compile manuscript", callback: () => this.openCompiler() });
+    this.addCommand({ id: COMMAND_IDS.compileCurrentBook, name: "Compile current book", callback: () => { void this.commands.compileCurrentBook(); } });
+    this.addCommand({ id: COMMAND_IDS.compileSelectedFolder, name: "Compile selected folder", callback: () => { new FolderSuggestModal(this.app, (folder) => { void this.commands.compileFolder(folder, undefined, [], "selected-folder"); }).open(); } });
+    this.addCommand({ id: COMMAND_IDS.validateManuscript, name: "Validate manuscript", callback: () => { void this.commands.validateManuscript(); } });
+    this.addCommand({ id: COMMAND_IDS.generateDiagnostics, name: "Generate diagnostics report", callback: () => { void this.commands.generateDiagnostics(); } });
   }
 
   private registerFolderContextMenu(): void {

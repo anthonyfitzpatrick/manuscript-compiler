@@ -12,14 +12,14 @@ import { repairCompileLogs, repairExportHistory } from "./history-storage";
 
 const VELLUM_OPTIONS = { ...DEFAULT_OPTIONS, orderingMethod: "metadata" as const, metadataOrdering: true, partHeadingTemplate: "Part {number}: {name}", chapterHeadingTemplate: "Chapter {number}: {name}", removeHtmlComments: true, removeDataviewBlocks: true, removeCallouts: true, stripInternalLinks: true };
 export function profileId(): string { return `profile-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`; }
-function profile(name: string, options = DEFAULT_OPTIONS, firstLineIndentCm = 1.27): CompileProfile { return { ...options, metadataFilters: options.metadataFilters.map((rule) => ({ ...rule })), id: profileId(), name, manuscriptRoot: "", exportFolder: "", outputFilename: "{BookTitle}.docx", variables: { BookTitle: "", Series: "", Author: "" }, exportTarget: "docx", referenceDocx: "", pandocMetadataFile: "", additionalPandocArguments: "", generateTableOfContents: false, keepIntermediateMarkdown: false, docxFirstLineIndentCm: firstLineIndentCm, docxPageSize: "a4" }; }
+function profile(name: string, options = DEFAULT_OPTIONS, firstLineIndentCm = 1.27): CompileProfile { return { ...options, metadataFilters: options.metadataFilters.map((rule) => ({ ...rule })), id: profileId(), name, manuscriptRoot: "", exportFolder: "", outputFilename: "{BookTitle}.docx", variables: { BookTitle: "", Series: "", Author: "" }, exportTarget: "docx", referenceDocx: "", pandocMetadataFile: "", additionalPandocArguments: "", generateTableOfContents: false, keepIntermediateMarkdown: false, docxIndentParagraphs: true, docxFirstLineIndentCm: firstLineIndentCm, docxPageSize: "a4" }; }
 /** Creates fresh profiles; callers may mutate them without sharing nested arrays. */
 export function createDefaultProfiles(): CompileProfile[] { return [profile("Default"), profile("Vellum", VELLUM_OPTIONS, 0.75)]; }
 /** Copies mutable nested profile values and assigns a new stable identity. */
 export function duplicateProfile(source: CompileProfile, name = `${source.name} Copy`): CompileProfile { return { ...source, id: profileId(), name, metadataFilters: source.metadataFilters.map((rule) => ({ ...rule })), variables: { ...source.variables } }; }
 /** Applies historical schema upgrades once while retaining compatibility data. */
 export function migrateSettings(settings: ManuscriptCompilerSettings): ManuscriptCompilerSettings {
-  if (settings.profiles.length > 0) { settings.profiles = settings.profiles.map((item) => ({ ...item, exportTarget: item.exportTarget ?? settings.defaultExportFormat ?? "markdown", referenceDocx: item.referenceDocx ?? settings.defaultReferenceDocx ?? "", pandocMetadataFile: item.pandocMetadataFile ?? "", additionalPandocArguments: item.additionalPandocArguments ?? "", generateTableOfContents: item.generateTableOfContents ?? false, keepIntermediateMarkdown: item.keepIntermediateMarkdown ?? settings.keepTemporaryMarkdown ?? false })); return settings; }
+  if (settings.profiles.length > 0) { settings.profiles = settings.profiles.map((item) => ({ ...item, exportTarget: item.exportTarget ?? settings.defaultExportFormat ?? "markdown", referenceDocx: item.referenceDocx ?? settings.defaultReferenceDocx ?? "", pandocMetadataFile: item.pandocMetadataFile ?? "", additionalPandocArguments: item.additionalPandocArguments ?? "", generateTableOfContents: item.generateTableOfContents ?? false, keepIntermediateMarkdown: item.keepIntermediateMarkdown ?? settings.keepTemporaryMarkdown ?? false, docxIndentParagraphs: item.docxIndentParagraphs ?? true })); return settings; }
   const profiles = createDefaultProfiles(); const active = profiles[settings.defaultCompilePreset === "vellum" ? 1 : 0];
   Object.assign(active, {
     manuscriptRoot: settings.defaultManuscriptFolder, exportFolder: settings.defaultExportFolder,
@@ -46,9 +46,9 @@ export function repairSettings(settings: ManuscriptCompilerSettings): Manuscript
   repaired.defaultStructurePreset ??= activeForMigration ? (activeForMigration.useParts ? (activeForMigration.chapterSource === "notes" ? "anthology" : "novel-parts") : activeForMigration.chapterSource === "notes" ? "chapter-notes" : "novel") : "novel-parts";
   repaired.defaultDocxStyle ??= repaired.defaultCompilePreset === "vellum" || /vellum/i.test(activeForMigration?.name ?? "") ? "vellum" : "standard";
   if (!(repaired.defaultDocxStyle === "vellum" || repaired.defaultDocxStyle === "standard")) repaired.defaultDocxStyle = "standard";
-  repaired.defaultExportFormat ??= "docx"; repaired.warnBeforeOverwrite ??= true; repaired.openAfterCompile ??= false; repaired.includeTitlePageByDefault ??= false; repaired.includeTableOfContentsByDefault ??= activeForMigration?.generateTableOfContents ?? false; repaired.showAdvancedOptions ??= false;
+  repaired.defaultExportFormat ??= "docx"; repaired.warnBeforeOverwrite ??= true; repaired.openAfterCompile ??= false; repaired.includeTitlePageByDefault ??= false; repaired.includeTableOfContentsByDefault ??= activeForMigration?.generateTableOfContents ?? false; repaired.showAdvancedOptions ??= false; repaired.defaultIndentParagraphs = typeof repaired.defaultIndentParagraphs === "boolean" ? repaired.defaultIndentParagraphs : true;
   repaired.saveToVaultByDefault = repaired.saveToVaultByDefault === true; repaired.rememberExternalSaveFolder = repaired.rememberExternalSaveFolder === true; repaired.revealAfterCompile = repaired.revealAfterCompile === true; if (typeof repaired.lastExternalSaveFolder !== "string") repaired.lastExternalSaveFolder = "";
-  if (!["docx", "odt", "pdf", "epub", "html", "xml"].includes(repaired.defaultDownloadFormat)) repaired.defaultDownloadFormat = "docx";
+  if (!["docx", "odt", "epub", "html", "markdown", "xml"].includes(repaired.defaultDownloadFormat)) repaired.defaultDownloadFormat = "docx";
   repaired.defaultDocxPageSize = activeForMigration?.docxPageSize === "letter" || activeForMigration?.docxPageSize === "a4" ? activeForMigration.docxPageSize : repaired.defaultDocxPageSize === "letter" ? "letter" : "a4";
   const migratedDefaultIndent = activeForMigration?.docxFirstLineIndentCm ?? (typeof activeForMigration?.docxFirstLineIndent === "number" ? inchesToCentimetres(activeForMigration.docxFirstLineIndent) : repaired.defaultDocxStyle === "vellum" ? 0.75 : 1.27);
   repaired.defaultDocxFirstLineIndentCm = clampCentimetres(migratedDefaultIndent, 0, 3.81, repaired.defaultDocxStyle === "vellum" ? 0.75 : 1.27);
@@ -66,7 +66,7 @@ export function repairSettings(settings: ManuscriptCompilerSettings): Manuscript
     const validation = validateProfile(merged); if (validation.errors.length) warnings.push(`Profile “${item.name || index + 1}” has configuration issues: ${validation.errors.join(" ")}`);
     if (!merged.id) { merged.id = profileId(); warnings.push(`Profile ${index + 1} was assigned a new identifier.`); }
     if (!merged.name?.trim()) { merged.name = `Recovered Profile ${index + 1}`; warnings.push(`Profile ${index + 1} was assigned a recovery name.`); }
-    if (!["markdown", "docx", "markdown-docx", "odt", "pdf", "epub", "html", "xml"].includes(merged.exportTarget)) { merged.exportTarget = "docx"; warnings.push(`Profile “${merged.name}” export target was repaired to DOCX.`); }
+    if (!["markdown", "docx", "markdown-docx", "odt", "epub", "html", "xml"].includes(merged.exportTarget)) { merged.exportTarget = "docx"; warnings.push(`Profile “${merged.name}” export target was repaired to DOCX.`); }
     for (const key of ["includeFrontMatter", "includeBackMatter", "includeSceneTitles", "metadataOrdering", "stripYamlFrontmatter", "removeObsidianComments", "removeHtmlComments", "removeDataviewBlocks", "removeCallouts", "stripInternalLinks", "generateTableOfContents", "keepIntermediateMarkdown", "useParts"] as const) if (typeof merged[key] !== "boolean") { (merged[key] as boolean) = defaults[key]; warnings.push(`Profile “${merged.name}” setting ${key} was repaired.`); }
     if (merged.chapterSource !== "folders" && merged.chapterSource !== "notes") { merged.chapterSource = "folders"; warnings.push(`Profile “${merged.name}” chapter source was repaired to folders.`); }
     for (const key of ["manuscriptRoot", "exportFolder", "outputFilename", "partHeadingTemplate", "chapterHeadingTemplate", "sceneSeparator", "referenceDocx", "pandocMetadataFile", "additionalPandocArguments"] as const) if (typeof merged[key] !== "string") { (merged[key] as string) = defaults[key]; warnings.push(`Profile “${merged.name}” setting ${key} was repaired.`); }
@@ -79,6 +79,7 @@ export function repairSettings(settings: ManuscriptCompilerSettings): Manuscript
     for (const key of ["blankLinesBetweenSections", "blankLinesBetweenChapters"] as const) if (!Number.isInteger(merged[key]) || merged[key] < 0) { merged[key] = defaults[key]; warnings.push(`Profile “${merged.name}” setting ${key} was repaired.`); }
     const profileIndentDefault = /vellum/i.test(item.name ?? "") ? 0.75 : defaults.docxFirstLineIndentCm ?? 1.27;
     const metricIndent = typeof item.docxFirstLineIndentCm === "number" ? item.docxFirstLineIndentCm : typeof item.docxFirstLineIndent === "number" ? inchesToCentimetres(item.docxFirstLineIndent) : profileIndentDefault;
+    merged.docxIndentParagraphs = typeof item.docxIndentParagraphs === "boolean" ? item.docxIndentParagraphs : true;
     merged.docxFirstLineIndentCm = clampCentimetres(metricIndent, 0, 3.81, profileIndentDefault);
     merged.docxPageSize = item.docxPageSize === "letter" || item.docxPageSize === "a4" ? item.docxPageSize : "a4";
     return merged;
@@ -103,9 +104,9 @@ export function validateProfile(value: unknown): { profile?: CompileProfile; err
   if (item.chapterSource !== undefined && item.chapterSource !== "folders" && item.chapterSource !== "notes") errors.push("chapterSource is invalid.");
   for (const key of ["blankLinesBetweenSections", "blankLinesBetweenChapters"] as const) if (item[key] !== undefined && (!Number.isInteger(item[key]) || (item[key] ?? -1) < 0)) errors.push(`${key} must be a non-negative integer.`);
   if (item.orderingMethod !== undefined && item.orderingMethod !== "filename" && item.orderingMethod !== "metadata") errors.push("orderingMethod is invalid.");
-  if (item.exportTarget !== undefined && !["markdown", "docx", "markdown-docx", "odt", "pdf", "epub", "html", "xml"].includes(item.exportTarget)) errors.push("exportTarget is invalid.");
+  if (item.exportTarget !== undefined && !["markdown", "docx", "markdown-docx", "odt", "epub", "html", "xml"].includes(item.exportTarget)) errors.push("exportTarget is invalid.");
   for (const key of ["referenceDocx", "pandocMetadataFile", "additionalPandocArguments"] as const) if (item[key] !== undefined && typeof item[key] !== "string") errors.push(`${key} must be a string.`);
-  for (const key of ["generateTableOfContents", "keepIntermediateMarkdown"] as const) if (item[key] !== undefined && typeof item[key] !== "boolean") errors.push(`${key} must be boolean.`);
+  for (const key of ["generateTableOfContents", "keepIntermediateMarkdown", "docxIndentParagraphs"] as const) if (item[key] !== undefined && typeof item[key] !== "boolean") errors.push(`${key} must be boolean.`);
   if (item.variables !== undefined && (typeof item.variables !== "object" || item.variables === null || Array.isArray(item.variables))) errors.push("variables must be an object.");
   if (!Array.isArray(item.metadataFilters)) errors.push("metadataFilters must be an array.");
   else item.metadataFilters.forEach((rule, index) => {
@@ -115,6 +116,6 @@ export function validateProfile(value: unknown): { profile?: CompileProfile; err
   });
   if (errors.length > 0) return { errors };
   const base = profile(item.name?.trim() ?? "Imported");
-  const imported = { ...base, ...item, id: profileId(), variables: { ...base.variables, ...(item.variables ?? {}) }, metadataFilters: (item.metadataFilters ?? []).map((rule) => ({ ...rule, id: typeof rule.id === "string" ? rule.id : profileId() })) } as CompileProfile;
+  const imported: CompileProfile = { ...base, ...item, id: profileId(), variables: { ...base.variables, ...(item.variables ?? {}) }, metadataFilters: (item.metadataFilters ?? []).map((rule) => ({ ...rule, id: typeof rule.id === "string" ? rule.id : profileId() })) };
   return { profile: imported, errors };
 }

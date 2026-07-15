@@ -8,7 +8,7 @@
 export type OrderingMethod = "filename" | "metadata";
 export type WarningLevel = "information" | "warning" | "error";
 export type MetadataOperator = "equals" | "not-equals";
-export type ExportTarget = "markdown" | "docx" | "markdown-docx" | "odt" | "pdf" | "epub" | "html" | "xml";
+export type ExportTarget = "markdown" | "docx" | "markdown-docx" | "odt" | "epub" | "html" | "xml";
 export type ChapterSource = "folders" | "notes";
 export type StructurePreset = "novel-parts" | "novel" | "chapter-notes" | "short-story" | "anthology" | "custom";
 export type DocxStylePreset = "vellum" | "standard" | "custom";
@@ -37,6 +37,8 @@ export interface CompileProfile extends CompileOptions {
   contentOrder?: string[]; docxFont?: string; docxFontSize?: number; docxLineSpacing?: number;
   /** Canonical first-line indentation unit for current settings. */
   docxFirstLineIndentCm?: number;
+  /** Applies the configured first-line indentation to later body paragraphs. */
+  docxIndentParagraphs?: boolean;
   /** Legacy pre-metric value in inches. Retained only for migration compatibility. */
   docxFirstLineIndent?: number;
   docxPageSize?: "letter" | "a4"; docxChapterPageBreak?: boolean; docxTitlePage?: boolean; downloadAfterExport?: boolean;
@@ -57,10 +59,10 @@ export interface ManuscriptCompilerSettings extends CompileOptions {
   configurationWarnings: string[];
   onboardingCompleted: boolean;
   defaultStructurePreset: StructurePreset; defaultDocxStyle: DocxStylePreset; warnBeforeOverwrite: boolean;
-  defaultDocxPageSize: "letter" | "a4"; defaultDocxFirstLineIndentCm: number;
+  defaultDocxPageSize: "letter" | "a4"; defaultIndentParagraphs: boolean; defaultDocxFirstLineIndentCm: number;
   openAfterCompile: boolean; includeTitlePageByDefault: boolean; includeTableOfContentsByDefault: boolean; showAdvancedOptions: boolean;
   saveToVaultByDefault: boolean; rememberExternalSaveFolder: boolean; lastExternalSaveFolder: string; revealAfterCompile: boolean;
-  defaultDownloadFormat: "docx" | "odt" | "pdf" | "epub" | "html" | "xml";
+  defaultDownloadFormat: "docx" | "odt" | "epub" | "html" | "markdown" | "xml";
   /* Stage 1/2 migration fields. */
   defaultManuscriptFolder: string; defaultExportFolder: string; defaultCompilePreset: "default" | "vellum";
 }
@@ -80,7 +82,7 @@ export const DEFAULT_SETTINGS: ManuscriptCompilerSettings = {
   keepTemporaryMarkdown: false, enableCompileLogs: true, maximumExportHistoryEntries: 50, exportHistory: [], compileLogs: [], configurationWarnings: [], onboardingCompleted: false,
   defaultManuscriptFolder: "", defaultExportFolder: "", defaultCompilePreset: "default",
   defaultStructurePreset: "novel-parts", defaultDocxStyle: "vellum", warnBeforeOverwrite: true, openAfterCompile: false,
-  defaultDocxPageSize: "a4", defaultDocxFirstLineIndentCm: 0.75,
+  defaultDocxPageSize: "a4", defaultIndentParagraphs: true, defaultDocxFirstLineIndentCm: 0.75,
   includeTitlePageByDefault: false, includeTableOfContentsByDefault: false, showAdvancedOptions: false
   , saveToVaultByDefault: false, rememberExternalSaveFolder: false, lastExternalSaveFolder: "", revealAfterCompile: false, defaultDownloadFormat: "docx"
 };

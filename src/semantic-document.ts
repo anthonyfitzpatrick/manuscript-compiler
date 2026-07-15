@@ -4,7 +4,7 @@ import type { CompileProfile } from "./settings";
 import type { ExportFormattingOptions } from "./export-types";
 import { structuralLines } from "./docx";
 
-export interface SemanticInline { text: string; bold?: boolean; italic?: boolean; }
+export interface SemanticInline { text: string; bold?: boolean; italic?: boolean; href?: string; }
 export type SemanticBlock =
   | { kind: "heading"; style: "title" | "author" | "front-matter" | "back-matter" | "part-number" | "part-title" | "chapter-number" | "chapter-title" | "body-heading"; inlines: SemanticInline[]; pageBreakBefore?: boolean; pageBreakAfter?: boolean }
   | { kind: "paragraph"; inlines: SemanticInline[]; first: boolean }
@@ -40,7 +40,7 @@ export function bodyBlocks(markdown: string): SemanticBlock[] {
 }
 
 export function inlineMarkdown(value: string): SemanticInline[] {
-  const output: SemanticInline[] = []; const pattern = /(\*\*\*|___)(.+?)\1|(\*\*|__)(.+?)\3|(?<!\*)\*([^*]+?)\*|_([^_]+?)_|\[([^\]]+)\]\([^)]+\)|`([^`]+)`/g; let offset = 0; let match: RegExpExecArray | null;
-  while ((match = pattern.exec(value))) { if (match.index > offset) output.push({ text: value.slice(offset, match.index) }); if (match[2]) output.push({ text: match[2], bold: true, italic: true }); else if (match[4]) output.push({ text: match[4], bold: true }); else if (match[5] || match[6]) output.push({ text: match[5] ?? match[6], italic: true }); else output.push({ text: match[7] ?? match[8] ?? "" }); offset = match.index + match[0].length; } if (offset < value.length) output.push({ text: value.slice(offset) }); return output.length ? output : [{ text: value }];
+  const output: SemanticInline[] = []; const pattern = /(\*\*\*|___)(.+?)\1|(\*\*|__)(.+?)\3|(?<!\*)\*([^*]+?)\*|_([^_]+?)_|\[([^\]]+)\]\(([^)]+)\)|`([^`]+)`/g; let offset = 0; let match: RegExpExecArray | null;
+  while ((match = pattern.exec(value))) { if (match.index > offset) output.push({ text: value.slice(offset, match.index) }); if (match[2]) output.push({ text: match[2], bold: true, italic: true }); else if (match[4]) output.push({ text: match[4], bold: true }); else if (match[5] || match[6]) output.push({ text: match[5] ?? match[6], italic: true }); else if (match[7]) output.push({ text: match[7], href: match[8] }); else output.push({ text: match[9] ?? "" }); offset = match.index + match[0].length; } if (offset < value.length) output.push({ text: value.slice(offset) }); return output.length ? output : [{ text: value }];
 }
 export function plainText(block: SemanticBlock): string { return "inlines" in block ? block.inlines.map((item) => item.text).join("") : block.kind === "scene-break" ? block.text : ""; }

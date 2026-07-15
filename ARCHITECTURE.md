@@ -33,7 +33,7 @@ Changing a filename or export format does not invalidate or reconstruct the prep
 - `workspace/compile-workspace-controller.ts` owns three-stage state, invalidation, cancellation, and duplicate-action suppression.
 - Workspace step modules render DOM controls only.
 - `semantic-document.ts` creates one format-independent block/section projection.
-- `native-exporters.ts` contains DOCX, ODT, PDF, EPUB, HTML, and XML byte generators.
+- `native-exporters.ts` contains DOCX, ODT, EPUB, HTML, Markdown, and XML byte generators.
 - `export-validators.ts` is the validator registry used before delivery.
 - `export-coordinator.ts` verifies the session, generates, validates, starts one download, and records history.
 - `browser-download.ts` owns the complete Blob/object-URL/temporary-anchor lifecycle.
@@ -43,7 +43,7 @@ No exporter accepts `ScannedBook`, a vault, a parser, or raw note paths. Exporte
 
 ## Export contracts
 
-`ExportFormat` is `docx | odt | pdf | epub | html | xml`. Each exporter returns `{ format, filename, mimeType, bytes, warnings }`. `EXPORTERS` and `EXPORT_VALIDATORS` are exhaustive registries keyed by that union.
+`ExportFormat` is `docx | odt | epub | html | markdown | xml`. Each exporter returns `{ format, filename, mimeType, bytes, warnings }`. `EXPORTERS` and `EXPORT_VALIDATORS` are exhaustive registries keyed by that union.
 
 The coordinator order is fixed:
 
@@ -59,9 +59,11 @@ Download-started is not filesystem-persisted. No final external path, Downloads 
 
 ## Format implementation
 
-DOCX retains the native WordprocessingML generator and structural validator. ODT and EPUB use `fflate` with the required first, uncompressed `mimetype` entry and controlled package paths. HTML and XML use UTF-8 `TextEncoder` output. PDF is generated internally as direct binary PDF objects, pages, content streams, xref, trailer, and EOF marker; it uses no runtime PDF dependency. PDF display codes use the built-in font's WinAnsi encoding, while a deterministic ToUnicode CMap maps every emitted byte back to Unicode for selection, search, and copy. Input is normalised to NFC; unsupported characters receive an intentional `?` glyph and one grouped informational issue rather than corrupting adjacent text.
+DOCX retains the native WordprocessingML generator and structural validator. ODT and EPUB use `fflate` with the required first, uncompressed `mimetype` entry and controlled package paths. HTML, Markdown, and XML use UTF-8 `TextEncoder` output. Markdown renders deterministically from the same `SemanticDocument`, preserving publication structure, emphasis, readable links, Unicode, and canonical paragraph spacing.
 
-The PDF layout pass uses one centimetre/millimetre-to-point conversion, exact A4 or Letter dimensions, and `page width - left margin - right margin` as its text measure. Wrapping uses the emitted Times-Roman or Helvetica glyph widths in their 1000-unit coordinate system. Semantic blocks retain their own alignment, leading, spacing, keep-with-next rules, and first-line indentation; paragraph continuations use the full measure. Part/Chapter heading groups and scene breaks are kept with following content where space permits. Generated page dictionaries carry bounded layout measurements so the validator can reject implausibly narrow columns and out-of-bounds text without screenshot analysis.
+The non-DOCX presentation renderers consume the projection's existing heading styles without reinterpreting the Book. ODT heading paragraphs reference explicit bold named styles. HTML and EPUB combine adjacent Part number/title and Chapter number/title blocks into semantic heading elements, while number-only and title-only modes retain distinct manuscript heading classes; every structural class resolves to `font-weight: 700` without a generic heading-weight rule. Markdown emits unescaped `#`, `##`, and `###` syntax without redundant emphasis, so raw source is not expected to look bold until rendered. The DOCX path is independent of these presentation rules and is deliberately unchanged.
+
+`indentParagraphs` is part of the shared export formatting options and therefore of the prepared-input signature; changing it invalidates the prepared preview without rescanning or rebuilding the semantic Book. The semantic projection continues to classify first paragraphs and later body paragraphs independently of presentation. DOCX and ODT map the resolved boolean and existing indent size to their Body Text styles, while HTML and EPUB map them to `.body-text`; First Paragraph remains zero-indent in every case, including after headings and scene breaks. Markdown deliberately ignores visual indentation preferences to preserve portable source, and XML carries no presentation preference. Missing persisted values migrate idempotently to `true`, preserving historical output and existing indent sizes; Vellum and Standard Manuscript also default to enabled, while Custom retains the current value.
 
 All ZIP entry names are constants or generated section filenames under controlled prefixes. User-controlled filenames never become ZIP paths. XML 1.0-invalid characters are removed, element text and attributes are escaped, HTML is escaped, and CSS font names are constrained before interpolation.
 
@@ -77,6 +79,8 @@ The XML interchange structure uses:
 ```
 
 Inline emphasis is represented with `span` elements carrying `bold` and/or `italic`. The schema deliberately excludes source paths, YAML, profile identifiers, settings, diagnostics, and compiler state.
+
+XML consumers should render semantic structural `heading` elements in bold. The interchange document does not add presentation elements or styling attributes to those headings.
 
 ## Output delivery and compatibility data
 
@@ -102,6 +106,6 @@ The explicit diagnostics command may write its redacted Markdown report through 
 - `tests/run.ts`: parsing, cleaning, inference, migration, state, privacy, UI view models, route identity, and repository hygiene.
 - `tests/docx-integration.ts`: semantic Word XML and package regression coverage.
 - `tests/exports.ts`: all exporter registries, formats, validators, escaping, forbidden-content checks, filenames, and browser-download cleanup.
-- `tests/large-manuscript-benchmark.ts`: prepares one large Book/SemanticDocument, then measures all six generators independently with a generous runaway guard.
+- `tests/large-manuscript-benchmark.ts`: prepares one large Book/SemanticDocument, then measures all six generators with indentation enabled and disabled without repeating manuscript preparation, under a generous runaway guard.
 
 Automated package tests do not establish application interoperability. Live gates remain unchecked in `MANUAL_TESTING.md` until performed.

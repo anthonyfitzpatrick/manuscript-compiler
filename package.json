@@ -1,7 +1,7 @@
 {
   "name": "obsidian-manuscript-compiler",
   "version": "0.9.2",
-  "description": "Validate, preview, and compile Obsidian book manuscripts to DOCX, ODT, PDF, EPUB, HTML, or XML.",
+  "description": "Validate, preview, and compile Obsidian book manuscripts to DOCX, ODT, EPUB, HTML, Markdown, or XML.",
   "main": "main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",
@@ -10,12 +10,15 @@
     "test": "node esbuild.test.mjs",
     "test:docx": "node esbuild.docx-test.mjs",
     "test:odt": "node esbuild.exports-test.mjs odt",
-    "test:pdf": "node esbuild.exports-test.mjs pdf",
     "test:epub": "node esbuild.exports-test.mjs epub",
     "test:html": "node esbuild.exports-test.mjs html",
+    "test:markdown": "node esbuild.exports-test.mjs markdown",
     "test:xml": "node esbuild.exports-test.mjs xml",
     "test:exports": "node esbuild.exports-test.mjs",
     "benchmark:large": "node esbuild.benchmark.mjs",
+    "lint": "eslint . --max-warnings 0",
+    "lint:fix": "eslint src manifest.json LICENSE --fix --max-warnings 0",
+    "check": "npm run typecheck && npm run lint && npm test && npm run test:exports",
     "package": "npm run typecheck && npm test && npm run test:docx && npm run test:exports && npm run build && node scripts/package.mjs",
     "package:validate": "node scripts/package.mjs --validate"
   },
@@ -26,11 +29,16 @@
     "docx",
     "publishing"
   ],
+  "author": "Anthony Fitzpatrick",
+  "repository": "https://github.com/anthonyfitzpatrick/manuscript-compiler",
   "license": "MIT",
   "devDependencies": {
+    "@typescript-eslint/parser": "^8.64.0",
     "@types/node": "^22.10.2",
     "esbuild": "^0.28.1",
-    "obsidian": "^1.8.7",
+    "eslint": "^9.39.4",
+    "eslint-plugin-obsidianmd": "^0.4.1",
+    "obsidian": "^1.13.1",
     "typescript": "^5.7.2"
   },
   "dependencies": {

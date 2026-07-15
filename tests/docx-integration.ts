@@ -16,7 +16,7 @@ const loaded = await loadFixtureTree("samples/Book 1 - Warden of Silence");
 const profile = createDefaultProfiles()[1]; profile.useParts = true; profile.chapterSource = "folders"; profile.sceneSeparator = "#"; profile.partDisplay = "word-title"; profile.chapterDisplay = "word-title"; profile.bodySectionAliases = ["Scene", "Manuscript", "Text", "Draft", "Body"];
 const session = await new CompilePreparationService(loaded.vault as never, profile, 250).prepareAuthoritative({ manuscriptRoot: loaded.root.path, profile, structurePreset: "novel-parts", purpose: "compile", route: "legacy-profile" });
 const { book } = session;
-const baseOptions: DocxOptions = { title: "Warden of Silence", author: "Anthony Fitzpatrick", titlePage: true, font: "Times New Roman", fontSize: 12, lineSpacing: 2, firstLineIndentCm: 1.27, partDisplay: "word-title", chapterDisplay: "word-title", chapterPageBreak: true };
+const baseOptions: DocxOptions = { title: "Warden of Silence", author: "Anthony Fitzpatrick", titlePage: true, font: "Times New Roman", fontSize: 12, lineSpacing: 2, indentParagraphs: true, firstLineIndentCm: 1.27, partDisplay: "word-title", chapterDisplay: "word-title", chapterPageBreak: true };
 const bytes = createManuscriptDocx(book, profile, baseOptions);
 assert.equal(validateDocxBytes(bytes).valid, true);
 assert.equal(String.fromCharCode(...bytes.slice(0, 2)), "PK");
@@ -37,6 +37,7 @@ const paragraphs = (xml: string, style: string): string[] => [...xml.matchAll(ne
 const paragraphText = (xml: string): string => xml.replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, "\"").replace(/&apos;/g, "'");
 const documentFor = (options: Partial<DocxOptions> = {}, selectedProfile = profile, selectedBook = book): string => strFromU8(unzipSync(createManuscriptDocx(selectedBook, selectedProfile, { ...baseOptions, ...options }))["word/document.xml"]);
 const stylesFor = (options: Partial<DocxOptions> = {}): string => strFromU8(unzipSync(createManuscriptDocx(book, profile, { ...baseOptions, ...options }))["word/styles.xml"]);
+const paragraphStyle = (xml: string, style: string): string => new RegExp(`<w:style w:type="paragraph" w:styleId="${style}">[\\s\\S]*?<\\/w:style>`).exec(xml)?.[0] ?? "";
 
 const breaksEnabled = documentFor({ chapterPageBreak: true });
 assert.ok(paragraphs(breaksEnabled, "ChapterNumber").every((item) => item.includes("<w:pageBreakBefore/>")));
@@ -128,9 +129,14 @@ assert.match(customStyles, /w:styleId="BodyText"[\s\S]*?w:ind w:firstLine="360"/
 assert.match(customStyles, /w:styleId="FirstParagraph"[\s\S]*?w:ind w:firstLine="0"/);
 assert.match(stylesFor({ firstLineIndentCm: 0.75 }), /w:styleId="BodyText"[\s\S]*?w:ind w:firstLine="425"/);
 assert.match(stylesFor({ firstLineIndentCm: 1.27 }), /w:styleId="BodyText"[\s\S]*?w:ind w:firstLine="720"/);
+const indentationDisabledStyles = stylesFor({ indentParagraphs: false, firstLineIndentCm: 1.27 });
+assert.match(paragraphStyle(indentationDisabledStyles, "BodyText"), /w:ind w:firstLine="0"/);
+assert.match(paragraphStyle(indentationDisabledStyles, "FirstParagraph"), /w:ind w:firstLine="0"/);
+for (const style of ["Title", "Author", "PartNumber", "PartTitle", "ChapterNumber", "ChapterTitle", "SceneBreak", "FrontMatterHeading", "BackMatterHeading"]) assert.equal(paragraphStyle(indentationDisabledStyles, style), paragraphStyle(styles, style), `${style} must not change with paragraph indentation`);
 assert.equal(centimetresToTwips(0.75), 425); assert.equal(centimetresToTwips(1.27), 720); assert.equal(centimetresToTwips(2.54), 1440);
 assert.match(documentFor({ pageSize: "a4" }), /w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440"/);
-assert.deepEqual(resolveDocxOptions({ title: "x", author: "y", font: "", fontSize: 100, lineSpacing: -2, firstLineIndentCm: 9, pageSize: "a4" }), { title: "x", author: "y", font: "Times New Roman", fontSize: 24, lineSpacing: 0.8, firstLineIndentCm: 3.81, pageSize: "a4", chapterPageBreak: true, titlePage: false, tableOfContents: false });
+assert.deepEqual(resolveDocxOptions({ title: "x", author: "y", font: "", fontSize: 100, lineSpacing: -2, firstLineIndentCm: 9, pageSize: "a4" }), { title: "x", author: "y", font: "Times New Roman", fontSize: 24, lineSpacing: 0.8, indentParagraphs: true, firstLineIndentCm: 3.81, pageSize: "a4", chapterPageBreak: true, titlePage: false, tableOfContents: false });
+assert.equal(resolveDocxOptions({ title: "x", author: "y", indentParagraphs: false }).indentParagraphs, false);
 assert.equal(resolveDocxOptions({ title: "x", author: "y" }).pageSize, "a4");
 
 const richScene = { ...book.parts[0].chapters[0].scenes[0], content: "**bold** *italic* ***both*** [readable link](https://example.invalid) `code` & <angle> “smart”—Östersund 雪" };

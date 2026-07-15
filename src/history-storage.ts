@@ -52,7 +52,7 @@ function historyEntry(item: HistoryCandidate, index: number): ExportHistoryEntry
     downloadStarted: typeof item.downloadStarted === "boolean" ? item.downloadStarted : undefined
   };
 }
-function isExportTarget(value: unknown): value is CompileLogEntry["exportFormats"] { return typeof value === "string" && ["markdown", "docx", "markdown-docx", "odt", "pdf", "epub", "html", "xml"].includes(value); }
+function isExportTarget(value: unknown): value is CompileLogEntry["exportFormats"] { return typeof value === "string" && ["markdown", "docx", "markdown-docx", "odt", "epub", "html", "xml"].includes(value); }
 function stringArray(value: unknown): string[] { return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : []; }
 function safeText(value: unknown, fallback: string, maximum: number): string { return typeof value === "string" ? value.slice(0, maximum) : fallback; }
 function safeNumber(value: unknown): number { return typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : 0; }

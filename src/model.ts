@@ -40,7 +40,7 @@ export interface MatterSection {
   documents: ManuscriptDocument[];
 }
 
-export interface Scene extends ManuscriptDocument {}
+export type Scene = ManuscriptDocument;
 
 /** Semantic Chapter. An absent number remains absent rather than becoming zero. */
 export interface Chapter {

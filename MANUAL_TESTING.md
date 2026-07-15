@@ -42,35 +42,41 @@ All items are intentionally unchecked. Record date, tester, Obsidian version, op
 - [ ] Open DOCX in LibreOffice and inspect the same structure.
 - [ ] Import DOCX into Vellum and confirm Parts/Chapters are recognised without duplicate titles.
 - [ ] Exercise Vellum, Standard Manuscript, Custom, A4/Letter, title page, TOC, Unicode, and every scene-break choice.
+- [ ] Export DOCX with **Indent first line of paragraphs** on and off; confirm later Body Text follows the toggle and configured size while First Paragraph, headings, and scene breaks remain zero-indent or otherwise unchanged.
+- [ ] With indentation enabled, confirm the first paragraph after a Chapter heading and after a scene break remains unindented.
 
 ## ODT
 
 - [ ] Open ODT in LibreOffice and inspect styles, page starts, title/matter order, paragraphs, emphasis, Unicode, and scene breaks.
+- [ ] Confirm title, front/back matter, Part number/title, and Chapter number/title paragraphs are visibly bold; confirm Author, body prose, and scene separators retain their existing normal weight.
 - [ ] Confirm A4/Letter and Standard Manuscript formatting behave as selected.
-
-## PDF
-
-- [ ] Open PDF in at least two independent viewers.
-- [ ] Confirm page size, wrapping, page flow, Parts/Chapters, matter, and scene breaks.
-- [ ] In each viewer, render, select, copy, and search `Östersund`, `Å Ä Ö å ä ö`, curly quotes, en/em dashes, `Café, naïve, façade, déjà vu`, and `© ® ™ € £ ¥`.
-- [ ] Confirm unsupported characters use the documented `?` fallback and produce one informational item, not mojibake or repeated warnings.
-- [ ] Confirm parentheses, backslashes, long wrapped paragraphs, and page breaks do not corrupt surrounding text.
-- [ ] Confirm no blank, duplicated, substituted, or missing glyphs within the documented WinAnsi character coverage.
-- [ ] Confirm A4 uses 2.54 cm margins and body lines use the full text measure without a narrow right-side void.
-- [ ] Confirm only the first line of later body paragraphs is indented; continuation lines return to the left margin, while first prose after Chapter headings and scene breaks is unindented.
-- [ ] Inspect Part/Chapter number-title spacing, heading-to-prose spacing, centred scene breaks, continuation pages, and bottom-margin clearance.
+- [ ] Export ODT with **Indent first line of paragraphs** on and off; confirm BodyText changes while FirstParagraph, headings, and scene breaks do not.
 
 ## EPUB
 
 - [ ] Open EPUB in at least two EPUB 3 readers.
 - [ ] Confirm navigation, spine order, title/matter/Part/Chapter order, reflow, emphasis, Unicode, and scene breaks.
+- [ ] Confirm combined and separate Part/Chapter heading modes are visibly bold while body prose and scene separators remain normal weight.
+- [ ] Export EPUB with **Indent first line of paragraphs** on and off; confirm later body paragraphs change and first paragraphs after headings and scene breaks remain unindented.
 - [ ] Run EPUBCheck separately if available and record its version/results; it is not a runtime requirement.
+
+## Markdown
+
+- [ ] Open Markdown in at least two text editors and confirm title, author, matter, Parts, Chapters, Scenes, emphasis, readable links, Unicode, and scene separators.
+- [ ] Inspect both source and rendered views: source must use clean, unescaped `#`/`##` heading syntax without `**`; visible bold is expected only in the rendered view.
+- [ ] Confirm there is no YAML, project metadata, dashboard content, Synopsis, Revision Notes, Part 0, or Chapter 0.
+- [ ] Confirm paragraph spacing is canonical and the file ends with exactly one newline.
+- [ ] Confirm Markdown shows the portability note, offers no indentation toggle or size control, and contains no indentation spaces, tabs, HTML, or CSS workaround.
 
 ## HTML and XML
 
-- [ ] Open HTML offline in multiple browsers; confirm embedded styling, navigation, structure, Unicode, and no network requests.
+- [ ] Open HTML offline in multiple browsers; confirm combined and separate Part/Chapter headings are visibly bold, body prose and scene separators remain normal weight, and there are no network requests.
+- [ ] Export HTML with **Indent first line of paragraphs** on and off; confirm later body paragraphs change and first paragraphs after headings and scene breaks remain unindented.
+- [ ] With indentation off, inspect front matter and a copyright page; confirm legal text, ISBN, publisher, edition, and rights paragraphs are unindented while spacing remains readable.
 - [ ] Open XML in at least two XML-aware tools and inspect namespace, schema version, hierarchy, emphasis, escaping, and deterministic ordering.
+- [ ] Confirm XML Part, Chapter, and heading elements remain semantic and contain no CSS, HTML, Markdown markers, or presentation attributes.
 - [ ] Confirm XML contains no vault paths, YAML, settings, profile IDs, or diagnostics.
+- [ ] Confirm XML shows the presentation-neutral note, offers no indentation toggle or size control, and contains no indentation preference or presentation attributes.
 
 ## Privacy and independence
 

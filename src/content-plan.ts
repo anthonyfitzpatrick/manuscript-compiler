@@ -45,7 +45,7 @@ export function createContentPlan(root: TFolder, preset: StructurePreset): Conte
     children.forEach((child, order) => {
       const kind = child instanceof TFolder ? "folder" : "note";
       const suggestion = inheritedMatter ? { role: inheritedMatter } : inferredRole(child, semanticDepth, preset, normalizedRootName); const excluded = suggestion.role === "ignore";
-      items.push({ path: child.path, parentPath: folder.path, name: kind === "note" ? (child as TFile).basename : child.name, kind, role: suggestion.role, detectedRole: suggestion.role, included: !excluded, order, exclusionReason: suggestion.reason });
+      items.push({ path: child.path, parentPath: folder.path, name: child instanceof TFile ? child.basename : child.name, kind, role: suggestion.role, detectedRole: suggestion.role, included: !excluded, order, exclusionReason: suggestion.reason });
       if (child instanceof TFolder) {
         const childMatter = matterContext(child, suggestion.role, inheritedMatter);
         visit(child, semanticDepth + (suggestion.role === "transparent" || suggestion.role === "front-matter" || suggestion.role === "back-matter" || suggestion.role === "ignore" ? 0 : 1), childMatter);
@@ -120,7 +120,7 @@ export function applyMatterRoleInheritance(plan: ContentPlanItem[], folderPath: 
 }
 export function isPlanItemIncluded(item: ContentPlanItem, plan: ContentPlanItem[], rootPath: string): boolean { const byPath = new Map(plan.map((candidate) => [candidate.path, candidate])); let current: ContentPlanItem | undefined = item; while (current) { if (!current.included || current.role === "ignore") return false; if (current.parentPath === rootPath) break; current = byPath.get(current.parentPath); } return true; }
 
-function frontmatter(markdown: string): Record<string, unknown> { const match = markdown.replace(/^\uFEFF/, "").match(/^---[\t ]*\r?\n([\s\S]*?)\r?\n(?:---|\.\.\.)[\t ]*(?:\r?\n|$)/); if (!match) return {}; try { const value = parseYaml(match[1]); if (!value || typeof value !== "object" || Array.isArray(value)) return {}; return Object.fromEntries(Object.entries(value as Record<string, unknown>).map(([key, item]) => [normalizedProjectName(key), item])); } catch { return {}; } }
+function frontmatter(markdown: string): Record<string, unknown> { const match = markdown.replace(/^\uFEFF/, "").match(/^---[\t ]*\r?\n([\s\S]*?)\r?\n(?:---|\.\.\.)[\t ]*(?:\r?\n|$)/); if (!match) return {}; try { const value: unknown = parseYaml(match[1]); if (!value || typeof value !== "object" || Array.isArray(value)) return {}; return Object.fromEntries(Object.entries(value).map(([key, item]) => [normalizedProjectName(key), item])); } catch { return {}; } }
 
 /**
  * Reconstructs scanner output using nearest included structural ancestors. This

@@ -2,9 +2,9 @@
 export interface DownloadFileRequest { filename: string; bytes: Uint8Array; mimeType: string; }
 export interface DownloadFileResult { started: boolean; filename: string; error?: string; }
 export interface DownloadEnvironment {
-  createObjectURL(blob: Blob): string; revokeObjectURL(url: string): void;
+  createObjectURL(blob: Blob, anchor: HTMLAnchorElement): string; revokeObjectURL(url: string, anchor: HTMLAnchorElement): void;
   createAnchor(): HTMLAnchorElement; append(anchor: HTMLAnchorElement): void;
-  defer(action: () => void): void;
+  defer(action: () => void, anchor: HTMLAnchorElement): void;
 }
 
 export class BrowserDownloadService {
@@ -12,11 +12,12 @@ export class BrowserDownloadService {
   async download(request: DownloadFileRequest): Promise<DownloadFileResult> {
     const filename = safeLeaf(request.filename); let url = ""; let anchor: HTMLAnchorElement | undefined; let clicked = false;
     try {
-      const copy = request.bytes.slice(); const blob = new Blob([copy], { type: request.mimeType }); url = this.environment.createObjectURL(blob); anchor = this.environment.createAnchor(); anchor.href = url; anchor.download = filename; anchor.style.display = "none"; this.environment.append(anchor); anchor.click(); clicked = true; return { started: true, filename };
-    } catch (error) { return { started: false, filename, error: error instanceof Error ? error.message : "The host blocked the download." }; }
-    finally { anchor?.remove(); if (url) { if (clicked) this.environment.defer(() => this.environment.revokeObjectURL(url)); else this.environment.revokeObjectURL(url); } }
+      const copy = request.bytes.slice(); const blob = new Blob([copy], { type: request.mimeType }); anchor = this.environment.createAnchor(); url = this.environment.createObjectURL(blob, anchor); anchor.href = url; anchor.download = filename; anchor.addClass("manuscript-download-anchor"); this.environment.append(anchor); anchor.click(); clicked = true; return { started: true, filename };
+    } catch { return { started: false, filename, error: "The host blocked the download. Try again or use the platform share or save controls." }; }
+    finally { anchor?.remove(); if (url && anchor) { const cleanupAnchor = anchor; if (clicked) this.environment.defer(() => this.environment.revokeObjectURL(url, cleanupAnchor), cleanupAnchor); else this.environment.revokeObjectURL(url, cleanupAnchor); } }
   }
 }
 
-function browserEnvironment(): DownloadEnvironment { return { createObjectURL: (blob) => URL.createObjectURL(blob), revokeObjectURL: (url) => URL.revokeObjectURL(url), createAnchor: () => document.createElement("a"), append: (anchor) => document.body.appendChild(anchor), defer: (action) => window.setTimeout(action, 1000) }; }
-function safeLeaf(value: string): string { let leaf = value.replace(/^.*[\\/]/, "").replace(/[\u0000-\u001f\u007f\\/:*?"<>|]/g, "-").trim().replace(/[. ]+$/g, ""); if (/^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(leaf)) leaf = `_${leaf}`; return leaf || "Manuscript"; }
+function browserEnvironment(): DownloadEnvironment { return { createObjectURL: (blob) => URL.createObjectURL(blob), revokeObjectURL: (url) => URL.revokeObjectURL(url), createAnchor: () => createEl("a"), append: (anchor) => anchor.doc.body.appendChild(anchor), defer: (action, anchor) => anchor.win.setTimeout(action, 1000) }; }
+function safeLeaf(value: string): string { let leaf = replaceUnsafeFilenameCharacters(value.replace(/^.*[\\/]/, "")).trim().replace(/[. ]+$/g, ""); if (/^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(leaf)) leaf = `_${leaf}`; return leaf || "Manuscript"; }
+function replaceUnsafeFilenameCharacters(value: string): string { return [...value].map((character) => { const code = character.charCodeAt(0); return code <= 0x1f || code === 0x7f || '\\/:*?"<>|'.includes(character) ? "-" : character; }).join(""); }
