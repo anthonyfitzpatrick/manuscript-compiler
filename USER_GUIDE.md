@@ -171,45 +171,9 @@ Keyboard users can Tab to controls, use Space/Enter on buttons and toggles, and 
 
 <!-- SCREENSHOT:10 -->
 
-<p style="color:#cc0000; font-size:1.5em; font-weight:bold; margin-bottom:0;">
-📸 SCREENSHOT REQUIRED — #10
-</p>
+![The Ignored project notes review showing excluded items and their reasons](docs/images/10-ignored-project-notes.png)
 
-<p style="color:#cc0000; font-weight:bold;">
-CAPTURE
-</p>
-
-<p style="color:#cc0000;">
-Return to normal review mode, select the Ignored review, and capture a safe sample containing grouped project notes.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-SHOW
-</p>
-
-<ul style="color:#cc0000;">
-<li>The Ignored review selected</li>
-<li>A collapsed Development or Research folder</li>
-<li>The ignored item count and exclusion reason</li>
-<li>At least one included manuscript item for contrast</li>
-<li>No private note titles or project names</li>
-</ul>
-
-<p style="color:#cc0000; font-weight:bold;">
-PURPOSE
-</p>
-
-<p style="color:#cc0000;">
-Explains that ignored notes remain unchanged and reviewable while project material is excluded from the prepared Book.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-WHEN REPLACING
-</p>
-
-<p style="color:#cc0000;">
-Delete this entire placeholder and replace it with the final screenshot and caption.
-</p>
+*Open **Ignored project notes** to review excluded material and the reason each item was left out of the prepared book.*
 
 ---
 
