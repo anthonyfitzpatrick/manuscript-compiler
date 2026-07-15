@@ -27,6 +27,11 @@
 .manuscript-issue-error, .manuscript-issues-error { color: var(--text-error); }
 .manuscript-issue-information, .manuscript-issues-information { color: var(--text-muted); }
 .manuscript-profile-json { width: 100%; min-height: 360px; font-family: var(--font-monospace); }
+.manuscript-compiler-settings > .setting-item:not(.setting-item-heading),
+.manuscript-compiler-settings > details > .setting-item { min-height: 0; margin-bottom: var(--size-4-1); padding-block: var(--size-4-2); }
+.manuscript-compiler-settings > .setting-item-heading { margin: var(--size-4-4) 0 var(--size-4-2); padding-block: 0; }
+.manuscript-compiler-settings > details { margin-top: var(--size-4-2); }
+.manuscript-compiler-settings > details > summary { margin-bottom: var(--size-4-1); }
 .manuscript-support-panel { width: 100%; box-sizing: border-box; margin-top: var(--size-4-5); padding: var(--size-4-3); border: 1px solid var(--background-modifier-border); border-radius: var(--radius-m); background: var(--background-secondary); }
 .manuscript-support-panel > .setting-item-heading { margin-bottom: var(--size-4-2); padding-top: 0; }
 .manuscript-support-panel > .setting-item-heading .setting-item-name { font-size: var(--font-ui-small); }

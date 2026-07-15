@@ -104,7 +104,7 @@ export class ManuscriptCompilerSettingTab extends PluginSettingTab {
   constructor(app: App, private readonly plugin: ManuscriptCompilerPlugin) { super(app, plugin); }
   display(): void { this.renderSettings(); }
   private renderSettings(): void {
-    const container = this.containerEl; const settings = this.plugin.settings; const profile = this.plugin.getActiveProfile(); container.empty();
+    const container = this.containerEl; const settings = this.plugin.settings; const profile = this.plugin.getActiveProfile(); container.empty(); container.addClass("manuscript-compiler-settings");
     new Setting(container).setName("Compiler").addButton((button) => button.setButtonText("Open compiler").setCta().onClick(() => this.plugin.openCompiler()));
     new Setting(container).setName("Defaults").setHeading(); this.text(container, "Default manuscript folder", settings.defaultManuscriptFolder, (value) => { settings.defaultManuscriptFolder = value; });
     new Setting(container).setName("Default structure").addDropdown((dropdown) => { Object.entries(STRUCTURE_PRESET_NAMES).forEach(([value, label]) => { dropdown.addOption(value, label); }); dropdown.setValue(settings.defaultStructurePreset).onChange((value) => { settings.defaultStructurePreset = value as StructurePreset; void this.plugin.saveSettings(); }); });
