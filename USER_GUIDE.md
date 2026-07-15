@@ -179,45 +179,9 @@ Keyboard users can Tab to controls, use Space/Enter on buttons and toggles, and 
 
 <!-- SCREENSHOT:11 -->
 
-<p style="color:#cc0000; font-size:1.5em; font-weight:bold; margin-bottom:0;">
-📸 SCREENSHOT REQUIRED — #11
-</p>
+![The Warnings review showing affected chapters and author-facing explanations](docs/images/11-warnings-review.png)
 
-<p style="color:#cc0000; font-weight:bold;">
-CAPTURE
-</p>
-
-<p style="color:#cc0000;">
-Select the Warnings review for a safe sample containing at least one non-blocking structural warning.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-SHOW
-</p>
-
-<ul style="color:#cc0000;">
-<li>The Warnings review selected</li>
-<li>The warning summary count</li>
-<li>A stable warning category and concise author-facing explanation</li>
-<li>The related structural row where available</li>
-<li>No manuscript prose, YAML values, or absolute vault paths</li>
-</ul>
-
-<p style="color:#cc0000; font-weight:bold;">
-PURPOSE
-</p>
-
-<p style="color:#cc0000;">
-Shows where authors review structural concerns before preparing the final export without exposing manuscript content in diagnostics.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-WHEN REPLACING
-</p>
-
-<p style="color:#cc0000;">
-Delete this entire placeholder and replace it with the final screenshot and caption.
-</p>
+*Open **Warnings** to review structural concerns and their explanations before continuing to Create file.*
 
 ---
 
