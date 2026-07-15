@@ -155,46 +155,9 @@ Keyboard users can Tab to controls, use Space/Enter on buttons and toggles, and 
 
 <!-- SCREENSHOT:08 -->
 
-<p style="color:#cc0000; font-size:1.5em; font-weight:bold; margin-bottom:0;">
-📸 SCREENSHOT REQUIRED — #08
-</p>
+![Correction mode showing inclusion checkboxes, folder disclosure, role selectors, and ordering controls](docs/images/08-correct-structure.png)
 
-<p style="color:#cc0000; font-weight:bold;">
-CAPTURE
-</p>
-
-<p style="color:#cc0000;">
-Activate Correct structure, expand one representative manuscript folder, and capture the Contents screen while correction mode is active.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-SHOW
-</p>
-
-<ul style="color:#cc0000;">
-<li>The active “Finish correcting structure” button</li>
-<li>An inclusion toggle</li>
-<li>A note or folder type selector</li>
-<li>Folder disclosure controls</li>
-<li>Move up and Move down controls</li>
-<li>Ordinary review controls remaining visually secondary</li>
-</ul>
-
-<p style="color:#cc0000; font-weight:bold;">
-PURPOSE
-</p>
-
-<p style="color:#cc0000;">
-Explains the active correction state and the controls used to change inclusion, semantic roles, and order.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-WHEN REPLACING
-</p>
-
-<p style="color:#cc0000;">
-Delete this entire placeholder and replace it with the final screenshot and caption.
-</p>
+*In correction mode, use the checkboxes, role selectors, disclosure controls, and arrows to change inclusion, structure, and order.*
 
 ---
 
