@@ -72,44 +72,9 @@ In File Explorer, right-click the exact book folder and choose **Compile manuscr
 
 <!-- SCREENSHOT:02 -->
 
-<p style="color:#cc0000; font-size:1.5em; font-weight:bold; margin-bottom:0;">
-📸 SCREENSHOT REQUIRED — #02
-</p>
+![Compile manuscript from this folder in the Obsidian File Explorer context menu](docs/images/02-folder-context-menu.png)
 
-<p style="color:#cc0000; font-weight:bold;">
-CAPTURE
-</p>
-
-<p style="color:#cc0000;">
-Capture the File Explorer context menu immediately after right-clicking the exact folder that represents one book.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-SHOW
-</p>
-
-<ul style="color:#cc0000;">
-<li>The selected book folder visible behind the menu</li>
-<li>The “Compile manuscript from this folder” command in full</li>
-<li>Enough of the expanded folder tree to show that a folder, not an individual note, was selected</li>
-<li>No unrelated private vault or project names</li>
-</ul>
-
-<p style="color:#cc0000; font-weight:bold;">
-PURPOSE
-</p>
-
-<p style="color:#cc0000;">
-Teaches the preferred folder-first workflow and shows that the clicked folder becomes the authoritative manuscript root.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-WHEN REPLACING
-</p>
-
-<p style="color:#cc0000;">
-Delete this entire placeholder and replace it with the final screenshot and caption.
-</p>
+*Right-click a book folder and choose **Compile manuscript from this folder** to use it as the manuscript root.*
 
 ---
 
