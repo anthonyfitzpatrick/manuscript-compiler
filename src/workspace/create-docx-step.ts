@@ -10,7 +10,7 @@
  * synchronous/non-cancellable and must remain focus-visible, scoped, and responsive
  * on desktop/mobile. Future formats must update metadata, controls, and tests together.
  */
-import { Setting } from "obsidian";
+import { Setting, type DropdownComponent } from "obsidian";
 import type { DocxStylePreset, StructuralDisplay } from "../settings";
 import { EXPORT_FORMAT_DETAILS, EXPORT_FORMATS, type ExportFormat } from "../export-types";
 import { exportFilename } from "../export-filename";
@@ -92,9 +92,10 @@ function renderFormatting(container: HTMLElement, controller: CompileWorkspaceCo
   else new Setting(container).setName("Document style").addDropdown((dropdown) => dropdown.addOption("vellum", "Vellum").addOption("standard", "Standard manuscript").addOption("custom", "Custom").setValue(request.docxPreset).onChange((value) => invalidate(controller, actions, () => controller.setDocxPreset(value as DocxStylePreset))));
   if (supportsParagraphIndentation(format)) {
     let indentSize: Setting | undefined;
-    new Setting(container).setName("Indent first line of paragraphs").setDesc("Indent only the first line of later body paragraphs; first paragraphs after headings and scene breaks stay flush left.").addToggle((toggle) => toggle.setValue(formatting.indentParagraphs).onChange((value) => { invalidate(controller, actions, () => controller.setFormatting({ indentParagraphs: value })); if (indentSize) indentSize.settingEl.hidden = !value; }));
-    indentSize = new Setting(container).setName("First-line indent (cm)").addDropdown((dropdown) => dropdown.addOption("0", "None").addOption("0.75", "0.75 cm").addOption("1.27", "1.27 cm").setValue(String(formatting.firstLineIndentCm)).onChange((value) => invalidate(controller, actions, () => controller.setFormatting({ firstLineIndentCm: Number(value) }))));
-    indentSize.settingEl.hidden = !formatting.indentParagraphs;
+    let indentDropdown: DropdownComponent | undefined;
+    new Setting(container).setName("Indent first line of paragraphs").setDesc("Indent only the first line of later body paragraphs; first paragraphs after headings and scene breaks stay flush left.").addToggle((toggle) => toggle.setValue(formatting.indentParagraphs).onChange((value) => { invalidate(controller, actions, () => controller.setFormatting({ indentParagraphs: value })); indentDropdown?.setDisabled(!value); indentSize?.settingEl.toggleClass("is-disabled", !value); }));
+    indentSize = new Setting(container).setName("First-line indent (cm)").addDropdown((dropdown) => { indentDropdown = dropdown; return dropdown.addOption("0", "None").addOption("0.75", "0.75 cm").addOption("1.27", "1.27 cm").setValue(String(formatting.firstLineIndentCm)).setDisabled(!formatting.indentParagraphs).onChange((value) => invalidate(controller, actions, () => controller.setFormatting({ firstLineIndentCm: Number(value) }))); });
+    indentSize.settingEl.addClass("manuscript-indent-size"); indentSize.settingEl.toggleClass("is-disabled", !formatting.indentParagraphs);
   }
   new Setting(container).setName("Scene break").addDropdown((dropdown) => { const separator = effectiveSeparator(controller); return dropdown.addOption("#", "#").addOption("*", "*").addOption("***", "***").addOption("* * *", "* * *").addOption("", "Blank line").addOption("custom", "Custom").setValue(sceneBreakValues.has(separator) ? separator : "custom").onChange((value) => { if (value !== "custom") invalidate(controller, actions, () => controller.setSceneSeparator(value)); }); });
   new Setting(container).setName("Add title page").addToggle((toggle) => toggle.setValue(formatting.titlePage).onChange((value) => invalidate(controller, actions, () => controller.setFormatting({ titlePage: value }))));

@@ -132,6 +132,8 @@
 .manuscript-export-summary { display: grid; grid-template-columns: max-content 1fr; gap: var(--size-4-2) var(--size-4-5); padding: var(--size-4-4); border-radius: var(--radius-m); background: var(--background-secondary); }
 .manuscript-export-summary dt { font-weight: var(--font-semibold); }
 .manuscript-export-summary dd { margin: 0; }
+.manuscript-indent-size.is-disabled .setting-item-name { color: var(--text-faint); }
+.manuscript-indent-size.is-disabled .setting-item-control { opacity: .55; }
 .manuscript-format-selector { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--size-4-3); margin: var(--size-4-3) 0 var(--size-4-5); }
 .manuscript-format-option { display: grid; grid-template-columns: 64px minmax(0, 1fr); align-items: center; gap: var(--size-4-3); min-height: 64px; width: 100%; padding: var(--size-4-3) var(--size-4-4); border: 2px solid var(--background-modifier-border); border-radius: var(--radius-m); background: var(--background-primary); color: var(--text-normal); text-align: start; box-shadow: none; }
 .manuscript-format-option strong { font-size: var(--font-ui-medium); letter-spacing: .02em; }
