@@ -193,45 +193,9 @@ Create file shows the prepared Book summary, six format cards, relevant formatti
 
 <!-- SCREENSHOT:12 -->
 
-<p style="color:#cc0000; font-size:1.5em; font-weight:bold; margin-bottom:0;">
-📸 SCREENSHOT REQUIRED — #12
-</p>
+![The Create file stage showing the prepared book summary and all six export formats](docs/images/12-create-file-overview.png)
 
-<p style="color:#cc0000; font-weight:bold;">
-CAPTURE
-</p>
-
-<p style="color:#cc0000;">
-Capture the format-selection area at the top of Create file before opening Advanced formatting.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-SHOW
-</p>
-
-<ul style="color:#cc0000;">
-<li>All six format cards: DOCX, ODT, EPUB, HTML, Markdown, and XML</li>
-<li>One clearly selected card</li>
-<li>The selected card's visible focus or selection treatment</li>
-<li>The prepared Book summary above the selector</li>
-<li>The filename extension corresponding to the selected format</li>
-</ul>
-
-<p style="color:#cc0000; font-weight:bold;">
-PURPOSE
-</p>
-
-<p style="color:#cc0000;">
-Introduces the six export choices and shows that changing format updates the filename while retaining the same prepared Book.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-WHEN REPLACING
-</p>
-
-<p style="color:#cc0000;">
-Delete this entire placeholder and replace it with the final screenshot and caption.
-</p>
+*Create file keeps the prepared book summary visible while you choose DOCX, ODT, EPUB, HTML, Markdown, or XML. DOCX is selected here.*
 
 ---
 
