@@ -314,45 +314,9 @@ Choose `#`, `*`, `***`, `* * *`, a styled blank line, or Custom. Scene separator
 
 <!-- SCREENSHOT:23 -->
 
-<p style="color:#cc0000; font-size:1.5em; font-weight:bold; margin-bottom:0;">
-📸 SCREENSHOT REQUIRED — #23
-</p>
+![Back matter correction controls with the Front and back matter container expanded](docs/images/23-back-matter-structure.png)
 
-<p style="color:#cc0000; font-weight:bold;">
-CAPTURE
-</p>
-
-<p style="color:#cc0000;">
-Capture Contents for the same safe sample with the back-matter branch expanded and correctly classified.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-SHOW
-</p>
-
-<ul style="color:#cc0000;">
-<li>The Back matter structural role</li>
-<li>An About the Author note</li>
-<li>An Acknowledgements or Also by note</li>
-<li>Inclusion state and ordering</li>
-<li>The boundary after the final manuscript Chapter or Scene</li>
-</ul>
-
-<p style="color:#cc0000; font-weight:bold;">
-PURPOSE
-</p>
-
-<p style="color:#cc0000;">
-Shows which notes are exported after the manuscript body and how their inclusion and order are reviewed.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-WHEN REPLACING
-</p>
-
-<p style="color:#cc0000;">
-Delete this entire placeholder and replace it with the final screenshot and caption.
-</p>
+*Review which notes will follow the manuscript body, including their inclusion, Back matter roles, and order.*
 
 ---
 
