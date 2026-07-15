@@ -245,45 +245,9 @@ Click a card or focus the selected card and use Left/Right or Up/Down arrows. Ho
 
 <!-- SCREENSHOT:18 -->
 
-<p style="color:#cc0000; font-size:1.5em; font-weight:bold; margin-bottom:0;">
-📸 SCREENSHOT REQUIRED — #18
-</p>
+![XML selected with structured manuscript guidance and advanced content options](docs/images/18-xml-format.png)
 
-<p style="color:#cc0000; font-weight:bold;">
-CAPTURE
-</p>
-
-<p style="color:#cc0000;">
-Select XML on Create file and capture its selected card and presentation-neutral guidance.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-SHOW
-</p>
-
-<ul style="color:#cc0000;">
-<li>The XML card in its obvious selected state</li>
-<li>The structured interchange description</li>
-<li>The note that paragraph indentation is controlled by the consuming application</li>
-<li>The resolved filename ending in `.xml`</li>
-<li>The “Create and download XML” primary button</li>
-</ul>
-
-<p style="color:#cc0000; font-weight:bold;">
-PURPOSE
-</p>
-
-<p style="color:#cc0000;">
-Explains XML's semantic interchange role and why it has no presentation or typography controls.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-WHEN REPLACING
-</p>
-
-<p style="color:#cc0000;">
-Delete this entire placeholder and replace it with the final screenshot and caption.
-</p>
+*XML preserves structured manuscript content for interchange; paragraph presentation is controlled by the application that consumes the XML.*
 
 ---
 
