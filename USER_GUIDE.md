@@ -229,45 +229,9 @@ Click a card or focus the selected card and use Left/Right or Up/Down arrows. Ho
 
 <!-- SCREENSHOT:16 -->
 
-<p style="color:#cc0000; font-size:1.5em; font-weight:bold; margin-bottom:0;">
-📸 SCREENSHOT REQUIRED — #16
-</p>
+![HTML selected with web-readable, indentation, scene break, title page, table of contents, and advanced formatting controls](docs/images/16-html-format.png)
 
-<p style="color:#cc0000; font-weight:bold;">
-CAPTURE
-</p>
-
-<p style="color:#cc0000;">
-Select HTML on Create file using keyboard navigation and capture the selected card with a visible focus ring.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-SHOW
-</p>
-
-<ul style="color:#cc0000;">
-<li>The HTML card selected</li>
-<li>A visible keyboard focus ring distinct from the selected state</li>
-<li>The web-readable format description</li>
-<li>The resolved filename ending in `.html`</li>
-<li>The “Create and download HTML” primary button</li>
-</ul>
-
-<p style="color:#cc0000; font-weight:bold;">
-PURPOSE
-</p>
-
-<p style="color:#cc0000;">
-Demonstrates HTML selection, automatic extension changes, and keyboard-accessible format navigation.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-WHEN REPLACING
-</p>
-
-<p style="color:#cc0000;">
-Delete this entire placeholder and replace it with the final screenshot and caption.
-</p>
+*Selecting HTML reveals its web-readable formatting controls for a standalone webpage.*
 
 ---
 
