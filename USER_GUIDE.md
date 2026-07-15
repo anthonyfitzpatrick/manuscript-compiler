@@ -221,45 +221,9 @@ Click a card or focus the selected card and use Left/Right or Up/Down arrows. Ho
 
 <!-- SCREENSHOT:15 -->
 
-<p style="color:#cc0000; font-size:1.5em; font-weight:bold; margin-bottom:0;">
-📸 SCREENSHOT REQUIRED — #15
-</p>
+![EPUB selected with reflowable ebook, indentation, scene break, title page, table of contents, and advanced formatting controls](docs/images/15-epub-format.png)
 
-<p style="color:#cc0000; font-weight:bold;">
-CAPTURE
-</p>
-
-<p style="color:#cc0000;">
-Select EPUB on Create file and capture the selected card together with its reflowable-book controls and action.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-SHOW
-</p>
-
-<ul style="color:#cc0000;">
-<li>The EPUB card in its obvious selected state</li>
-<li>The reflowable ebook description</li>
-<li>The resolved filename ending in `.epub`</li>
-<li>The “Create and download EPUB” primary button</li>
-<li>The title-page and table-of-contents choices where visible</li>
-</ul>
-
-<p style="color:#cc0000; font-weight:bold;">
-PURPOSE
-</p>
-
-<p style="color:#cc0000;">
-Shows the EPUB choice and the controls relevant to a reflowable ebook package.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-WHEN REPLACING
-</p>
-
-<p style="color:#cc0000;">
-Delete this entire placeholder and replace it with the final screenshot and caption.
-</p>
+*Selecting EPUB reveals its reflowable-ebook controls and changes the primary action to **Create and download EPUB**.*
 
 ---
 
