@@ -135,15 +135,14 @@ export class ManuscriptCompilerSettingTab extends PluginSettingTab {
     identity.createEl("p", { text: SUPPORT_COMPANY });
     const actions = panel.createDiv({ cls: "manuscript-support-actions" });
     for (const action of SUPPORT_ACTIONS) {
-      const button = new ButtonComponent(actions).setButtonText(action.label).setTooltip(action.label).setClass("manuscript-support-button");
+      const button = new ButtonComponent(actions).setTooltip(action.label).setClass("manuscript-support-button");
       if (action.label === "Buy me a coffee") {
-        button.setClass("manuscript-support-button-coffee");
         const icon = button.buttonEl.createSpan({ cls: "manuscript-support-bmc-icon", attr: { "aria-hidden": "true" } });
         icon.createEl("img", { attr: { src: buyMeACoffeeArtwork, alt: "" } });
-        button.buttonEl.prepend(icon);
       } else {
         button.setIcon(action.icon);
       }
+      button.buttonEl.createSpan({ cls: "manuscript-support-button-label", text: action.label });
       button.buttonEl.setAttribute("aria-label", action.label);
       button.onClick(() => {
         if ("notice" in action) { new Notice(action.notice); return; }
