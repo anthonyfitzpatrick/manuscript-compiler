@@ -102,44 +102,11 @@ Confirm the selected folder and choose the structure preset closest to the proje
 
 <!-- SCREENSHOT:05 -->
 
-<p style="color:#cc0000; font-size:1.5em; font-weight:bold; margin-bottom:0;">
-📸 SCREENSHOT REQUIRED — #05
-</p>
+You only need the folder chooser when you want to change the selected folder or when you opened Manuscript Compiler without using **Compile manuscript from this folder** in the File Explorer right-click menu.
 
-<p style="color:#cc0000; font-weight:bold;">
-CAPTURE
-</p>
+![The manuscript folder chooser filtered to Warden of Silence](docs/images/05-folder-chooser.png)
 
-<p style="color:#cc0000;">
-Open Manuscript Compiler from the command palette, invoke the folder chooser, select a safe sample book folder, and capture the selected result on the Manuscript screen.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-SHOW
-</p>
-
-<ul style="color:#cc0000;">
-<li>The selected book folder name and safe vault-relative context</li>
-<li>A sample tree containing front matter, a transparent Manuscript folder, a Part, a Chapter, Scenes, back matter, and one project folder</li>
-<li>The control used to change the selected folder</li>
-<li>No private vault names or unrelated personal folders</li>
-</ul>
-
-<p style="color:#cc0000; font-weight:bold;">
-PURPOSE
-</p>
-
-<p style="color:#cc0000;">
-Demonstrates how authors who start outside File Explorer choose the exact folder that represents one book.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-WHEN REPLACING
-</p>
-
-<p style="color:#cc0000;">
-Delete this entire placeholder and replace it with the final screenshot and caption.
-</p>
+*Search for and select the folder that represents the complete book. The chosen folder becomes the manuscript root.*
 
 ---
 
