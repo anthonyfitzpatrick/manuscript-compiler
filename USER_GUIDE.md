@@ -12,44 +12,9 @@ The workflow has three stages:
 
 <!-- SCREENSHOT:01 -->
 
-<p style="color:#cc0000; font-size:1.5em; font-weight:bold; margin-bottom:0;">
-📸 SCREENSHOT REQUIRED — #01
-</p>
+![Manuscript Compiler installed and enabled in Obsidian's Community plugins settings](docs/images/01-manuscript-compiler-enabled.png)
 
-<p style="color:#cc0000; font-weight:bold;">
-CAPTURE
-</p>
-
-<p style="color:#cc0000;">
-Capture Obsidian Settings → Community plugins after Manuscript Compiler has been installed and enabled.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-SHOW
-</p>
-
-<ul style="color:#cc0000;">
-<li>The Manuscript Compiler plugin name</li>
-<li>The enabled toggle in its active state</li>
-<li>The installed plugin version</li>
-<li>Enough of the Community plugins screen to establish location, with unrelated personal plugin names cropped out</li>
-</ul>
-
-<p style="color:#cc0000; font-weight:bold;">
-PURPOSE
-</p>
-
-<p style="color:#cc0000;">
-Confirms that the plugin is installed and enabled and that no companion plugin is required.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-WHEN REPLACING
-</p>
-
-<p style="color:#cc0000;">
-Delete this entire placeholder and replace it with the final screenshot and caption.
-</p>
+*Manuscript Compiler installed and enabled in Obsidian’s Community plugins settings.*
 
 ---
 
