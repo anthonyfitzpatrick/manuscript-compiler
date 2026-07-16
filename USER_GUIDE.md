@@ -392,45 +392,9 @@ After validation, the plugin starts one browser/host download. Desktop systems m
 
 <!-- SCREENSHOT:28 -->
 
-<p style="color:#cc0000; font-size:1.5em; font-weight:bold; margin-bottom:0;">
-📸 SCREENSHOT REQUIRED — #28
-</p>
+![A compiled Warden of Silence ODT chapter open in LibreOffice Writer](docs/images/28-odt-in-libreoffice.png)
 
-<p style="color:#cc0000; font-weight:bold;">
-CAPTURE
-</p>
-
-<p style="color:#cc0000;">
-Open a generated ODT in LibreOffice Writer and capture a representative Chapter page with the paragraph-style selector visible.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-SHOW
-</p>
-
-<ul style="color:#cc0000;">
-<li>A bold structural Chapter heading</li>
-<li>A flush-left FirstParagraph</li>
-<li>An indented BodyText paragraph</li>
-<li>A normal-weight scene separator</li>
-<li>The paragraph-style selector identifying structural and body styles</li>
-</ul>
-
-<p style="color:#cc0000; font-weight:bold;">
-PURPOSE
-</p>
-
-<p style="color:#cc0000;">
-Demonstrates that ODT's named structural and body paragraph styles render distinctly in LibreOffice Writer.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-WHEN REPLACING
-</p>
-
-<p style="color:#cc0000;">
-Delete this entire placeholder and replace it with the final screenshot and caption.
-</p>
+*LibreOffice Writer renders the generated ODT with distinct chapter number and title formatting, manuscript body text, and a centred scene separator.*
 
 ---
 
