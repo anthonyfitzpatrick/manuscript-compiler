@@ -8,6 +8,10 @@ Compile structured Obsidian manuscripts into publication-ready DOCX, ODT, EPUB, 
 
 ![Manuscript Compiler Create file screen with a prepared book summary and six export formats](docs/images/12-create-file-overview.png)
 
+*The final Create file stage: a reviewed 129,576-word novel, ready to compile into any of six native publishing formats.*
+
+Manuscript Compiler guides the book through **Manuscript → Contents → Create file**. By the time this screen appears, the selected notes have been scanned, their publishing roles and order have been reviewed, and one semantic Book has been prepared for every format. Choose the output and formatting you need, then create the file locally—without rewriting the Markdown manuscript.
+
 [![Latest release](https://img.shields.io/github/v/release/anthonyfitzpatrick/manuscript-compiler?label=release)](https://github.com/anthonyfitzpatrick/manuscript-compiler/releases/latest)
 [![MIT licence](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Obsidian plugin](https://img.shields.io/badge/Obsidian-plugin-7C3AED?logo=obsidian&logoColor=white)](https://obsidian.md/)

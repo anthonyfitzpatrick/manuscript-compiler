@@ -1,5 +1,9 @@
 # Manuscript Compiler User Guide
 
+<p align="center">
+  <img src="logo.svg" alt="Manuscript Compiler logo" width="128">
+</p>
+
 ## Introduction
 
 Manuscript Compiler turns an author-reviewed set of Markdown notes into DOCX, ODT, EPUB, HTML, Markdown, or XML. It runs inside Obsidian, works offline, and never changes manuscript notes. Exported files are created in memory and handed to the operating system's download or share flow; manuscript exports are not written into the vault.
