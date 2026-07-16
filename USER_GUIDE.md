@@ -384,45 +384,9 @@ After validation, the plugin starts one browser/host download. Desktop systems m
 
 <!-- SCREENSHOT:27 -->
 
-<p style="color:#cc0000; font-size:1.5em; font-weight:bold; margin-bottom:0;">
-📸 SCREENSHOT REQUIRED — #27
-</p>
+![The compiled Warden of Silence DOCX imported into Vellum with its book hierarchy and chapter preview visible](docs/images/27-docx-in-vellum.png)
 
-<p style="color:#cc0000; font-weight:bold;">
-CAPTURE
-</p>
-
-<p style="color:#cc0000;">
-Import the same generated DOCX into Vellum and capture the navigator and manuscript pane after import completes.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-SHOW
-</p>
-
-<ul style="color:#cc0000;">
-<li>Recognised Part structure in the navigator</li>
-<li>Recognised Chapter structure in the navigator</li>
-<li>The corresponding manuscript heading in the reading pane</li>
-<li>No duplicate Part or Chapter headings</li>
-<li>A safe sample title, with the Vellum version recorded for the eventual caption</li>
-</ul>
-
-<p style="color:#cc0000; font-weight:bold;">
-PURPOSE
-</p>
-
-<p style="color:#cc0000;">
-Shows that the DOCX/Vellum workflow preserves manuscript hierarchy and avoids duplicate structural headings.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-WHEN REPLACING
-</p>
-
-<p style="color:#cc0000;">
-Delete this entire placeholder and replace it with the final screenshot and caption.
-</p>
+*Vellum recognises the imported Part and Chapter hierarchy, displays the selected chapter once in the manuscript pane, and renders its corresponding print preview.*
 
 ---
 
