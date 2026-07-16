@@ -1,8 +1,8 @@
-# 0.9.3 Release Readiness <img src="logo.svg" alt="Manuscript Compiler logo" width="48" align="right">
+# 0.10.0 Release Readiness <img src="logo.svg" alt="Manuscript Compiler logo" width="48" align="right">
 
 ## Current status
 
-Version 0.9.3 remains a prerelease candidate. Automated gates cover the shared prepared Book, six native generators, format validators, browser-download cleanup, privacy, migration, and release allowlist. Live interoperability and platform download testing remain release blockers; this document does not claim they were performed.
+Version 0.10.0 remains a prerelease candidate. Automated gates cover the shared prepared Book, six native generators, format validators, browser-download cleanup, privacy, migration, and release allowlist. Live interoperability and platform download testing remain release blockers; this document does not claim they were performed.
 
 Maintainer and author documentation is provided in `ARCHITECTURE.md`, `DEVELOPER_GUIDE.md`, `USER_GUIDE.md`, `SECURITY.md`, and `CONTRIBUTING.md`. Screenshot placeholders in the user guide remain publication work and are not claims of completed manual testing.
 
@@ -38,9 +38,9 @@ Run and record current output before publishing:
 - `npm audit`
 - `git diff --check`
 
-The release archive must be `release/manuscript-compiler-0.9.3.zip` and contain exactly `main.js`, `manifest.json`, `styles.css`, and `logo.svg`.
+The release archive must be `release/manuscript-compiler-0.10.0.zip` and contain exactly `main.js`, `manifest.json`, `styles.css`, and `logo.svg`.
 
-Attach those four files individually to the GitHub release. The release tag must be exactly `0.9.3`, without a `v` prefix; the ZIP is optional and is not an installation dependency. Obsidian's Community Plugins installer uses the three recognised runtime assets, while GitHub and manual-install users also receive the standalone logo.
+Attach those four files individually to the GitHub release. The release tag must be exactly `0.10.0`, without a `v` prefix; the ZIP is optional and is not an installation dependency. Obsidian's Community Plugins installer uses the three recognised runtime assets, while GitHub and manual-install users also receive the standalone logo.
 
 ## Runtime dependencies
 

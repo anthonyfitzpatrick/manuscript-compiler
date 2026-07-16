@@ -229,7 +229,7 @@ npm audit
 git diff --check
 ```
 
-The release archive is `release/manuscript-compiler-0.9.3.zip` and contains exactly `main.js`, `manifest.json`, `styles.css`, and `logo.svg`. Obsidian's Community Plugins installer fetches its three recognised runtime files; `logo.svg` is also published for manual installs and release branding.
+The release archive is `release/manuscript-compiler-0.10.0.zip` and contains exactly `main.js`, `manifest.json`, `styles.css`, and `logo.svg`. Obsidian's Community Plugins installer fetches its three recognised runtime files; `logo.svg` is also published for manual installs and release branding.
 
 Automated structural validation is not a substitute for opening outputs in Word, Vellum, LibreOffice, multiple EPUB readers, text editors, and browsers. See the [Manual Release Checklist](MANUAL_TESTING.md).
 

@@ -1,6 +1,6 @@
 # Changelog <img src="logo.svg" alt="Manuscript Compiler logo" width="48" align="right">
 
-## 0.9.3 Quality and Security Release
+## 0.10.0 Initial Public Release
 
 - Added searchable settings definitions for Obsidian 1.13+ while retaining the imperative settings fallback required by the declared Obsidian 1.5 minimum.
 - Removed deprecated destructive-button calls and the lint exemptions that hid them.
