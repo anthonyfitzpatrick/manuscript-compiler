@@ -90,8 +90,8 @@ class ExportHistoryModal extends Modal { constructor(app: App, private readonly 
 class CompileLogsModal extends Modal { constructor(app: App, private readonly plugin: ManuscriptCompilerPlugin) { super(app); } onOpen(): void { this.titleEl.setText("Compile logs"); this.plugin.settings.compileLogs.forEach((log) => { const details = this.contentEl.createEl("details"); details.createEl("summary", { text: `${log.cancelled ? "Cancelled" : log.success ? "Success" : "Failure"} — ${new Date(log.timestamp).toLocaleString()} — ${log.profile}` }); const pre = details.createEl("pre"); pre.setText([`Compiler: ${log.compilerVersion}`, `Manuscript: ${log.manuscript}`, `Formats: ${log.exportFormats}`, `Outputs: ${log.outputFiles.join(", ") || "None"}`, `Duration: ${log.durationMs} ms`, `Warnings: ${log.warnings.join(" | ") || "None"}`, log.diagnostics ? `Diagnostics:\n${log.diagnostics}` : ""].filter(Boolean).join("\n")); }); new Setting(this.contentEl).addButton((button) => button.setButtonText("Close").onClick(() => this.close())); } }
 
 const SUPPORT_ACTIONS = [
-  { label: "Report a bug", icon: "bug", url: "https://github.com/anthonyfitzpatrick/manuscript-compiler/issues/new?labels=bug" },
-  { label: "Feature request", icon: "lightbulb", url: "https://github.com/anthonyfitzpatrick/manuscript-compiler/issues/new?labels=enhancement" },
+  { label: "Report a bug", icon: "bug", url: "https://github.com/anthonyfitzpatrick/manuscript-compiler/issues/new?template=bug_report.yml" },
+  { label: "Feature request", icon: "lightbulb", url: "https://github.com/anthonyfitzpatrick/manuscript-compiler/issues/new?template=feature_request.yml" },
   { label: "wolf359.app", icon: "globe", url: "https://wolf359.app" },
   { label: "Wolf 359 Press", icon: "book-open", url: "https://wolf359.press" },
   { label: "Buy me a coffee", icon: "coffee", url: "https://buymeacoffee.com/wolf359pressab" }
