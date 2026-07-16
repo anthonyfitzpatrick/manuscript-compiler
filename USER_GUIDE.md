@@ -408,45 +408,9 @@ After validation, the plugin starts one browser/host download. Desktop systems m
 
 <!-- SCREENSHOT:30 -->
 
-<p style="color:#cc0000; font-size:1.5em; font-weight:bold; margin-bottom:0;">
-📸 SCREENSHOT REQUIRED — #30
-</p>
+![The Warden of Silence HTML export opened locally in a browser](docs/images/30-offline-html-in-browser.png)
 
-<p style="color:#cc0000; font-weight:bold;">
-CAPTURE
-</p>
-
-<p style="color:#cc0000;">
-Open the generated HTML file locally in a browser and capture a representative Part or Chapter section.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-SHOW
-</p>
-
-<ul style="color:#cc0000;">
-<li>A visibly bold Part or Chapter heading</li>
-<li>A flush-left first paragraph</li>
-<li>An indented later paragraph</li>
-<li>A normal-weight scene separator</li>
-<li>The local-file location and, where practical, developer tools showing no network requests</li>
-</ul>
-
-<p style="color:#cc0000; font-weight:bold;">
-PURPOSE
-</p>
-
-<p style="color:#cc0000;">
-Demonstrates the self-contained offline HTML presentation and its manuscript-specific structural styling.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-WHEN REPLACING
-</p>
-
-<p style="color:#cc0000;">
-Delete this entire placeholder and replace it with the final screenshot and caption.
-</p>
+*The self-contained HTML file opens directly from local storage with distinct Part and Chapter headings, manuscript body text, and a centred scene separator.*
 
 ---
 
