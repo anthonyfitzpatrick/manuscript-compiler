@@ -368,45 +368,9 @@ After validation, the plugin starts one browser/host download. Desktop systems m
 
 <!-- SCREENSHOT:25 -->
 
-<p style="color:#cc0000; font-size:1.5em; font-weight:bold; margin-bottom:0;">
-📸 SCREENSHOT REQUIRED — #25
-</p>
+![The macOS save prompt for a Warden of Silence DOCX export](docs/images/25-download-save-prompt.png)
 
-<p style="color:#cc0000; font-weight:bold;">
-CAPTURE
-</p>
-
-<p style="color:#cc0000;">
-Start a DOCX export and capture the operating-system, browser, or mobile-host download prompt before confirming the destination.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-SHOW
-</p>
-
-<ul style="color:#cc0000;">
-<li>The corrected `.docx` filename</li>
-<li>The host-controlled Save, Download, or Share action</li>
-<li>The file type where the host displays it</li>
-<li>Enough surrounding host interface to distinguish it from the plugin</li>
-<li>Personal folder names and account details redacted</li>
-</ul>
-
-<p style="color:#cc0000; font-weight:bold;">
-PURPOSE
-</p>
-
-<p style="color:#cc0000;">
-Shows that Manuscript Compiler hands the completed file to the host and does not write it into the vault or choose the final destination.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-WHEN REPLACING
-</p>
-
-<p style="color:#cc0000;">
-Delete this entire placeholder and replace it with the final screenshot and caption.
-</p>
+*The completed DOCX is handed to macOS, where you confirm the filename and choose the external save destination.*
 
 ---
 
