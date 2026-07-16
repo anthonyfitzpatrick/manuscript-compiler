@@ -430,50 +430,6 @@ After validation, the plugin starts one browser/host download. Desktop systems m
 
 ---
 
-<!-- SCREENSHOT:33 -->
-
-<p style="color:#cc0000; font-size:1.5em; font-weight:bold; margin-bottom:0;">
-📸 SCREENSHOT REQUIRED — #33
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-CAPTURE
-</p>
-
-<p style="color:#cc0000;">
-Capture Manuscript Compiler's successful completion state immediately after the host accepts a generated download.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-SHOW
-</p>
-
-<ul style="color:#cc0000;">
-<li>The completed export format</li>
-<li>The portable filename</li>
-<li>Successful validation and download-dispatch status</li>
-<li>The available next action</li>
-<li>No private filesystem path or Blob URL</li>
-</ul>
-
-<p style="color:#cc0000; font-weight:bold;">
-PURPOSE
-</p>
-
-<p style="color:#cc0000;">
-Shows the truthful terminal state recorded after validated bytes have been handed to the browser or operating system.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-WHEN REPLACING
-</p>
-
-<p style="color:#cc0000;">
-Delete this entire placeholder and replace it with the final screenshot and caption.
-</p>
-
----
-
 ## Troubleshooting
 
 ### A note is missing
