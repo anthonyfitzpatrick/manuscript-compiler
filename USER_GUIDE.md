@@ -424,45 +424,9 @@ After validation, the plugin starts one browser/host download. Desktop systems m
 
 <!-- SCREENSHOT:32 -->
 
-<p style="color:#cc0000; font-size:1.5em; font-weight:bold; margin-bottom:0;">
-📸 SCREENSHOT REQUIRED — #32
-</p>
+![The Warden of Silence XML export with expanded Part, Chapter, Scene, heading, and paragraph elements](docs/images/32-xml-semantic-structure.png)
 
-<p style="color:#cc0000; font-weight:bold;">
-CAPTURE
-</p>
-
-<p style="color:#cc0000;">
-Open the generated XML in an XML-aware editor or viewer and expand representative semantic elements.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-SHOW
-</p>
-
-<ul style="color:#cc0000;">
-<li>The manuscript metadata element</li>
-<li>Expanded frontMatter and backMatter elements</li>
-<li>One Part, one Chapter, and one Scene</li>
-<li>Paragraph and inline emphasis or link elements</li>
-<li>No style attributes, CSS, vault paths, YAML, or presentation markup</li>
-</ul>
-
-<p style="color:#cc0000; font-weight:bold;">
-PURPOSE
-</p>
-
-<p style="color:#cc0000;">
-Shows XML as deterministic semantic interchange whose visual presentation is controlled by the consuming application.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-WHEN REPLACING
-</p>
-
-<p style="color:#cc0000;">
-Delete this entire placeholder and replace it with the final screenshot and caption.
-</p>
+*The presentation-neutral XML preserves the manuscript as explicit Part, Chapter, Scene, heading, and paragraph elements for deterministic interchange.*
 
 ---
 
