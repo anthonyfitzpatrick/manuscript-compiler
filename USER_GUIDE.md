@@ -774,7 +774,7 @@ Structure corrections are stored as compiler choices rather than implemented by 
 
 **Does it upload my manuscript?**
 
-No. There are no network requests, accounts, telemetry, or cloud services.
+No manuscript or settings data is sent over the network. There are no accounts, telemetry, cloud services, or background network requests. Support and funding links open an external website only when you select them.
 
 Compilation and package validation happen locally. The operating system or application chosen in the save/share flow may have its own cloud-sync behavior, which is outside the plugin's control.
 

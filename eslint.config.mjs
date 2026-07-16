@@ -32,12 +32,4 @@ export default defineConfig(
       }],
     },
   },
-  {
-    files: ["src/ui.ts"],
-    rules: {
-      // Obsidian <1.13 requires display() and lacks setDestructive().
-      "@typescript-eslint/no-deprecated": "off",
-      "obsidianmd/settings-tab/prefer-setting-definitions": "off",
-    },
-  },
 );

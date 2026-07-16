@@ -1,4 +1,4 @@
-# Manuscript Compiler 0.9.2 Manual Release Checklist
+# Manuscript Compiler 0.9.3 Manual Release Checklist
 
 All items are intentionally unchecked. Record date, tester, Obsidian version, operating system, and application versions. Automated tests do not complete these gates.
 

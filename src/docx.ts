@@ -256,15 +256,16 @@ function plainParagraph(value: string, style: string): string {
 function inlineRuns(value: string, wholeBold = false): string {
   if (wholeBold) return run(value, "<w:b/>");
   const runs: string[] = [];
-  const pattern = /(\*\*\*|___)(.+?)\1|(\*\*|__)(.+?)\3|(?<!\*)\*([^*]+?)\*|_([^_]+?)_|\[([^\]]+)\]\([^)]+\)|`([^`]+)`/g;
+  const pattern = /(\*\*\*|___)(.+?)\1|(\*\*|__)(.+?)\3|(^|[^*])\*([^*]+?)\*|_([^_]+?)_|\[([^\]]+)\]\([^)]+\)|`([^`]+)`/g;
   let offset = 0;
   let match: RegExpExecArray | null;
   while ((match = pattern.exec(value))) {
     if (match.index > offset) runs.push(run(value.slice(offset, match.index)));
     if (match[2]) runs.push(run(match[2], "<w:b/><w:i/>"));
     else if (match[4]) runs.push(run(match[4], "<w:b/>"));
-    else if (match[5] || match[6]) runs.push(run(match[5] ?? match[6], "<w:i/>"));
-    else runs.push(run(match[7] ?? match[8] ?? ""));
+    else if (match[6]) { if (match[5]) runs.push(run(match[5])); runs.push(run(match[6], "<w:i/>")); }
+    else if (match[7]) runs.push(run(match[7], "<w:i/>"));
+    else runs.push(run(match[8] ?? match[9] ?? ""));
     offset = match.index + match[0].length;
   }
   if (offset < value.length) runs.push(run(value.slice(offset)));

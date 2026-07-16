@@ -1,8 +1,8 @@
-# 0.9.2 Release Readiness
+# 0.9.3 Release Readiness
 
 ## Current status
 
-Version 0.9.2 remains a prerelease candidate. Automated gates cover the shared prepared Book, six native generators, format validators, browser-download cleanup, privacy, migration, and release allowlist. Live interoperability and platform download testing remain release blockers; this document does not claim they were performed.
+Version 0.9.3 remains a prerelease candidate. Automated gates cover the shared prepared Book, six native generators, format validators, browser-download cleanup, privacy, migration, and release allowlist. Live interoperability and platform download testing remain release blockers; this document does not claim they were performed.
 
 Maintainer and author documentation is provided in `ARCHITECTURE.md`, `DEVELOPER_GUIDE.md`, `USER_GUIDE.md`, `SECURITY.md`, and `CONTRIBUTING.md`. Screenshot placeholders in the user guide remain publication work and are not claims of completed manual testing.
 
@@ -15,7 +15,7 @@ Maintainer and author documentation is provided in `ARCHITECTURE.md`, `DEVELOPER
 - For DOCX, ODT, EPUB, or HTML, choose whether later body paragraphs use the configured first-line indent; first paragraphs after headings and scene breaks remain unindented. Markdown exposes a portability note instead, and XML delegates presentation to its consumer.
 - Generate and validate bytes in memory, then start the host browser download/share flow.
 
-No completed export is written into the Obsidian vault. There is no vault fallback, Electron path, external executable, network request, telemetry, or dependency on another community plugin. The host controls the final destination and the plugin cannot verify that external filesystem copy after download dispatch.
+No completed export is written into the Obsidian vault. There is no vault fallback, Electron path, external executable, background network request, telemetry, or dependency on another community plugin. User-selected support links may open an external website. The host controls the final destination and the plugin cannot verify that external filesystem copy after download dispatch.
 
 ## Automated gates
 
@@ -38,9 +38,9 @@ Run and record current output before publishing:
 - `npm audit`
 - `git diff --check`
 
-The release archive must be `release/manuscript-compiler-0.9.2.zip` and contain exactly `main.js`, `manifest.json`, and `styles.css`.
+The release archive must be `release/manuscript-compiler-0.9.3.zip` and contain exactly `main.js`, `manifest.json`, and `styles.css`.
 
-Attach those three files individually to the GitHub release. The release tag must be exactly `0.9.2`, without a `v` prefix; the ZIP is optional and is not an installation dependency.
+Attach those three files individually to the GitHub release. The release tag must be exactly `0.9.3`, without a `v` prefix; the ZIP is optional and is not an installation dependency.
 
 ## Runtime dependencies
 

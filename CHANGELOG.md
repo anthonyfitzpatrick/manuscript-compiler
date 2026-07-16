@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.9.3 Quality and Security Release
+
+- Added searchable settings definitions for Obsidian 1.13+ while retaining the imperative settings fallback required by the declared Obsidian 1.5 minimum.
+- Removed deprecated destructive-button calls and the lint exemptions that hid them.
+- Replaced regular-expression lookbehind so mobile builds remain compatible with older iOS WebKit.
+- Hardened HTML/EPUB active-content validation, CSS settings escaping, profile imports, download filenames, and author-facing error redaction.
+- Restored the complete version compatibility map and added manifest author and optional funding metadata.
+- Replaced placeholder support actions with explicit GitHub issue links and clarified external-link and funding disclosures.
+- Reduced plugin startup work by persisting settings only when repair or migration changes stored data.
+
 ## 0.9.2 Release Candidate
 
 ### Universal export workflow

@@ -34,31 +34,34 @@ export default class ManuscriptCompilerPlugin extends Plugin {
   private history!: CompileHistoryService;
   private exporter!: ExportCoordinator;
   private commands!: CompileCommandService;
+  private active = false;
 
   /** Loads durable state, composes services once, and registers all Obsidian entry points. */
   async onload(): Promise<void> {
     await this.loadSettings();
+    this.active = true;
     this.composeServices();
     this.addSettingTab(new ManuscriptCompilerSettingTab(this.app, this));
     this.registerCommands();
     this.registerFolderContextMenu();
     this.app.workspace.onLayoutReady(() => {
-      if (!this.settings.onboardingCompleted) new FirstRunWizardModal(this.app, this).open();
+      if (this.active && !this.settings.onboardingCompleted) new FirstRunWizardModal(this.app, this).open();
     });
   }
 
   /** Cancels work that has not crossed its non-cancellable file-finalisation boundary. */
-  onunload(): void { this.operations.cancel(); }
+  onunload(): void { this.active = false; this.operations.cancel(); }
 
   /** Repairs persisted data idempotently before any service is allowed to read it. */
   async loadSettings(): Promise<void> {
     const raw = await this.loadData() as Partial<ManuscriptCompilerSettings> | null;
+    const stored = raw ? JSON.stringify(raw) : null;
     const loaded = Object.assign({}, DEFAULT_SETTINGS, raw);
     if (raw && raw.onboardingCompleted === undefined) loaded.onboardingCompleted = true;
     const previousWarnings = Array.isArray(loaded.configurationWarnings) ? loaded.configurationWarnings.length : 0;
     this.settings = repairSettings(loaded);
     if (raw && raw.defaultStructurePreset === undefined) this.settings.defaultStructurePreset = inferStructurePreset(this.getActiveProfile());
-    await this.saveSettings();
+    if (stored !== null && JSON.stringify(this.settings) !== stored) await this.saveSettings();
     if (this.settings.configurationWarnings.length > previousWarnings) new Notice("Manuscript Compiler repaired invalid settings. Run validate manuscript for details.", 8000);
   }
 
@@ -93,10 +96,10 @@ export default class ManuscriptCompilerPlugin extends Plugin {
 
   private registerCommands(): void {
     this.addCommand({ id: COMMAND_IDS.compileManuscript, name: "Compile manuscript", callback: () => this.openCompiler() });
-    this.addCommand({ id: COMMAND_IDS.compileCurrentBook, name: "Compile current book", callback: () => { void this.commands.compileCurrentBook(); } });
+    this.addCommand({ id: COMMAND_IDS.compileCurrentBook, name: "Compile current book", callback: async () => { await this.commands.compileCurrentBook(); } });
     this.addCommand({ id: COMMAND_IDS.compileSelectedFolder, name: "Compile selected folder", callback: () => { new FolderSuggestModal(this.app, (folder) => { void this.commands.compileFolder(folder, undefined, [], "selected-folder"); }).open(); } });
-    this.addCommand({ id: COMMAND_IDS.validateManuscript, name: "Validate manuscript", callback: () => { void this.commands.validateManuscript(); } });
-    this.addCommand({ id: COMMAND_IDS.generateDiagnostics, name: "Generate diagnostics report", callback: () => { void this.commands.generateDiagnostics(); } });
+    this.addCommand({ id: COMMAND_IDS.validateManuscript, name: "Validate manuscript", callback: async () => { await this.commands.validateManuscript(); } });
+    this.addCommand({ id: COMMAND_IDS.generateDiagnostics, name: "Generate diagnostics report", callback: async () => { await this.commands.generateDiagnostics(); } });
   }
 
   private registerFolderContextMenu(): void {

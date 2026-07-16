@@ -6,7 +6,7 @@ Manuscript Compiler is an offline Obsidian plugin. It reads manuscript notes thr
 
 The production plugin has:
 
-- no network requests;
+- no background network requests; user-selected support and funding links may open an external website;
 - no telemetry, analytics, advertising, accounts, or cloud service;
 - no remote fonts, stylesheets, scripts, or assets;
 - no Electron bridge or Node filesystem export;

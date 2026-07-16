@@ -1,6 +1,6 @@
 # Manuscript Compiler <img src="logo.svg" alt="Manuscript Compiler semantic tree logo" width="48" align="right">
 
-Manuscript Compiler 0.9.2 turns fiction in an Obsidian vault into DOCX, ODT, EPUB, standalone HTML, Markdown, or structured XML. It works offline, never changes source notes, and requires neither Pandoc nor another community plugin.
+Manuscript Compiler 0.9.3 turns fiction in an Obsidian vault into DOCX, ODT, EPUB, standalone HTML, Markdown, or structured XML. It works offline, never changes source notes, and requires neither Pandoc nor another community plugin.
 
 Only content included in the reviewed manuscript structure is exported. Project metadata, author notes, dashboards, and excluded notes are not manuscript content.
 
@@ -60,16 +60,16 @@ All formats are generated and structurally validated in memory before delivery. 
 
 Completed manuscript exports are never written into the vault. Historical vault-output settings remain storage-only migration data and cannot activate an old output route. The diagnostics command may still create an explicitly requested privacy-safe Markdown diagnostics note in the vault; that is not a manuscript export.
 
-The plugin has no Electron bridge, Node filesystem export path, network requests, telemetry, cloud service, remote assets, shell command, or external executable. `fflate` is the sole bundled runtime dependency and supplies ZIP creation/inspection.
+The plugin has no Electron bridge, Node filesystem export path, background network requests, telemetry, cloud service, remote assets, shell command, or external executable. Support and funding links open an external website only when the user explicitly selects them. `fflate` is the sole bundled runtime dependency and supplies ZIP creation/inspection.
 
 ### Disclosures
 
 | Topic | Disclosure |
 | --- | --- |
 | External file access | Browser/host-controlled download only; the host chooses the destination. |
-| Network | None. Export, validation, and delivery initiation are offline. |
+| Network | No background requests. Export, validation, and delivery initiation are offline. User-selected support links open in the system browser. |
 | Accounts | None. |
-| Payments and advertising | None. |
+| Payments and advertising | No advertising or in-plugin payments. An optional external donation link is identified as **Buy me a coffee**. |
 | Telemetry and analytics | None. |
 | Closed-source components | None. |
 | Runtime dependencies | `fflate` 0.8.3, bundled under its MIT licence. |
@@ -106,7 +106,7 @@ npm audit
 git diff --check
 ```
 
-The release archive is `release/manuscript-compiler-0.9.2.zip` and contains exactly `main.js`, `manifest.json`, and `styles.css`.
+The release archive is `release/manuscript-compiler-0.9.3.zip` and contains exactly `main.js`, `manifest.json`, and `styles.css`.
 
 Automated structural validation is not a substitute for opening outputs in Word, Vellum, LibreOffice, multiple EPUB readers, text editors, and browsers. See [MANUAL_TESTING.md](MANUAL_TESTING.md).
 

@@ -55,6 +55,8 @@ function validateManifest() {
   assert(semverPattern.test(manifest.version) && semverPattern.test(manifest.minAppVersion), "Manifest versions must use x.y.z semantic versions.");
   assert(typeof manifest.description === "string" && manifest.description.trim().length > 0, "Manifest description is required.");
   assert(typeof manifest.author === "string" && manifest.author.trim().length > 0, "Manifest author is required.");
+  if (manifest.authorUrl !== undefined) assert(/^https:\/\//.test(manifest.authorUrl), "Manifest authorUrl must use HTTPS.");
+  if (manifest.fundingUrl !== undefined) assert(typeof manifest.fundingUrl === "string" && /^https:\/\//.test(manifest.fundingUrl), "Manifest fundingUrl must use HTTPS.");
   assert(typeof manifest.isDesktopOnly === "boolean", "Manifest isDesktopOnly must be a boolean.");
 }
 
@@ -62,7 +64,7 @@ function validateVersions() {
   const entries = Object.entries(versions);
   assert(entries.length > 0, "versions.json must contain at least one minimum-version boundary.");
   for (const [pluginVersion, appVersion] of entries) assert(semverPattern.test(pluginVersion) && typeof appVersion === "string" && semverPattern.test(appVersion), "versions.json contains an invalid version.");
-  assert(entries.at(-1)?.[1] === manifest.minAppVersion, `Latest versions.json boundary must match minAppVersion ${manifest.minAppVersion}.`);
+  assert(versions[manifest.version] === manifest.minAppVersion, `versions.json must map ${manifest.version} to minAppVersion ${manifest.minAppVersion}.`);
 }
 
 async function jsonFile(filename) { return JSON.parse(await readFile(filename, "utf8")); }

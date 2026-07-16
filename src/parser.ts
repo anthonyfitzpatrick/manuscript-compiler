@@ -33,7 +33,6 @@ export class ManuscriptParser {
    */
   async parse(scan: ScannedBook, settings: CompileOptions, signal?: AbortSignal): Promise<Book> {
     const warnings = [...scan.warnings];
-    if (scan.hierarchyDiagnostics?.length) console.warn(`Manuscript Compiler found ${scan.hierarchyDiagnostics.length} hierarchy diagnostic(s).`);
     const unreadable = new Map<string, string>();
     const cache = new Map<string, ManuscriptDocument>();
     this.filterDurationMs = 0;

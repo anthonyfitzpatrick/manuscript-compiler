@@ -6,7 +6,7 @@
  * workspace. It calls plugin/service callbacks and must not implement scanning,
  * parsing, safe-write transactions, or platform filesystem bridges.
  */
-import { App, ButtonComponent, FuzzySuggestModal, Modal, Notice, PluginSettingTab, Setting, TextAreaComponent, TFolder } from "obsidian";
+import { App, ButtonComponent, FuzzySuggestModal, Modal, Notice, PluginSettingTab, Setting, TextAreaComponent, TFolder, type SettingDefinitionItem } from "obsidian";
 import type ManuscriptCompilerPlugin from "./main";
 import type { Chapter, CompilePreview, CompileWarning, ManuscriptDocument, Part } from "./model";
 import { duplicateProfile, validateProfile } from "./profiles";
@@ -62,7 +62,7 @@ export class CompilePreviewModal extends Modal {
 export class CompilationProgressModal extends Modal {
   private statusEl?: HTMLElement; private cancelButton?: HTMLButtonElement; private cancelled = false; private completed = false;
   constructor(app: App, private readonly cancel: () => void) { super(app); }
-  onOpen(): void { this.titleEl.setText("Compiling manuscript"); this.statusEl = this.contentEl.createEl("p", { text: "Preparing…" }); this.statusEl.setAttribute("role", "status"); this.statusEl.setAttribute("aria-live", "polite"); new Setting(this.contentEl).addButton((button) => { this.cancelButton = button.buttonEl; button.setButtonText("Cancel compilation").setWarning().onClick(() => { if (this.cancelled) return; this.cancelled = true; button.setDisabled(true).setButtonText("Cancelling…"); this.cancel(); }); }); }
+  onOpen(): void { this.titleEl.setText("Compiling manuscript"); this.statusEl = this.contentEl.createEl("p", { text: "Preparing…" }); this.statusEl.setAttribute("role", "status"); this.statusEl.setAttribute("aria-live", "polite"); new Setting(this.contentEl).addButton((button) => { this.cancelButton = button.buttonEl; destructive(button.setButtonText("Cancel compilation")).onClick(() => { if (this.cancelled) return; this.cancelled = true; button.setDisabled(true).setButtonText("Cancelling…"); this.cancel(); }); }); }
   update(stage: string): void { if (!this.cancelled) this.statusEl?.setText(stage); }
   lock(stage: string): void { this.completed = true; this.statusEl?.setText(stage); if (this.cancelButton) { this.cancelButton.disabled = true; this.cancelButton.setText("Finalising file…"); } }
   finish(): void { this.completed = true; this.close(); }
@@ -86,12 +86,12 @@ class ProfileJsonModal extends Modal {
   constructor(app: App, private readonly mode: "import" | "export", profile: CompileProfile, private readonly done: (value?: string) => void | Promise<void>) { super(app); this.value = mode === "export" ? JSON.stringify(profile, null, 2) : ""; }
   onOpen(): void { this.titleEl.setText(`${this.mode === "import" ? "Import" : "Export"} compile profile`); const area = new TextAreaComponent(this.contentEl); area.setValue(this.value).onChange((value) => { this.value = value; }); area.inputEl.addClass("manuscript-profile-json"); new Setting(this.contentEl).addButton((button) => button.setButtonText("Close").onClick(() => this.close())); if (this.mode === "import") new Setting(this.contentEl).addButton((button) => button.setButtonText("Import").setCta().onClick(() => { void this.done(this.value); this.close(); })); }
 }
-class ExportHistoryModal extends Modal { constructor(app: App, private readonly plugin: ManuscriptCompilerPlugin) { super(app); } onOpen(): void { this.titleEl.setText("Export history"); this.plugin.settings.exportHistory.forEach((entry) => { const details = this.contentEl.createEl("details"); details.createEl("summary", { text: `${entry.cancelled ? "—" : entry.success ? "✓" : "✗"} ${new Date(entry.timestamp).toLocaleString()} — ${(entry.format ?? "docx").toUpperCase()}` }); details.createEl("p", { text: `${entry.manuscript} · ${entry.wordCount.toLocaleString()} words` }); entry.outputFiles.forEach((filename) => details.createEl("p", { text: filename })); }); new Setting(this.contentEl).addButton((button) => button.setButtonText("Clear history and logs").setWarning().onClick(async () => { await this.plugin.clearHistory(); this.close(); })).addButton((button) => button.setButtonText("Close").onClick(() => this.close())); } }
+class ExportHistoryModal extends Modal { constructor(app: App, private readonly plugin: ManuscriptCompilerPlugin) { super(app); } onOpen(): void { this.titleEl.setText("Export history"); this.plugin.settings.exportHistory.forEach((entry) => { const details = this.contentEl.createEl("details"); details.createEl("summary", { text: `${entry.cancelled ? "—" : entry.success ? "✓" : "✗"} ${new Date(entry.timestamp).toLocaleString()} — ${(entry.format ?? "docx").toUpperCase()}` }); details.createEl("p", { text: `${entry.manuscript} · ${entry.wordCount.toLocaleString()} words` }); entry.outputFiles.forEach((filename) => details.createEl("p", { text: filename })); }); new Setting(this.contentEl).addButton((button) => destructive(button.setButtonText("Clear history and logs")).onClick(async () => { await this.plugin.clearHistory(); this.close(); })).addButton((button) => button.setButtonText("Close").onClick(() => this.close())); } }
 class CompileLogsModal extends Modal { constructor(app: App, private readonly plugin: ManuscriptCompilerPlugin) { super(app); } onOpen(): void { this.titleEl.setText("Compile logs"); this.plugin.settings.compileLogs.forEach((log) => { const details = this.contentEl.createEl("details"); details.createEl("summary", { text: `${log.cancelled ? "Cancelled" : log.success ? "Success" : "Failure"} — ${new Date(log.timestamp).toLocaleString()} — ${log.profile}` }); const pre = details.createEl("pre"); pre.setText([`Compiler: ${log.compilerVersion}`, `Manuscript: ${log.manuscript}`, `Formats: ${log.exportFormats}`, `Outputs: ${log.outputFiles.join(", ") || "None"}`, `Duration: ${log.durationMs} ms`, `Warnings: ${log.warnings.join(" | ") || "None"}`, log.diagnostics ? `Diagnostics:\n${log.diagnostics}` : ""].filter(Boolean).join("\n")); }); new Setting(this.contentEl).addButton((button) => button.setButtonText("Close").onClick(() => this.close())); } }
 
 const SUPPORT_ACTIONS = [
-  { label: "Report a bug", icon: "bug", notice: "Bug reporting portal coming soon." },
-  { label: "Feature request", icon: "lightbulb", notice: "Feature request portal coming soon." },
+  { label: "Report a bug", icon: "bug", url: "https://github.com/anthonyfitzpatrick/manuscript-compiler/issues/new?labels=bug" },
+  { label: "Feature request", icon: "lightbulb", url: "https://github.com/anthonyfitzpatrick/manuscript-compiler/issues/new?labels=enhancement" },
   { label: "wolf359.app", icon: "globe", url: "https://wolf359.app" },
   { label: "Wolf 359 Press", icon: "book-open", url: "https://wolf359.press" },
   { label: "Buy me a coffee", icon: "coffee", url: "https://buymeacoffee.com/wolf359pressab" }
@@ -103,6 +103,30 @@ const SUPPORT_SECTION_TITLE = "Support & Links";
 /** Defaults/advanced compatibility settings; not the primary compile workspace. */
 export class ManuscriptCompilerSettingTab extends PluginSettingTab {
   constructor(app: App, private readonly plugin: ManuscriptCompilerPlugin) { super(app, plugin); }
+  /** Provides searchable settings on Obsidian 1.13+ while display() remains the pre-1.13 fallback. */
+  getSettingDefinitions(): SettingDefinitionItem[] {
+    const settings = this.plugin.settings; const profile = this.plugin.getActiveProfile();
+    return [
+      { name: "Compiler", desc: "Open the guided manuscript compiler.", render: (setting) => { setting.addButton((button) => button.setButtonText("Open compiler").setCta().onClick(() => this.plugin.openCompiler())); } },
+      { type: "group", heading: "Defaults", items: [
+        { name: "Default manuscript folder", aliases: ["Manuscript root", "Book folder"], render: (setting) => { setting.addText((text) => text.setValue(settings.defaultManuscriptFolder).onChange(async (value) => { settings.defaultManuscriptFolder = value.trim(); await this.plugin.saveSettings(); })); } },
+        { name: "Default structure", render: (setting) => { setting.addDropdown((dropdown) => { Object.entries(STRUCTURE_PRESET_NAMES).forEach(([value, label]) => { dropdown.addOption(value, label); }); dropdown.setValue(settings.defaultStructurePreset).onChange(async (value) => { settings.defaultStructurePreset = value as StructurePreset; await this.plugin.saveSettings(); }); }); } },
+        { name: "Default format", render: (setting) => { setting.addDropdown((dropdown) => { EXPORT_FORMATS.forEach((format) => { dropdown.addOption(format, EXPORT_FORMAT_DETAILS[format].label); }); dropdown.setValue(settings.defaultDownloadFormat).onChange(async (value) => { settings.defaultDownloadFormat = value as ExportFormat; await this.plugin.saveSettings(); }); }); } },
+        { name: "Default document style", render: (setting) => { setting.addDropdown((dropdown) => dropdown.addOption("vellum", "Vellum-ready").addOption("standard", "Standard manuscript").setValue(settings.defaultDocxStyle === "custom" ? "standard" : settings.defaultDocxStyle).onChange(async (value) => { settings.defaultDocxStyle = value as DocxStylePreset; await this.plugin.saveSettings(); })); } },
+        { name: "Include title page", render: (setting) => { setting.addToggle((toggle) => toggle.setValue(settings.includeTitlePageByDefault).onChange(async (value) => { settings.includeTitlePageByDefault = value; await this.plugin.saveSettings(); })); } },
+        { name: "Include table of contents", render: (setting) => { setting.addToggle((toggle) => toggle.setValue(settings.includeTableOfContentsByDefault).onChange(async (value) => { settings.includeTableOfContentsByDefault = value; await this.plugin.saveSettings(); })); } }
+      ] },
+      { type: "group", heading: "Advanced profiles, records, and compatibility", items: [
+        { name: "Advanced profile", desc: "Used for customised or older workflows.", render: (setting) => { setting.addDropdown((dropdown) => { settings.profiles.forEach((item) => { dropdown.addOption(item.id, item.name); }); dropdown.setValue(profile.id).onChange(async (id) => { settings.activeProfileId = id; await this.saveAndRender(); }); }); } },
+        { name: "Profile actions", render: (setting) => { setting.addButton((button) => button.setButtonText("New").onClick(() => new ProfileWizardModal(this.app, this.plugin, async (created) => { settings.profiles.push(created); settings.activeProfileId = created.id; await this.saveAndRender(); }).open())).addButton((button) => button.setButtonText("Duplicate").onClick(async () => { const copy = duplicateProfile(profile); settings.profiles.push(copy); settings.activeProfileId = copy.id; await this.saveAndRender(); })).addButton((button) => destructive(button.setButtonText("Delete")).setDisabled(settings.profiles.length < 2).onClick(async () => { settings.profiles = settings.profiles.filter((item) => item.id !== profile.id); settings.activeProfileId = settings.profiles[0].id; await this.saveAndRender(); })); } },
+        { name: "Profile JSON", aliases: ["Import profile", "Export profile"], render: (setting) => { setting.addButton((button) => button.setButtonText("Export").onClick(() => new ProfileJsonModal(this.app, "export", profile, () => undefined).open())).addButton((button) => button.setButtonText("Import").onClick(() => new ProfileJsonModal(this.app, "import", profile, (json) => this.importProfileJson(json)).open())); } },
+        { name: "Export records", aliases: ["History", "Logs"], render: (setting) => { setting.addButton((button) => button.setButtonText(`History (${settings.exportHistory.length})`).onClick(() => new ExportHistoryModal(this.app, this.plugin).open())).addButton((button) => button.setButtonText(`Logs (${settings.compileLogs.length})`).onClick(() => new CompileLogsModal(this.app, this.plugin).open())); } }
+      ] },
+      { type: "group", heading: SUPPORT_SECTION_TITLE, items: [
+        { name: "About and support", desc: "Version, creator, support, website, and optional funding links.", render: (setting) => { setting.settingEl.addClass("manuscript-support-panel"); this.renderSupportContent(setting.settingEl); } }
+      ] }
+    ];
+  }
   display(): void { this.renderSettings(); }
   private renderSettings(): void {
     const container = this.containerEl; const settings = this.plugin.settings; const profile = this.plugin.getActiveProfile(); container.empty(); container.addClass("manuscript-compiler-settings");
@@ -114,15 +138,8 @@ export class ManuscriptCompilerSettingTab extends PluginSettingTab {
     this.toggle(container, "Include title page", settings.includeTitlePageByDefault, (value) => { settings.includeTitlePageByDefault = value; }); this.toggle(container, "Include table of contents", settings.includeTableOfContentsByDefault, (value) => { settings.includeTableOfContentsByDefault = value; });
     const advanced = container.createEl("details"); advanced.createEl("summary", { text: "Advanced profiles, records, and compatibility" });
     new Setting(advanced).setName("Advanced profile").setDesc("Used for customised or older workflows.").addDropdown((dropdown) => { settings.profiles.forEach((item) => { dropdown.addOption(item.id, item.name); }); dropdown.setValue(profile.id).onChange((id) => { settings.activeProfileId = id; void this.saveAndRender(); }); });
-    new Setting(advanced).setName("Profile actions").addButton((button) => button.setButtonText("New").onClick(() => new ProfileWizardModal(this.app, this.plugin, async (created) => { settings.profiles.push(created); settings.activeProfileId = created.id; await this.saveAndRender(); }).open())).addButton((button) => button.setButtonText("Duplicate").onClick(() => { const copy = duplicateProfile(profile); settings.profiles.push(copy); settings.activeProfileId = copy.id; void this.saveAndRender(); })).addButton((button) => button.setButtonText("Delete").setWarning().setDisabled(settings.profiles.length < 2).onClick(() => { settings.profiles = settings.profiles.filter((item) => item.id !== profile.id); settings.activeProfileId = settings.profiles[0].id; void this.saveAndRender(); }));
-    new Setting(advanced).setName("Profile JSON").addButton((button) => button.setButtonText("Export").onClick(() => new ProfileJsonModal(this.app, "export", profile, () => undefined).open())).addButton((button) => button.setButtonText("Import").onClick(() => new ProfileJsonModal(this.app, "import", profile, async (json) => {
-      if (!json) return;
-      if (new TextEncoder().encode(json).length > 262_144) { new Notice("Profile JSON is too large. Profiles must be smaller than 256 kb.", 8000); return; }
-      let parsed: unknown;
-      try { parsed = JSON.parse(json); } catch { new Notice("Profile JSON is invalid. Correct the JSON syntax and try again.", 8000); return; }
-      const validation = validateProfile(parsed); if (!validation.profile) { new Notice(validation.errors.join(" "), 8000); return; }
-      settings.profiles.push(validation.profile); settings.activeProfileId = validation.profile.id; await this.saveAndRender();
-    }).open()));
+    new Setting(advanced).setName("Profile actions").addButton((button) => button.setButtonText("New").onClick(() => new ProfileWizardModal(this.app, this.plugin, async (created) => { settings.profiles.push(created); settings.activeProfileId = created.id; await this.saveAndRender(); }).open())).addButton((button) => button.setButtonText("Duplicate").onClick(() => { const copy = duplicateProfile(profile); settings.profiles.push(copy); settings.activeProfileId = copy.id; void this.saveAndRender(); })).addButton((button) => destructive(button.setButtonText("Delete")).setDisabled(settings.profiles.length < 2).onClick(() => { settings.profiles = settings.profiles.filter((item) => item.id !== profile.id); settings.activeProfileId = settings.profiles[0].id; void this.saveAndRender(); }));
+    new Setting(advanced).setName("Profile JSON").addButton((button) => button.setButtonText("Export").onClick(() => new ProfileJsonModal(this.app, "export", profile, () => undefined).open())).addButton((button) => button.setButtonText("Import").onClick(() => new ProfileJsonModal(this.app, "import", profile, (json) => this.importProfileJson(json)).open()));
     new Setting(advanced).setName("Export records").addButton((button) => button.setButtonText(`History (${settings.exportHistory.length})`).onClick(() => new ExportHistoryModal(this.app, this.plugin).open())).addButton((button) => button.setButtonText(`Logs (${settings.compileLogs.length})`).onClick(() => new CompileLogsModal(this.app, this.plugin).open()));
     this.renderSupportPanel(container);
   }
@@ -130,6 +147,9 @@ export class ManuscriptCompilerSettingTab extends PluginSettingTab {
   private renderSupportPanel(parent: HTMLElement): void {
     const panel = parent.createDiv({ cls: "manuscript-support-panel" });
     new Setting(panel).setName(SUPPORT_SECTION_TITLE).setHeading();
+    this.renderSupportContent(panel);
+  }
+  private renderSupportContent(panel: HTMLElement): void {
     const identity = panel.createDiv({ cls: "manuscript-support-identity" });
     identity.createEl("img", { cls: "manuscript-support-logo", attr: { src: pluginLogo, alt: "", "aria-hidden": "true" } });
     const identityText = identity.createDiv({ cls: "manuscript-support-identity-text" });
@@ -149,14 +169,14 @@ export class ManuscriptCompilerSettingTab extends PluginSettingTab {
       button.buttonEl.createSpan({ cls: "manuscript-support-button-label", text: action.label });
       button.buttonEl.setAttribute("aria-label", action.label);
       button.onClick(() => {
-        if ("notice" in action) { new Notice(action.notice); return; }
         button.buttonEl.win.open(action.url, "_blank", "noopener,noreferrer");
       });
     }
   }
   private text(parent: HTMLElement, name: string, value: string, change: (value: string) => void): void { new Setting(parent).setName(name).addText((text) => text.setValue(value).onChange(async (next) => { change(next.trim()); await this.plugin.saveSettings(); })); }
   private toggle(parent: HTMLElement, name: string, value: boolean, change: (value: boolean) => void): void { new Setting(parent).setName(name).addToggle((toggle) => toggle.setValue(value).onChange(async (next) => { change(next); await this.plugin.saveSettings(); })); }
-  private async saveAndRender(): Promise<void> { await this.plugin.saveSettings(); this.renderSettings(); }
+  private async importProfileJson(json?: string): Promise<void> { if (!json) return; if (new TextEncoder().encode(json).length > 262_144) { new Notice("Profile JSON is too large. Profiles must be smaller than 256 kb.", 8000); return; } let parsed: unknown; try { parsed = JSON.parse(json); } catch { new Notice("Profile JSON is invalid. Correct the JSON syntax and try again.", 8000); return; } const validation = validateProfile(parsed); if (!validation.profile) { new Notice(validation.errors.join(" "), 8000); return; } this.plugin.settings.profiles.push(validation.profile); this.plugin.settings.activeProfileId = validation.profile.id; await this.saveAndRender(); }
+  private async saveAndRender(): Promise<void> { await this.plugin.saveSettings(); const update = (this as unknown as Record<string, unknown>)["update"]; if (typeof update === "function") update.call(this); else this.renderSettings(); }
 }
 
 function row(list: HTMLElement, label: string, value: string): void { list.createEl("dt", { text: label }); list.createEl("dd", { text: value }); }
@@ -166,3 +186,6 @@ function row(list: HTMLElement, label: string, value: string): void { list.creat
  * errors that might contain private paths or metadata are never emitted.
  */
 export function showError(error: unknown): void { const message = redactTechnicalMessage(error); new Notice(`Manuscript Compiler: ${message}`, 8000); console.error(`Manuscript Compiler: ${message}`); }
+
+/** Uses the current destructive API while retaining compatibility with Obsidian before 1.13. */
+function destructive(button: ButtonComponent): ButtonComponent { const method = (button as unknown as Record<string, unknown>)["setDestructive"]; if (typeof method === "function") { method.call(button); return button; } button.buttonEl.addClass("mod-warning"); return button; }
