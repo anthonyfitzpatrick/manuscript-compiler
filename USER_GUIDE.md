@@ -416,45 +416,9 @@ After validation, the plugin starts one browser/host download. Desktop systems m
 
 <!-- SCREENSHOT:31 -->
 
-<p style="color:#cc0000; font-size:1.5em; font-weight:bold; margin-bottom:0;">
-📸 SCREENSHOT REQUIRED — #31
-</p>
+![The Warden of Silence Markdown export displayed in a rendered editing view](docs/images/31-markdown-rendered-view.png)
 
-<p style="color:#cc0000; font-weight:bold;">
-CAPTURE
-</p>
-
-<p style="color:#cc0000;">
-Open the exported Markdown in Obsidian and capture Source view beside Reading view for the same manuscript passage.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-SHOW
-</p>
-
-<ul style="color:#cc0000;">
-<li>A Part heading and Chapter heading with clean `#` syntax in Source view</li>
-<li>The same headings rendered in Reading view</li>
-<li>Two ordinary paragraphs without leading spaces or tabs</li>
-<li>Bold, italics, a readable link, and a scene separator</li>
-<li>No redundant `**` around heading text</li>
-</ul>
-
-<p style="color:#cc0000; font-weight:bold;">
-PURPOSE
-</p>
-
-<p style="color:#cc0000;">
-Explains the difference between clean Markdown source and its rendered presentation inside Obsidian.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-WHEN REPLACING
-</p>
-
-<p style="color:#cc0000;">
-Delete this entire placeholder and replace it with the final screenshot and caption.
-</p>
+*The portable Markdown renders Part and Chapter headings distinctly while preserving ordinary manuscript paragraphs and the configured scene separator.*
 
 ---
 
