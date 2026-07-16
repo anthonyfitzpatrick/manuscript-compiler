@@ -12,7 +12,11 @@ The workflow has three stages:
 
 <!-- SCREENSHOT:01 -->
 
+<br>
+
 ![Manuscript Compiler installed and enabled in Obsidian's Community plugins settings](docs/images/01-manuscript-compiler-enabled.png)
+
+<br>
 
 *Manuscript Compiler installed and enabled in Obsidian’s Community plugins settings.*
 
@@ -72,7 +76,11 @@ In File Explorer, right-click the exact book folder and choose **Compile manuscr
 
 <!-- SCREENSHOT:02 -->
 
+<br>
+
 ![Compile manuscript from this folder in the Obsidian File Explorer context menu](docs/images/02-folder-context-menu.png)
+
+<br>
 
 *Right-click a book folder and choose **Compile manuscript from this folder** to use it as the manuscript root.*
 
@@ -82,7 +90,11 @@ You can also open Manuscript Compiler from the command palette or plugin setting
 
 <!-- SCREENSHOT:03 -->
 
+<br>
+
 ![Manuscript Compiler settings with defaults, advanced options, support links, and the Open compiler button](docs/images/03-plugin-settings.png)
+
+<br>
 
 *The Manuscript Compiler settings tab provides an **Open compiler** button alongside defaults, advanced profile tools, and support links.*
 
@@ -94,7 +106,11 @@ Confirm the selected folder and choose the structure preset closest to the proje
 
 <!-- SCREENSHOT:04 -->
 
+<br>
+
 ![The Manuscript stage showing the selected book folder, detected structure, scan summary, and Review Structure action](docs/images/04-manuscript-screen.png)
+
+<br>
 
 *The Manuscript stage confirms the selected book folder and detected structure before you choose **Review Structure**.*
 
@@ -104,7 +120,11 @@ Confirm the selected folder and choose the structure preset closest to the proje
 
 You only need the folder chooser when you want to change the selected folder or when you opened Manuscript Compiler without using **Compile manuscript from this folder** in the File Explorer right-click menu.
 
+<br>
+
 ![The manuscript folder chooser filtered to Warden of Silence](docs/images/05-folder-chooser.png)
+
+<br>
 
 *Search for and select the folder that represents the complete book. The chosen folder becomes the manuscript root.*
 
@@ -123,7 +143,11 @@ Choose the nearest preset and correct exceptions on Contents. Renaming the vault
 
 <!-- SCREENSHOT:06 -->
 
+<br>
+
 ![The Detected structure menu showing every available manuscript structure preset](docs/images/06-structure-presets.png)
+
+<br>
 
 *Choose the preset that most closely matches the book. **Novel with Parts** is selected here before reviewing the detected structure.*
 
@@ -135,7 +159,11 @@ Contents opens as a compact review, not an editing form. Summary cards show dete
 
 <!-- SCREENSHOT:07 -->
 
+<br>
+
 ![The Contents stage showing detected counts, review controls, and the collapsed manuscript outline](docs/images/07-contents-review.png)
+
+<br>
 
 *Review the detected counts, ignored items, warnings, and manuscript outline before continuing or choosing **Correct structure**.*
 
@@ -155,7 +183,11 @@ Keyboard users can Tab to controls, use Space/Enter on buttons and toggles, and 
 
 <!-- SCREENSHOT:08 -->
 
+<br>
+
 ![Correction mode showing inclusion checkboxes, folder disclosure, role selectors, and ordering controls](docs/images/08-correct-structure.png)
+
+<br>
 
 *In correction mode, use the checkboxes, role selectors, disclosure controls, and arrows to change inclusion, structure, and order.*
 
@@ -163,7 +195,11 @@ Keyboard users can Tab to controls, use Space/Enter on buttons and toggles, and 
 
 <!-- SCREENSHOT:09 -->
 
+<br>
+
 ![Correction mode with one chapter expanded into scenes and neighbouring chapters collapsed](docs/images/09-collapsed-structure.png)
+
+<br>
 
 *Collapse large branches to simplify structure review. Descendant inclusion, roles, and ordering remain saved while a branch is collapsed.*
 
@@ -171,7 +207,11 @@ Keyboard users can Tab to controls, use Space/Enter on buttons and toggles, and 
 
 <!-- SCREENSHOT:10 -->
 
+<br>
+
 ![The Ignored project notes review showing excluded items and their reasons](docs/images/10-ignored-project-notes.png)
+
+<br>
 
 *Open **Ignored project notes** to review excluded material and the reason each item was left out of the prepared book.*
 
@@ -179,7 +219,11 @@ Keyboard users can Tab to controls, use Space/Enter on buttons and toggles, and 
 
 <!-- SCREENSHOT:11 -->
 
+<br>
+
 ![The Warnings review showing affected chapters and author-facing explanations](docs/images/11-warnings-review.png)
+
+<br>
 
 *Open **Warnings** to review structural concerns and their explanations before continuing to Create file.*
 
@@ -193,7 +237,11 @@ Create file shows the prepared Book summary, six format cards, relevant formatti
 
 <!-- SCREENSHOT:12 -->
 
+<br>
+
 ![The Create file stage showing the prepared book summary and all six export formats](docs/images/12-create-file-overview.png)
+
+<br>
 
 *Create file keeps the prepared book summary visible while you choose DOCX, ODT, EPUB, HTML, Markdown, or XML. DOCX is selected here.*
 
@@ -205,7 +253,11 @@ Click a card or focus the selected card and use Left/Right or Up/Down arrows. Ho
 
 <!-- SCREENSHOT:13 -->
 
+<br>
+
 ![DOCX selected with document style, indentation, scene break, title page, table of contents, and chapter controls](docs/images/13-docx-format.png)
+
+<br>
 
 *Selecting DOCX reveals its document formatting controls and changes the primary action to **Create and download DOCX**.*
 
@@ -213,7 +265,11 @@ Click a card or focus the selected card and use Left/Right or Up/Down arrows. Ho
 
 <!-- SCREENSHOT:14 -->
 
+<br>
+
 ![ODT selected with document style, indentation, scene break, title page, table of contents, and chapter controls](docs/images/14-odt-format.png)
+
+<br>
 
 *Selecting ODT reveals its OpenDocument formatting controls and changes the primary action to **Create and download ODT**.*
 
@@ -221,7 +277,11 @@ Click a card or focus the selected card and use Left/Right or Up/Down arrows. Ho
 
 <!-- SCREENSHOT:15 -->
 
+<br>
+
 ![EPUB selected with reflowable ebook, indentation, scene break, title page, table of contents, and advanced formatting controls](docs/images/15-epub-format.png)
+
+<br>
 
 *Selecting EPUB reveals its reflowable-ebook controls and changes the primary action to **Create and download EPUB**.*
 
@@ -229,7 +289,11 @@ Click a card or focus the selected card and use Left/Right or Up/Down arrows. Ho
 
 <!-- SCREENSHOT:16 -->
 
+<br>
+
 ![HTML selected with web-readable, indentation, scene break, title page, table of contents, and advanced formatting controls](docs/images/16-html-format.png)
+
+<br>
 
 *Selecting HTML reveals its web-readable formatting controls for a standalone webpage.*
 
@@ -237,7 +301,11 @@ Click a card or focus the selected card and use Left/Right or Up/Down arrows. Ho
 
 <!-- SCREENSHOT:17 -->
 
+<br>
+
 ![Markdown selected with plain-text structure, indentation guidance, scene break, title page, and advanced content options](docs/images/17-markdown-format.png)
+
+<br>
 
 *Markdown preserves portable plain-text structure, emphasis, and links, but does not support portable first-line indentation.*
 
@@ -245,7 +313,11 @@ Click a card or focus the selected card and use Left/Right or Up/Down arrows. Ho
 
 <!-- SCREENSHOT:18 -->
 
+<br>
+
 ![XML selected with structured manuscript guidance and advanced content options](docs/images/18-xml-format.png)
+
+<br>
 
 *XML preserves structured manuscript content for interchange; paragraph presentation is controlled by the application that consumes the XML.*
 
@@ -274,7 +346,11 @@ The first-line indent size appears only when indentation is enabled. Markdown ha
 
 <!-- SCREENSHOT:19 -->
 
+<br>
+
 ![The Standard manuscript formatting preset with indentation, scene break, title page, table of contents, chapter start, and advanced formatting controls](docs/images/19-standard-formatting.png)
+
+<br>
 
 *The Standard manuscript preset shows the ordinary document controls available before opening **Advanced formatting**.*
 
@@ -282,7 +358,11 @@ The first-line indent size appears only when indentation is enabled. Markdown ha
 
 <!-- SCREENSHOT:20 -->
 
+<br>
+
 ![Paragraph indentation enabled with the first-line indent size menu open](docs/images/20-paragraph-indentation.png)
+
+<br>
 
 *When paragraph indentation is enabled, choose **None**, **0.75 cm**, or **1.27 cm**. Disabling indentation hides this size control.*
 
@@ -294,7 +374,11 @@ Choose `#`, `*`, `***`, `* * *`, a styled blank line, or Custom. Scene separator
 
 <!-- SCREENSHOT:21 -->
 
+<br>
+
 ![The Scene break menu showing hash, asterisk, blank-line, and custom separator choices](docs/images/21-scene-break-options.png)
+
+<br>
 
 *Choose `#`, `*`, `***`, `* * *`, a blank line, or a custom separator between included Scenes. `* * *` is selected here.*
 
@@ -306,7 +390,11 @@ Choose `#`, `*`, `***`, `* * *`, a styled blank line, or Custom. Scene separator
 
 <!-- SCREENSHOT:22 -->
 
+<br>
+
 ![Front matter correction controls with Copyright notices expanded above the manuscript Parts](docs/images/22-front-matter-structure.png)
+
+<br>
 
 *Review front-matter inclusion, roles, and order separately from the manuscript Parts. The Copyright notices container is expanded here.*
 
@@ -314,7 +402,11 @@ Choose `#`, `*`, `***`, `* * *`, a styled blank line, or Custom. Scene separator
 
 <!-- SCREENSHOT:23 -->
 
+<br>
+
 ![Back matter correction controls with the Front and back matter container expanded](docs/images/23-back-matter-structure.png)
+
+<br>
 
 *Review which notes will follow the manuscript body, including their inclusion, Back matter roles, and order.*
 
@@ -326,11 +418,19 @@ Advanced formatting contains title/author overrides, typography where meaningful
 
 <!-- SCREENSHOT:24 -->
 
+<br>
+
 ![Advanced formatting with book and author overrides, font, font size, and line spacing](docs/images/24a-advanced-formatting-typography.png)
+
+<br>
 
 *Advanced formatting begins with book and author overrides plus typography controls.*
 
+<br>
+
 ![Advanced formatting with page size, custom scene break, structural heading styles, manuscript body headings, and filename template](docs/images/24b-advanced-formatting-structure.png)
+
+<br>
 
 *The remaining controls set page size, scene breaks, structural heading styles, manuscript body headings, and the filename template.*
 
@@ -368,7 +468,11 @@ After validation, the plugin starts one browser/host download. Desktop systems m
 
 <!-- SCREENSHOT:25 -->
 
+<br>
+
 ![The macOS save prompt for a Warden of Silence DOCX export](docs/images/25-download-save-prompt.png)
+
+<br>
 
 *The completed DOCX is handed to macOS, where you confirm the filename and choose the external save destination.*
 
@@ -376,7 +480,11 @@ After validation, the plugin starts one browser/host download. Desktop systems m
 
 <!-- SCREENSHOT:26 -->
 
+<br>
+
 ![A compiled Warden of Silence chapter open in Microsoft Word with named manuscript styles visible](docs/images/26-docx-in-word.png)
+
+<br>
 
 *The generated DOCX opens in Microsoft Word with separate chapter number and title formatting, manuscript body text, a scene break, and named styles available in the Styles gallery.*
 
@@ -384,7 +492,11 @@ After validation, the plugin starts one browser/host download. Desktop systems m
 
 <!-- SCREENSHOT:27 -->
 
+<br>
+
 ![The compiled Warden of Silence DOCX imported into Vellum with its book hierarchy and chapter preview visible](docs/images/27-docx-in-vellum.png)
+
+<br>
 
 *Vellum recognises the imported Part and Chapter hierarchy, displays the selected chapter once in the manuscript pane, and renders its corresponding print preview.*
 
@@ -392,7 +504,11 @@ After validation, the plugin starts one browser/host download. Desktop systems m
 
 <!-- SCREENSHOT:28 -->
 
+<br>
+
 ![A compiled Warden of Silence ODT chapter open in LibreOffice Writer](docs/images/28-odt-in-libreoffice.png)
+
+<br>
 
 *LibreOffice Writer renders the generated ODT with distinct chapter number and title formatting, manuscript body text, and a centred scene separator.*
 
@@ -400,7 +516,11 @@ After validation, the plugin starts one browser/host download. Desktop systems m
 
 <!-- SCREENSHOT:29 -->
 
+<br>
+
 ![The Warden of Silence EPUB open in a reader with its contents navigation and chapter text visible](docs/images/29-epub-reader.png)
+
+<br>
 
 *The generated EPUB provides navigable front matter and Chapters alongside a reflowable reading view with a distinct Chapter heading and scene separator.*
 
@@ -408,7 +528,11 @@ After validation, the plugin starts one browser/host download. Desktop systems m
 
 <!-- SCREENSHOT:30 -->
 
+<br>
+
 ![The Warden of Silence HTML export opened locally in a browser](docs/images/30-offline-html-in-browser.png)
+
+<br>
 
 *The self-contained HTML file opens directly from local storage with distinct Part and Chapter headings, manuscript body text, and a centred scene separator.*
 
@@ -416,7 +540,11 @@ After validation, the plugin starts one browser/host download. Desktop systems m
 
 <!-- SCREENSHOT:31 -->
 
+<br>
+
 ![The Warden of Silence Markdown export displayed in a rendered editing view](docs/images/31-markdown-rendered-view.png)
+
+<br>
 
 *The portable Markdown renders Part and Chapter headings distinctly while preserving ordinary manuscript paragraphs and the configured scene separator.*
 
@@ -424,7 +552,11 @@ After validation, the plugin starts one browser/host download. Desktop systems m
 
 <!-- SCREENSHOT:32 -->
 
+<br>
+
 ![The Warden of Silence XML export with expanded Part, Chapter, Scene, heading, and paragraph elements](docs/images/32-xml-semantic-structure.png)
+
+<br>
 
 *The presentation-neutral XML preserves the manuscript as explicit Part, Chapter, Scene, heading, and paragraph elements for deterministic interchange.*
 
