@@ -14,7 +14,9 @@ The workflow has three stages:
 
 <br>
 
-![Manuscript Compiler installed and enabled in Obsidian's Community plugins settings](docs/images/01-manuscript-compiler-enabled.png)
+<p align="center">
+  <img src="docs/images/01-manuscript-compiler-enabled.png" alt="Manuscript Compiler installed and enabled in Obsidian's Community plugins settings" width="75%">
+</p>
 
 <br>
 
@@ -78,7 +80,9 @@ In File Explorer, right-click the exact book folder and choose **Compile manuscr
 
 <br>
 
-![Compile manuscript from this folder in the Obsidian File Explorer context menu](docs/images/02-folder-context-menu.png)
+<p align="center">
+  <img src="docs/images/02-folder-context-menu.png" alt="Compile manuscript from this folder in the Obsidian File Explorer context menu" width="75%">
+</p>
 
 <br>
 
@@ -92,7 +96,9 @@ You can also open Manuscript Compiler from the command palette or plugin setting
 
 <br>
 
-![Manuscript Compiler settings with defaults, advanced options, support links, and the Open compiler button](docs/images/03-plugin-settings.png)
+<p align="center">
+  <img src="docs/images/03-plugin-settings.png" alt="Manuscript Compiler settings with defaults, advanced options, support links, and the Open compiler button" width="75%">
+</p>
 
 <br>
 
@@ -108,7 +114,9 @@ Confirm the selected folder and choose the structure preset closest to the proje
 
 <br>
 
-![The Manuscript stage showing the selected book folder, detected structure, scan summary, and Review Structure action](docs/images/04-manuscript-screen.png)
+<p align="center">
+  <img src="docs/images/04-manuscript-screen.png" alt="The Manuscript stage showing the selected book folder, detected structure, scan summary, and Review Structure action" width="75%">
+</p>
 
 <br>
 
@@ -122,7 +130,9 @@ You only need the folder chooser when you want to change the selected folder or 
 
 <br>
 
-![The manuscript folder chooser filtered to Warden of Silence](docs/images/05-folder-chooser.png)
+<p align="center">
+  <img src="docs/images/05-folder-chooser.png" alt="The manuscript folder chooser filtered to Warden of Silence" width="75%">
+</p>
 
 <br>
 
@@ -145,7 +155,9 @@ Choose the nearest preset and correct exceptions on Contents. Renaming the vault
 
 <br>
 
-![The Detected structure menu showing every available manuscript structure preset](docs/images/06-structure-presets.png)
+<p align="center">
+  <img src="docs/images/06-structure-presets.png" alt="The Detected structure menu showing every available manuscript structure preset" width="75%">
+</p>
 
 <br>
 
@@ -161,7 +173,9 @@ Contents opens as a compact review, not an editing form. Summary cards show dete
 
 <br>
 
-![The Contents stage showing detected counts, review controls, and the collapsed manuscript outline](docs/images/07-contents-review.png)
+<p align="center">
+  <img src="docs/images/07-contents-review.png" alt="The Contents stage showing detected counts, review controls, and the collapsed manuscript outline" width="75%">
+</p>
 
 <br>
 
@@ -185,7 +199,9 @@ Keyboard users can Tab to controls, use Space/Enter on buttons and toggles, and 
 
 <br>
 
-![Correction mode showing inclusion checkboxes, folder disclosure, role selectors, and ordering controls](docs/images/08-correct-structure.png)
+<p align="center">
+  <img src="docs/images/08-correct-structure.png" alt="Correction mode showing inclusion checkboxes, folder disclosure, role selectors, and ordering controls" width="75%">
+</p>
 
 <br>
 
@@ -197,7 +213,9 @@ Keyboard users can Tab to controls, use Space/Enter on buttons and toggles, and 
 
 <br>
 
-![Correction mode with one chapter expanded into scenes and neighbouring chapters collapsed](docs/images/09-collapsed-structure.png)
+<p align="center">
+  <img src="docs/images/09-collapsed-structure.png" alt="Correction mode with one chapter expanded into scenes and neighbouring chapters collapsed" width="75%">
+</p>
 
 <br>
 
@@ -209,7 +227,9 @@ Keyboard users can Tab to controls, use Space/Enter on buttons and toggles, and 
 
 <br>
 
-![The Ignored project notes review showing excluded items and their reasons](docs/images/10-ignored-project-notes.png)
+<p align="center">
+  <img src="docs/images/10-ignored-project-notes.png" alt="The Ignored project notes review showing excluded items and their reasons" width="75%">
+</p>
 
 <br>
 
@@ -221,7 +241,9 @@ Keyboard users can Tab to controls, use Space/Enter on buttons and toggles, and 
 
 <br>
 
-![The Warnings review showing affected chapters and author-facing explanations](docs/images/11-warnings-review.png)
+<p align="center">
+  <img src="docs/images/11-warnings-review.png" alt="The Warnings review showing affected chapters and author-facing explanations" width="75%">
+</p>
 
 <br>
 
@@ -239,7 +261,9 @@ Create file shows the prepared Book summary, six format cards, relevant formatti
 
 <br>
 
-![The Create file stage showing the prepared book summary and all six export formats](docs/images/12-create-file-overview.png)
+<p align="center">
+  <img src="docs/images/12-create-file-overview.png" alt="The Create file stage showing the prepared book summary and all six export formats" width="75%">
+</p>
 
 <br>
 
@@ -255,7 +279,9 @@ Click a card or focus the selected card and use Left/Right or Up/Down arrows. Ho
 
 <br>
 
-![DOCX selected with document style, indentation, scene break, title page, table of contents, and chapter controls](docs/images/13-docx-format.png)
+<p align="center">
+  <img src="docs/images/13-docx-format.png" alt="DOCX selected with document style, indentation, scene break, title page, table of contents, and chapter controls" width="75%">
+</p>
 
 <br>
 
@@ -267,7 +293,9 @@ Click a card or focus the selected card and use Left/Right or Up/Down arrows. Ho
 
 <br>
 
-![ODT selected with document style, indentation, scene break, title page, table of contents, and chapter controls](docs/images/14-odt-format.png)
+<p align="center">
+  <img src="docs/images/14-odt-format.png" alt="ODT selected with document style, indentation, scene break, title page, table of contents, and chapter controls" width="75%">
+</p>
 
 <br>
 
@@ -279,7 +307,9 @@ Click a card or focus the selected card and use Left/Right or Up/Down arrows. Ho
 
 <br>
 
-![EPUB selected with reflowable ebook, indentation, scene break, title page, table of contents, and advanced formatting controls](docs/images/15-epub-format.png)
+<p align="center">
+  <img src="docs/images/15-epub-format.png" alt="EPUB selected with reflowable ebook, indentation, scene break, title page, table of contents, and advanced formatting controls" width="75%">
+</p>
 
 <br>
 
@@ -291,7 +321,9 @@ Click a card or focus the selected card and use Left/Right or Up/Down arrows. Ho
 
 <br>
 
-![HTML selected with web-readable, indentation, scene break, title page, table of contents, and advanced formatting controls](docs/images/16-html-format.png)
+<p align="center">
+  <img src="docs/images/16-html-format.png" alt="HTML selected with web-readable, indentation, scene break, title page, table of contents, and advanced formatting controls" width="75%">
+</p>
 
 <br>
 
@@ -303,7 +335,9 @@ Click a card or focus the selected card and use Left/Right or Up/Down arrows. Ho
 
 <br>
 
-![Markdown selected with plain-text structure, indentation guidance, scene break, title page, and advanced content options](docs/images/17-markdown-format.png)
+<p align="center">
+  <img src="docs/images/17-markdown-format.png" alt="Markdown selected with plain-text structure, indentation guidance, scene break, title page, and advanced content options" width="75%">
+</p>
 
 <br>
 
@@ -315,7 +349,9 @@ Click a card or focus the selected card and use Left/Right or Up/Down arrows. Ho
 
 <br>
 
-![XML selected with structured manuscript guidance and advanced content options](docs/images/18-xml-format.png)
+<p align="center">
+  <img src="docs/images/18-xml-format.png" alt="XML selected with structured manuscript guidance and advanced content options" width="75%">
+</p>
 
 <br>
 
@@ -348,7 +384,9 @@ The first-line indent size appears only when indentation is enabled. Markdown ha
 
 <br>
 
-![The Standard manuscript formatting preset with indentation, scene break, title page, table of contents, chapter start, and advanced formatting controls](docs/images/19-standard-formatting.png)
+<p align="center">
+  <img src="docs/images/19-standard-formatting.png" alt="The Standard manuscript formatting preset with indentation, scene break, title page, table of contents, chapter start, and advanced formatting controls" width="75%">
+</p>
 
 <br>
 
@@ -360,7 +398,9 @@ The first-line indent size appears only when indentation is enabled. Markdown ha
 
 <br>
 
-![Paragraph indentation enabled with the first-line indent size menu open](docs/images/20-paragraph-indentation.png)
+<p align="center">
+  <img src="docs/images/20-paragraph-indentation.png" alt="Paragraph indentation enabled with the first-line indent size menu open" width="75%">
+</p>
 
 <br>
 
@@ -376,7 +416,9 @@ Choose `#`, `*`, `***`, `* * *`, a styled blank line, or Custom. Scene separator
 
 <br>
 
-![The Scene break menu showing hash, asterisk, blank-line, and custom separator choices](docs/images/21-scene-break-options.png)
+<p align="center">
+  <img src="docs/images/21-scene-break-options.png" alt="The Scene break menu showing hash, asterisk, blank-line, and custom separator choices" width="75%">
+</p>
 
 <br>
 
@@ -392,7 +434,9 @@ Choose `#`, `*`, `***`, `* * *`, a styled blank line, or Custom. Scene separator
 
 <br>
 
-![Front matter correction controls with Copyright notices expanded above the manuscript Parts](docs/images/22-front-matter-structure.png)
+<p align="center">
+  <img src="docs/images/22-front-matter-structure.png" alt="Front matter correction controls with Copyright notices expanded above the manuscript Parts" width="75%">
+</p>
 
 <br>
 
@@ -404,7 +448,9 @@ Choose `#`, `*`, `***`, `* * *`, a styled blank line, or Custom. Scene separator
 
 <br>
 
-![Back matter correction controls with the Front and back matter container expanded](docs/images/23-back-matter-structure.png)
+<p align="center">
+  <img src="docs/images/23-back-matter-structure.png" alt="Back matter correction controls with the Front and back matter container expanded" width="75%">
+</p>
 
 <br>
 
@@ -420,7 +466,9 @@ Advanced formatting contains title/author overrides, typography where meaningful
 
 <br>
 
-![Advanced formatting with book and author overrides, font, font size, and line spacing](docs/images/24a-advanced-formatting-typography.png)
+<p align="center">
+  <img src="docs/images/24a-advanced-formatting-typography.png" alt="Advanced formatting with book and author overrides, font, font size, and line spacing" width="75%">
+</p>
 
 <br>
 
@@ -428,7 +476,9 @@ Advanced formatting contains title/author overrides, typography where meaningful
 
 <br>
 
-![Advanced formatting with page size, custom scene break, structural heading styles, manuscript body headings, and filename template](docs/images/24b-advanced-formatting-structure.png)
+<p align="center">
+  <img src="docs/images/24b-advanced-formatting-structure.png" alt="Advanced formatting with page size, custom scene break, structural heading styles, manuscript body headings, and filename template" width="75%">
+</p>
 
 <br>
 
@@ -470,7 +520,9 @@ After validation, the plugin starts one browser/host download. Desktop systems m
 
 <br>
 
-![The macOS save prompt for a Warden of Silence DOCX export](docs/images/25-download-save-prompt.png)
+<p align="center">
+  <img src="docs/images/25-download-save-prompt.png" alt="The macOS save prompt for a Warden of Silence DOCX export" width="75%">
+</p>
 
 <br>
 
@@ -482,7 +534,9 @@ After validation, the plugin starts one browser/host download. Desktop systems m
 
 <br>
 
-![A compiled Warden of Silence chapter open in Microsoft Word with named manuscript styles visible](docs/images/26-docx-in-word.png)
+<p align="center">
+  <img src="docs/images/26-docx-in-word.png" alt="A compiled Warden of Silence chapter open in Microsoft Word with named manuscript styles visible" width="75%">
+</p>
 
 <br>
 
@@ -494,7 +548,9 @@ After validation, the plugin starts one browser/host download. Desktop systems m
 
 <br>
 
-![The compiled Warden of Silence DOCX imported into Vellum with its book hierarchy and chapter preview visible](docs/images/27-docx-in-vellum.png)
+<p align="center">
+  <img src="docs/images/27-docx-in-vellum.png" alt="The compiled Warden of Silence DOCX imported into Vellum with its book hierarchy and chapter preview visible" width="75%">
+</p>
 
 <br>
 
@@ -506,7 +562,9 @@ After validation, the plugin starts one browser/host download. Desktop systems m
 
 <br>
 
-![A compiled Warden of Silence ODT chapter open in LibreOffice Writer](docs/images/28-odt-in-libreoffice.png)
+<p align="center">
+  <img src="docs/images/28-odt-in-libreoffice.png" alt="A compiled Warden of Silence ODT chapter open in LibreOffice Writer" width="75%">
+</p>
 
 <br>
 
@@ -518,7 +576,9 @@ After validation, the plugin starts one browser/host download. Desktop systems m
 
 <br>
 
-![The Warden of Silence EPUB open in a reader with its contents navigation and chapter text visible](docs/images/29-epub-reader.png)
+<p align="center">
+  <img src="docs/images/29-epub-reader.png" alt="The Warden of Silence EPUB open in a reader with its contents navigation and chapter text visible" width="75%">
+</p>
 
 <br>
 
@@ -530,7 +590,9 @@ After validation, the plugin starts one browser/host download. Desktop systems m
 
 <br>
 
-![The Warden of Silence HTML export opened locally in a browser](docs/images/30-offline-html-in-browser.png)
+<p align="center">
+  <img src="docs/images/30-offline-html-in-browser.png" alt="The Warden of Silence HTML export opened locally in a browser" width="75%">
+</p>
 
 <br>
 
@@ -542,7 +604,9 @@ After validation, the plugin starts one browser/host download. Desktop systems m
 
 <br>
 
-![The Warden of Silence Markdown export displayed in a rendered editing view](docs/images/31-markdown-rendered-view.png)
+<p align="center">
+  <img src="docs/images/31-markdown-rendered-view.png" alt="The Warden of Silence Markdown export displayed in a rendered editing view" width="75%">
+</p>
 
 <br>
 
@@ -554,7 +618,9 @@ After validation, the plugin starts one browser/host download. Desktop systems m
 
 <br>
 
-![The Warden of Silence XML export with expanded Part, Chapter, Scene, heading, and paragraph elements](docs/images/32-xml-semantic-structure.png)
+<p align="center">
+  <img src="docs/images/32-xml-semantic-structure.png" alt="The Warden of Silence XML export with expanded Part, Chapter, Scene, heading, and paragraph elements" width="75%">
+</p>
 
 <br>
 
