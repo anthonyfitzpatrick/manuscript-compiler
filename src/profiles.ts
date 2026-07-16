@@ -102,7 +102,9 @@ export function validateProfile(value: unknown): { profile?: CompileProfile; err
   const errors: string[] = []; if (!value || typeof value !== "object" || Array.isArray(value)) return { errors: ["Profile must be a JSON object."] };
   const item = value as Partial<CompileProfile>;
   if (typeof item.name !== "string" || !item.name.trim()) errors.push("Profile name is required.");
+  else if (item.name.length > 200) errors.push("Profile name must be 200 characters or fewer.");
   for (const key of ["exportFolder", "outputFilename", "partHeadingTemplate", "chapterHeadingTemplate", "sceneSeparator"] as const) if (typeof item[key] !== "string") errors.push(`${key} must be a string.`);
+  for (const key of ["manuscriptRoot", "exportFolder", "outputFilename", "partHeadingTemplate", "chapterHeadingTemplate", "sceneSeparator", "referenceDocx", "pandocMetadataFile", "additionalPandocArguments"] as const) if (typeof item[key] === "string" && item[key].length > 4096) errors.push(`${key} is too long.`);
   if (typeof item.outputFilename === "string" && !item.outputFilename.trim()) errors.push("outputFilename is required.");
   for (const key of ["includeFrontMatter", "includeBackMatter", "includeSceneTitles", "metadataOrdering", "stripYamlFrontmatter", "removeObsidianComments", "removeHtmlComments", "removeDataviewBlocks", "removeCallouts", "stripInternalLinks", "useParts"] as const) if (item[key] !== undefined && typeof item[key] !== "boolean") errors.push(`${key} must be boolean.`);
   if (item.chapterSource !== undefined && item.chapterSource !== "folders" && item.chapterSource !== "notes") errors.push("chapterSource is invalid.");
@@ -112,12 +114,17 @@ export function validateProfile(value: unknown): { profile?: CompileProfile; err
   for (const key of ["referenceDocx", "pandocMetadataFile", "additionalPandocArguments"] as const) if (item[key] !== undefined && typeof item[key] !== "string") errors.push(`${key} must be a string.`);
   for (const key of ["generateTableOfContents", "keepIntermediateMarkdown", "docxIndentParagraphs"] as const) if (item[key] !== undefined && typeof item[key] !== "boolean") errors.push(`${key} must be boolean.`);
   if (item.variables !== undefined && (typeof item.variables !== "object" || item.variables === null || Array.isArray(item.variables))) errors.push("variables must be an object.");
+  else if (item.variables) for (const key of ["BookTitle", "Series", "Author"] as const) if (typeof item.variables[key] !== "string") errors.push(`variables.${key} must be a string.`); else if (item.variables[key].length > 1000) errors.push(`variables.${key} is too long.`);
   if (!Array.isArray(item.metadataFilters)) errors.push("metadataFilters must be an array.");
   else item.metadataFilters.forEach((rule, index) => {
+    if (index >= 100) { if (index === 100) errors.push("metadataFilters must contain no more than 100 rules."); return; }
     if (!rule || typeof rule !== "object" || typeof rule.field !== "string" || !rule.field.trim()) errors.push(`metadataFilters[${index}].field is required.`);
+    else if (rule.field.length > 100) errors.push(`metadataFilters[${index}].field is too long.`);
     if (rule?.operator !== "equals" && rule?.operator !== "not-equals") errors.push(`metadataFilters[${index}].operator is invalid.`);
     if (typeof rule?.value !== "string") errors.push(`metadataFilters[${index}].value must be a string.`);
+    else if (rule.value.length > 1000) errors.push(`metadataFilters[${index}].value is too long.`);
   });
+  if (item.bodySectionAliases !== undefined && (!Array.isArray(item.bodySectionAliases) || item.bodySectionAliases.length > 50 || item.bodySectionAliases.some((alias) => typeof alias !== "string" || alias.length > 100))) errors.push("bodySectionAliases must contain no more than 50 short strings.");
   if (errors.length > 0) return { errors };
   const base = profile(item.name?.trim() ?? "Imported");
   const imported: CompileProfile = { ...base, ...item, id: profileId(), variables: { ...base.variables, ...(item.variables ?? {}) }, metadataFilters: (item.metadataFilters ?? []).map((rule) => ({ ...rule, id: typeof rule.id === "string" ? rule.id : profileId() })) };

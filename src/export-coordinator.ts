@@ -29,6 +29,7 @@ import type { ManuscriptCompilerSettings } from "./settings";
 import { CompilationProgressModal } from "./ui";
 import { canProceedWithExport } from "./export-safety";
 import { WarningEngine } from "./warnings";
+import { redactTechnicalMessage } from "./diagnostics";
 
 export interface ExportExecutionResult { status: "success" | "failed" | "cancelled"; outputFiles: string[]; report?: CompileResult; error?: string; downloadStarted?: boolean; validationPassed?: boolean; }
 export interface ExportExecutionOptions { showResult?: boolean; format?: ExportFormat; filename?: string; }
@@ -90,7 +91,6 @@ export class ExportCoordinator {
 /**
  * Converts an unknown terminal export error into concise author-facing text.
  * Preserves actionable validation/download wording and performs no logging or
- * persistence. Callers must redact sensitive technical details before passing
- * them if an upstream error could contain paths or metadata.
+ * persistence. Technical details are redacted at this user-facing boundary.
  */
-export function friendlyExportError(error: unknown): string { const message = error instanceof Error ? error.message : String(error); if (/validation/i.test(message)) return message; if (/blocked|download/i.test(message)) return message; return `The file could not be created. ${message}`; }
+export function friendlyExportError(error: unknown): string { const message = redactTechnicalMessage(error); if (/validation/i.test(message)) return message; if (/blocked|download/i.test(message)) return message; return `The file could not be created. ${message}`; }

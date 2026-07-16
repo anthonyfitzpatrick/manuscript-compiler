@@ -22,7 +22,10 @@ export function exportFilename(value: string, format: ExportFormat, fallback = "
   const leaf = resolved.replace(/^.*[\\/]/, "").replace(/(?:\.(?:docx|odt|epub|html?|md|markdown|xml))+$/i, "");
   let safe = replaceUnsafeFilenameCharacters(leaf).trim().replace(/[. ]+$/g, "") || fallback;
   if (/^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])$/i.test(safe)) safe = `_${safe}`;
-  return `${safe}.${EXPORT_FORMAT_DETAILS[format].extension}`;
+  const extension = `.${EXPORT_FORMAT_DETAILS[format].extension}`;
+  safe = utf8Prefix(safe, 200 - new TextEncoder().encode(extension).length).replace(/[. ]+$/g, "") || "Manuscript";
+  return `${safe}${extension}`;
 }
 
 function replaceUnsafeFilenameCharacters(value: string): string { return [...value].map((character) => { const code = character.charCodeAt(0); return code <= 0x1f || code === 0x7f || '\\/:*?"<>|'.includes(character) ? "-" : character; }).join(""); }
+function utf8Prefix(value: string, maximumBytes: number): string { let result = ""; let bytes = 0; const encoder = new TextEncoder(); for (const character of value) { const size = encoder.encode(character).length; if (bytes + size > maximumBytes) break; result += character; bytes += size; } return result; }
