@@ -1,88 +1,190 @@
-# Manuscript Compiler <img src="logo.svg" alt="Manuscript Compiler semantic tree logo" width="48" align="right">
+# Manuscript Compiler
 
-Manuscript Compiler 0.9.3 turns fiction in an Obsidian vault into DOCX, ODT, EPUB, standalone HTML, Markdown, or structured XML. It works offline, never changes source notes, and requires neither Pandoc nor another community plugin.
+<p align="center">
+  <img src="logo.svg" alt="Manuscript Compiler logo" width="128">
+</p>
 
-Only content included in the reviewed manuscript structure is exported. Project metadata, author notes, dashboards, and excluded notes are not manuscript content.
+Compile structured Obsidian manuscripts into publication-ready DOCX, ODT, EPUB, HTML, Markdown, and XML files for Vellum and other publishing workflows.
 
-The workflow has three stages: **Manuscript → Contents → Create file**. Every format is generated locally in memory, validated, and handed to the host download/share flow. Completed exports are downloaded outside the vault; the plugin does not choose or remember the final destination.
+![Manuscript Compiler Create file screen with a prepared book summary and six export formats](docs/images/12-create-file-overview.png)
 
-Documentation:
+[![Latest release](https://img.shields.io/github/v/release/anthonyfitzpatrick/manuscript-compiler?label=release)](https://github.com/anthonyfitzpatrick/manuscript-compiler/releases/latest)
+[![MIT licence](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Obsidian plugin](https://img.shields.io/badge/Obsidian-plugin-7C3AED?logo=obsidian&logoColor=white)](https://obsidian.md/)
+[![TypeScript](https://img.shields.io/github/languages/top/anthonyfitzpatrick/manuscript-compiler)](https://www.typescriptlang.org/)
+[![Tests](https://github.com/anthonyfitzpatrick/manuscript-compiler/actions/workflows/ci.yml/badge.svg)](https://github.com/anthonyfitzpatrick/manuscript-compiler/actions/workflows/ci.yml)
+![Offline](https://img.shields.io/badge/works-offline-success)
+![No Pandoc](https://img.shields.io/badge/Pandoc-not%20required-success)
+[![Open source](https://img.shields.io/badge/open%20source-yes-success)](LICENSE)
 
-- [User guide](USER_GUIDE.md) — installation, manuscript layout, complete workflow, formats, formatting, troubleshooting, and screenshot plan.
-- [Developer guide](DEVELOPER_GUIDE.md) — building, testing, architecture boundaries, extension procedures, security, and releases.
-- [Architecture](ARCHITECTURE.md) — source-of-truth pipeline, state ownership, exports, validation, privacy, and source map.
-- [Security policy](SECURITY.md) — offline guarantees, data handling, dependency policy, and private reporting.
-- [Manual release checklist](MANUAL_TESTING.md) — intentionally unchecked application/platform interoperability gates.
+## Why Manuscript Compiler?
+
+Manuscript Compiler understands a book as **Parts, Chapters, Scenes, Front Matter, and Back Matter**—not merely as a collection of Markdown files. It detects that publishing structure, lets you review and correct inclusion, roles, and order, then compiles only the manuscript you approved.
+
+Designed specifically for long-form authors, it keeps research, dashboards, development notes, and excluded drafts out of the finished book while preserving the hierarchy expected by editing and publishing tools. Your source notes are never rewritten.
+
+## Features
+
+### Author Workflow
+
+- Right-click any manuscript folder
+- Automatic structure detection
+- Manual correction before export
+- Semantic review of the complete book
+- One-click compilation and download
+
+### Publishing
+
+- Native DOCX
+- Native ODT
+- Native EPUB 3
+- Native offline HTML
+- Native Markdown
+- Native semantic XML
+- DOCX designed for Vellum workflows
+
+### Privacy
+
+- Fully offline compilation and export
+- No telemetry or analytics
+- No cloud service or account
+- No manuscript network access
+- No external executables
+- No companion plugins
+- No changes to manuscript notes
+
+### Reliability
+
+- One shared semantic `Book` model for every format
+- Format-specific structural validation before download
+- Deterministic structural output
+- Stale-preview protection
+- Comprehensive automated tests
+
+## Quick Start
+
+1. [Install the plugin](#installation).
+2. Right-click the complete manuscript folder in Obsidian.
+3. Review and correct the detected structure.
+4. Choose an export format and formatting preset.
+5. Select **Create and download**.
+
+See the [User Guide](USER_GUIDE.md) for the complete author workflow.
+
+## Export Formats
+
+| Format | Purpose |
+| --- | --- |
+| **DOCX** | Word editing, submission, and Vellum import workflows |
+| **ODT** | LibreOffice and other OpenDocument workflows |
+| **EPUB** | Reflowable EPUB 3 proofing and ebook workflows |
+| **HTML** | A self-contained offline browser proof with embedded CSS |
+| **Markdown** | Portable, readable plain-text manuscripts |
+| **XML** | Presentation-neutral semantic interchange and automation |
+
+## Capability Comparison
+
+| Capability | Manuscript Compiler |
+| --- | :---: |
+| Native DOCX | ✅ |
+| Native ODT | ✅ |
+| Native EPUB | ✅ |
+| Offline operation | ✅ |
+| No Pandoc | ✅ |
+| No companion plugin | ✅ |
+| No telemetry | ✅ |
+| Open source | ✅ |
+
+## Screenshots
+
+### Plugin Settings
+
+![Manuscript Compiler settings with defaults, advanced options, support links, and the Open compiler button](docs/images/03-plugin-settings.png)
+
+*Set author defaults once, then open the compiler directly from Obsidian settings.*
+
+### Right-click Menu
+
+![Compile manuscript from this folder in the Obsidian File Explorer context menu](docs/images/02-folder-context-menu.png)
+
+*Start from the exact folder that contains the complete book.*
+
+### Manuscript Screen
+
+![The Manuscript stage showing the selected book folder, detected structure, scan summary, and Review Structure action](docs/images/04-manuscript-screen.png)
+
+*Confirm the manuscript root and automatically detected book structure.*
+
+### Contents Review
+
+![The Contents stage showing detected counts, review controls, and the collapsed manuscript outline](docs/images/07-contents-review.png)
+
+*Review Parts, Chapters, Scenes, matter, warnings, and ignored notes before export.*
+
+### Correct Structure
+
+![Correction mode showing inclusion checkboxes, folder disclosure, role selectors, and ordering controls](docs/images/08-correct-structure.png)
+
+*Correct inclusion, publishing roles, and order without moving or rewriting source notes.*
+
+### Create File
+
+![DOCX selected with document style, indentation, scene break, title page, table of contents, and chapter controls](docs/images/13-docx-format.png)
+
+*Choose the output format and meaningful publishing controls, then create the file.*
+
+### DOCX in Microsoft Word
+
+![A compiled manuscript chapter open in Microsoft Word with named manuscript styles visible](docs/images/26-docx-in-word.png)
+
+*Native DOCX opens with distinct structural formatting and named manuscript styles.*
+
+### DOCX in Vellum
+
+![The compiled DOCX imported into Vellum with its book hierarchy and chapter preview visible](docs/images/27-docx-in-vellum.png)
+
+*Vellum recognises the compiled Part and Chapter hierarchy.*
+
+### ODT in LibreOffice
+
+![A compiled manuscript ODT chapter open in LibreOffice Writer](docs/images/28-odt-in-libreoffice.png)
+
+*Native ODT carries the manuscript structure into LibreOffice Writer.*
+
+### EPUB Reader
+
+![The compiled EPUB open in a reader with its contents navigation and chapter text visible](docs/images/29-epub-reader.png)
+
+*The EPUB provides navigable contents and a reflowable reading view.*
+
+## Documentation
+
+- [User Guide](USER_GUIDE.md)
+- [Developer Guide](DEVELOPER_GUIDE.md)
+- [Architecture](ARCHITECTURE.md)
+- [Security Policy](SECURITY.md)
+- [Contributing](CONTRIBUTING.md)
+- [Manual Release Checklist](MANUAL_TESTING.md)
 
 ## Installation
 
-Until the plugin is listed in Obsidian's Community Plugins directory, download `main.js`, `manifest.json`, and `styles.css` from a GitHub release whose tag exactly matches the manifest version. Put the three files in a vault plugin folder named `manuscript-compiler`, reload Obsidian, and enable **Manuscript Compiler** under Community Plugins.
+### Community Plugins
 
-## Quick start
+Manuscript Compiler is not yet listed in Obsidian's Community Plugins catalogue. Once available, search for **Manuscript Compiler**, select **Install**, then **Enable**.
 
-1. In File Explorer, right-click the book folder and choose **Compile manuscript from this folder**.
-2. Review the detected structure and correct inclusion, roles, or order if needed.
-3. Choose DOCX, ODT, EPUB, HTML, Markdown, or XML.
-4. Choose the formatting controls that apply to that format.
-5. Press **Create and download …**.
-6. Complete the save or share flow provided by Obsidian and the operating system.
+### Manual Installation
 
-The selected folder is the exact manuscript root; it never becomes a Part or Chapter. The three-stage workspace is **Manuscript → Contents → Create file**. Contents opens as a compact outline. **Correct structure** exposes keyboard-operable inclusion, type, and ordering controls. Excluded folders collapse without losing child choices or manual order.
+Download `main.js`, `manifest.json`, and `styles.css` from the same [GitHub release](https://github.com/anthonyfitzpatrick/manuscript-compiler/releases). Place them directly in `<vault>/.obsidian/plugins/manuscript-compiler/`, reload Obsidian, and enable **Manuscript Compiler** under Community Plugins.
 
-If an included note or a semantic compile choice changes after preparation, export is blocked until the preview is refreshed. Changing only the selected format or filename does not rescan, reparse, or rebuild the prepared Book.
+## Known Limitations
 
-## Formats
+- Complex tables, embedded media, and advanced Markdown layouts are outside the semantic fiction model.
+- Save and share behaviour depends on the desktop or mobile host.
+- EPUB and target-application validation still require representative reader testing.
+- Unusual authoring templates may require manual structure correction.
+- Manuscript Compiler is not a fixed-page desktop-publishing engine.
 
-- **DOCX** is native WordprocessingML for Word, Vellum, editing, and submission. Vellum and Standard Manuscript presets are fully supported.
-- **ODT** is a native OpenDocument Text ZIP package for LibreOffice and compatible editors.
-- **EPUB** is a native EPUB 3 reflowable package with container, package document, navigation, XHTML sections, and embedded CSS.
-- **HTML** is one offline HTML5 file with embedded CSS, semantic sections, and no JavaScript or remote assets.
-- **Markdown** is a deterministic, portable plain-text manuscript preserving semantic structure, emphasis, readable links, Unicode, and paragraph spacing.
-- **XML** is a deterministic interchange format in the `https://manuscript-compiler.dev/schema` namespace with `schemaVersion="1.0"`. It contains manuscript content and structure, but no vault paths, profile IDs, settings, or private YAML metadata.
-
-DOCX and ODT support document-style pagination controls. EPUB and HTML expose only meaningful reflowable controls. Markdown and XML expose structural content controls without print typography. No visible control is intended to be inert.
-
-The Create file screen offers **Indent first line of paragraphs** for DOCX, ODT, EPUB, and HTML. When enabled, the configured first-line indent applies only to later body paragraphs; the first paragraph after a structural heading or scene break remains unindented. When disabled, all body paragraphs—including copyright and other matter text—use zero first-line indent without changing paragraph or line spacing. The indent-size control is shown only while indentation is enabled. Markdown stays portable and does not simulate indentation with spaces, tabs, HTML, or CSS. XML stays presentation-neutral, so its consuming application controls paragraph indentation.
-
-## Discovery and Cleaning
-
-Folders named Manuscript, Draft, Drafts, Book, Content, or Chapters can be transparent containers. Project folders such as Archive, Development, Exports, Research, Notes, Planning, Characters, Locations, Dashboards, Templates, Attachments, and old drafts are ignored by default but remain reviewable.
-
-Front and back matter are inferred from names and ancestry. Parts, Chapters, Scenes, matter, transparent containers, and ignored items can all be corrected before preparation.
-
-For template notes, the default manuscript-body headings are Scene, Manuscript, Text, Draft, and Body. Synopsis, Revision Notes, Editing Notes, Author Notes, Development Notes, and Comments sections are removed. YAML and recognised structured project metadata are removed without treating ordinary prose beginning with words such as “Book” or “Chapter” as metadata.
-
-Bold, italics, combined emphasis, readable Markdown link text, punctuation, smart quotes, accented characters, and Unicode pass through the shared semantic export projection. Embedded media, complex tables, and advanced Markdown layout are outside the restrained fiction model.
-
-## Delivery, Privacy, and Platform Behaviour
-
-All formats are generated and structurally validated in memory before delivery. One platform-neutral service creates a Blob, dispatches a temporary `<a download>` exactly once, removes it, and revokes the object URL. The plugin does not know or persist the final external path. Obsidian or the host may ask where to save the file or place it in Downloads. On mobile, the same mechanism is attempted; there is no vault-output fallback.
-
-Completed manuscript exports are never written into the vault. Historical vault-output settings remain storage-only migration data and cannot activate an old output route. The diagnostics command may still create an explicitly requested privacy-safe Markdown diagnostics note in the vault; that is not a manuscript export.
-
-The plugin has no Electron bridge, Node filesystem export path, background network requests, telemetry, cloud service, remote assets, shell command, or external executable. Support and funding links open an external website only when the user explicitly selects them. `fflate` is the sole bundled runtime dependency and supplies ZIP creation/inspection.
-
-### Disclosures
-
-| Topic | Disclosure |
-| --- | --- |
-| External file access | Browser/host-controlled download only; the host chooses the destination. |
-| Network | No background requests. Export, validation, and delivery initiation are offline. User-selected support links open in the system browser. |
-| Accounts | None. |
-| Payments and advertising | No advertising or in-plugin payments. An optional external donation link is identified as **Buy me a coffee**. |
-| Telemetry and analytics | None. |
-| Closed-source components | None. |
-| Runtime dependencies | `fflate` 0.8.3, bundled under its MIT licence. |
-| Vault writes | No manuscript export is written to the vault. The explicit diagnostics action can create a redacted Markdown support note. |
-| Mobile | The same browser download mechanism is attempted. Some mobile hosts may block or redirect downloads; no vault fallback is used. |
-
-History records bounded structural facts: time, title, format, filename, counts, generation/validation status, and whether download dispatch started. It does not record prose, Blob URLs, absolute paths, profile IDs, or warning details containing manuscript data.
-
-## DOCX Presets
-
-Vellum defaults to Garamond 12 pt, 1.15 spacing, enabled 0.75 cm first-line indentation, A4, `#` scene breaks, separate Part/Chapter number and title styles, and Chapter page starts. Standard Manuscript defaults to Times New Roman 12 pt, double spacing, enabled 1.27 cm indentation, A4, `* * *` scene breaks, and Chapter page starts. Custom retains both the indentation toggle and its configured size along with the other applicable exposed values.
-
-DOCX includes native Title, Author, Front Matter Heading, Back Matter Heading, Part Number, Part Title, Chapter Number, Chapter Title, First Paragraph, Body Text, and Scene Break styles. No Part 0 or Chapter 0 is invented.
+See [Known limitations in the User Guide](USER_GUIDE.md#known-limitations) for details and recommended testing.
 
 ## Development and Validation
 
@@ -108,14 +210,8 @@ git diff --check
 
 The release archive is `release/manuscript-compiler-0.9.3.zip` and contains exactly `main.js`, `manifest.json`, and `styles.css`.
 
-Automated structural validation is not a substitute for opening outputs in Word, Vellum, LibreOffice, multiple EPUB readers, text editors, and browsers. See [MANUAL_TESTING.md](MANUAL_TESTING.md).
+Automated structural validation is not a substitute for opening outputs in Word, Vellum, LibreOffice, multiple EPUB readers, text editors, and browsers. See the [Manual Release Checklist](MANUAL_TESTING.md).
 
-## Known Limits
+## Licence
 
-- Browser/host download behaviour and prompts differ by platform, and the plugin cannot verify the final filesystem copy after dispatch.
-- On mobile, the host may block the download or route it through a platform share sheet. The plugin reports dispatch failure and does not write a fallback copy into the vault.
-- EPUB validation is structural and does not replace EPUBCheck or live reader testing.
-- Vellum import semantics require live Vellum testing.
-- Unusual authoring templates may require manual structure correction or body-heading aliases.
-
-For a full author-oriented explanation of these limits and recovery steps, see [USER_GUIDE.md](USER_GUIDE.md).
+[MIT](LICENSE)
