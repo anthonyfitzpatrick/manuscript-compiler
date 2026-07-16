@@ -376,45 +376,9 @@ After validation, the plugin starts one browser/host download. Desktop systems m
 
 <!-- SCREENSHOT:26 -->
 
-<p style="color:#cc0000; font-size:1.5em; font-weight:bold; margin-bottom:0;">
-📸 SCREENSHOT REQUIRED — #26
-</p>
+![A compiled Warden of Silence chapter open in Microsoft Word with named manuscript styles visible](docs/images/26-docx-in-word.png)
 
-<p style="color:#cc0000; font-weight:bold;">
-CAPTURE
-</p>
-
-<p style="color:#cc0000;">
-Open the generated DOCX in Microsoft Word and capture a representative Chapter page with the Styles pane visible if it does not obscure the manuscript.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-SHOW
-</p>
-
-<ul style="color:#cc0000;">
-<li>A structural Chapter heading</li>
-<li>A flush-left First Paragraph</li>
-<li>An indented later Body Text paragraph</li>
-<li>A scene separator followed by flush-left prose</li>
-<li>Named paragraph styles in the Styles pane where practical</li>
-</ul>
-
-<p style="color:#cc0000; font-weight:bold;">
-PURPOSE
-</p>
-
-<p style="color:#cc0000;">
-Demonstrates the intended DOCX structure and paragraph behavior in Microsoft Word rather than only at package-validation level.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-WHEN REPLACING
-</p>
-
-<p style="color:#cc0000;">
-Delete this entire placeholder and replace it with the final screenshot and caption.
-</p>
+*The generated DOCX opens in Microsoft Word with separate chapter number and title formatting, manuscript body text, a scene break, and named styles available in the Styles gallery.*
 
 ---
 
