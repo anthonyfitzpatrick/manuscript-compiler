@@ -229,7 +229,7 @@ If a change introduces caching, document ownership and invalidation. Never cache
 - Scope CSS to plugin roots and retain theme variables, focus-visible, reduced-motion, and high-contrast behavior.
 - Keep UI sentence case and accessible.
 - Keep `manifest.json` identity and minimum version stable unless the product release explicitly changes them.
-- Release exactly `main.js`, `manifest.json`, and `styles.css`.
+- Release exactly `main.js`, `manifest.json`, `styles.css`, and `logo.svg`.
 
 ## CI and release process
 
@@ -242,7 +242,7 @@ npm run package
 npm run package:validate
 ```
 
-The ZIP is optional; attach `main.js`, `manifest.json`, and `styles.css` individually to the GitHub release. The tag must exactly match `manifest.json` without a `v` prefix. Do not package tests, fixtures, source, diagnostics, data files, or inspection artifacts.
+The ZIP is optional; attach `main.js`, `manifest.json`, `styles.css`, and `logo.svg` individually to the GitHub release. The tag must exactly match `manifest.json` without a `v` prefix. Obsidian's Community Plugins installer downloads only its recognised runtime files; the logo remains a companion GitHub/manual-install asset. Do not package tests, fixtures, source, diagnostics, data files, or inspection artifacts.
 
 ## Common mistakes
 

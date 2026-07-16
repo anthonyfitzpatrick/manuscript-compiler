@@ -4,7 +4,7 @@ All items are intentionally unchecked. Record date, tester, Obsidian version, op
 
 ## Installation and workflow
 
-- [ ] Install only `main.js`, `manifest.json`, and `styles.css` in a clean Obsidian vault.
+- [ ] Install only `main.js`, `manifest.json`, `styles.css`, and `logo.svg` in a clean Obsidian vault.
 - [ ] Upgrade an existing vault from the prior plugin version; confirm profiles, history, and formatting choices survive.
 - [ ] Load malformed persisted settings and confirm bounded, actionable recovery.
 - [ ] Right-click a folder and confirm the exact root opens in **Manuscript → Contents → Create file**.

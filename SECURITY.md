@@ -45,8 +45,9 @@ Official release assets are exactly:
 - `main.js`
 - `manifest.json`
 - `styles.css`
+- `logo.svg`
 
-The optional release ZIP contains only those three files. Use assets from one release tag and verify that the tag exactly matches the version in `manifest.json`. Dependency changes require lockfile review, licence review, audit, updated third-party notices, and explicit approval. Runtime dependencies must not be introduced as convenience wrappers around platform, export, or network behavior.
+The optional release ZIP contains only those four files. The package validator rejects active content and external references in the standalone SVG. Use assets from one release tag and verify that the tag exactly matches the version in `manifest.json`. Dependency changes require lockfile review, licence review, audit, updated third-party notices, and explicit approval. Runtime dependencies must not be introduced as convenience wrappers around platform, export, or network behavior.
 
 ## Supported versions
 

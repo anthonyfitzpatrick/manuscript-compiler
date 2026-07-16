@@ -38,9 +38,9 @@ Run and record current output before publishing:
 - `npm audit`
 - `git diff --check`
 
-The release archive must be `release/manuscript-compiler-0.9.3.zip` and contain exactly `main.js`, `manifest.json`, and `styles.css`.
+The release archive must be `release/manuscript-compiler-0.9.3.zip` and contain exactly `main.js`, `manifest.json`, `styles.css`, and `logo.svg`.
 
-Attach those three files individually to the GitHub release. The release tag must be exactly `0.9.3`, without a `v` prefix; the ZIP is optional and is not an installation dependency.
+Attach those four files individually to the GitHub release. The release tag must be exactly `0.9.3`, without a `v` prefix; the ZIP is optional and is not an installation dependency. Obsidian's Community Plugins installer uses the three recognised runtime assets, while GitHub and manual-install users also receive the standalone logo.
 
 ## Runtime dependencies
 

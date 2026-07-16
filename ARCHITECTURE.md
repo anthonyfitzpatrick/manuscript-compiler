@@ -453,7 +453,7 @@ New formats, semantic Book fields, workflow stages, dependencies, delivery route
 11. Histories/diagnostics exclude prose and private paths/metadata.
 12. Output remains deterministic, escaped, offline, and dependency-restrained.
 13. Command IDs, manifest identity, and mobile compatibility remain stable.
-14. Release packages contain exactly the allowlisted three files.
+14. Release packages contain exactly the four allowlisted files: the three Obsidian runtime assets and the standalone logo.
 
 ## Future roadmap
 

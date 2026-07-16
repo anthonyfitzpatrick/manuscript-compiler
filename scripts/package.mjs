@@ -2,7 +2,7 @@ import { mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { unzipSync, zipSync } from "fflate";
 
-const required = ["main.js", "manifest.json", "styles.css"];
+const required = ["main.js", "manifest.json", "styles.css", "logo.svg"];
 const allowedManifestKeys = new Set(["id", "name", "version", "minAppVersion", "description", "author", "authorUrl", "fundingUrl", "isDesktopOnly"]);
 const semverPattern = /^\d+\.\d+\.\d+$/;
 const packageJson = await jsonFile("package.json");
@@ -36,11 +36,15 @@ async function validateAssets() {
     assert(info.isFile() && info.size > 0, `Required release asset is missing or empty: ${name}`);
   }
   const bundle = await readFile("main.js", "utf8");
-  const releaseText = `${bundle}\n${await readFile("manifest.json", "utf8")}\n${await readFile("styles.css", "utf8")}`;
+  const logo = await readFile("logo.svg", "utf8");
+  const releaseText = `${bundle}\n${await readFile("manifest.json", "utf8")}\n${await readFile("styles.css", "utf8")}\n${logo}`;
   assert(!/sourceMappingURL|\.map(?:\s|$)/i.test(bundle), "Production bundle contains a source map reference.");
   assert(!/require\(["'](?:electron|(?:node:)?(?:fs|path|os|child_process))["']\)/.test(bundle), "Production bundle contains a prohibited desktop or Node import.");
   assert(!/\b(?:fetch|requestUrl|XMLHttpRequest|WebSocket|sendBeacon)\s*\(/.test(bundle), "Production bundle contains a prohibited network API.");
   assert(!/\b(?:eval|Function)\s*\(/.test(bundle), "Production bundle contains dynamic code execution.");
+  assert(/<svg\b/i.test(logo), "logo.svg is not an SVG document.");
+  assert(!/<(?:script|foreignObject|iframe|object|embed)\b/i.test(logo), "logo.svg contains active or embedded content.");
+  assert(!/\b(?:href|src)\s*=\s*["'](?:https?:|data:|javascript:)/i.test(logo), "logo.svg contains an external or active reference.");
   assert(!/https?:\/\/(?:localhost|127\.0\.0\.1|192\.168\.|10\.|172\.(?:1[6-9]|2\d|3[01])\.)/i.test(releaseText), "Release assets contain a local or private-network URL.");
   assert(!releaseText.includes(process.cwd()), "Release assets contain the local build path.");
   assert(bundle.includes("fflate 0.8.3 — MIT License") && bundle.includes("Copyright (c) 2026 Arjun Barrett"), "Production bundle is missing the bundled fflate licence notice.");
