@@ -400,45 +400,9 @@ After validation, the plugin starts one browser/host download. Desktop systems m
 
 <!-- SCREENSHOT:29 -->
 
-<p style="color:#cc0000; font-size:1.5em; font-weight:bold; margin-bottom:0;">
-📸 SCREENSHOT REQUIRED — #29
-</p>
+![The Warden of Silence EPUB open in a reader with its contents navigation and chapter text visible](docs/images/29-epub-reader.png)
 
-<p style="color:#cc0000; font-weight:bold;">
-CAPTURE
-</p>
-
-<p style="color:#cc0000;">
-Open the generated EPUB in a mainstream EPUB 3 reader and capture its navigation pane beside a representative Chapter page.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-SHOW
-</p>
-
-<ul style="color:#cc0000;">
-<li>Navigation entries for Parts or Chapters</li>
-<li>A visibly bold Chapter heading</li>
-<li>A flush-left first paragraph</li>
-<li>An indented later paragraph</li>
-<li>Reader name and version available for the eventual caption</li>
-</ul>
-
-<p style="color:#cc0000; font-weight:bold;">
-PURPOSE
-</p>
-
-<p style="color:#cc0000;">
-Shows the EPUB navigation and reflowable manuscript presentation in an actual reader application.
-</p>
-
-<p style="color:#cc0000; font-weight:bold;">
-WHEN REPLACING
-</p>
-
-<p style="color:#cc0000;">
-Delete this entire placeholder and replace it with the final screenshot and caption.
-</p>
+*The generated EPUB provides navigable front matter and Chapters alongside a reflowable reading view with a distinct Chapter heading and scene separator.*
 
 ---
 
