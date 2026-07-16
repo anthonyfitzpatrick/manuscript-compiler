@@ -1,12 +1,10 @@
-# Manuscript Compiler
-
-<p align="center">
-  <img src="logo.svg" alt="Manuscript Compiler logo" width="128">
-</p>
+# Manuscript Compiler <img src="logo.svg" alt="Manuscript Compiler logo" width="48" align="right">
 
 Compile structured Obsidian manuscripts into publication-ready DOCX, ODT, EPUB, HTML, Markdown, and XML files for Vellum and other publishing workflows.
 
-![Manuscript Compiler Create file screen with a prepared book summary and six export formats](docs/images/12-create-file-overview.png)
+<p align="center">
+  <img src="docs/images/12-create-file-overview.png" alt="Manuscript Compiler Create file screen with a prepared book summary and six export formats" width="75%">
+</p>
 
 *The final Create file stage: a reviewed 129,576-word novel, ready to compile into any of six native publishing formats.*
 
@@ -103,61 +101,81 @@ See the [User Guide](USER_GUIDE.md) for the complete author workflow.
 
 ### Plugin Settings
 
-![Manuscript Compiler settings with defaults, advanced options, support links, and the Open compiler button](docs/images/03-plugin-settings.png)
+<p align="center">
+  <img src="docs/images/03-plugin-settings.png" alt="Manuscript Compiler settings with defaults, advanced options, support links, and the Open compiler button" width="75%">
+</p>
 
 *Set author defaults once, then open the compiler directly from Obsidian settings.*
 
 ### Right-click Menu
 
-![Compile manuscript from this folder in the Obsidian File Explorer context menu](docs/images/02-folder-context-menu.png)
+<p align="center">
+  <img src="docs/images/02-folder-context-menu.png" alt="Compile manuscript from this folder in the Obsidian File Explorer context menu" width="75%">
+</p>
 
 *Start from the exact folder that contains the complete book.*
 
 ### Manuscript Screen
 
-![The Manuscript stage showing the selected book folder, detected structure, scan summary, and Review Structure action](docs/images/04-manuscript-screen.png)
+<p align="center">
+  <img src="docs/images/04-manuscript-screen.png" alt="The Manuscript stage showing the selected book folder, detected structure, scan summary, and Review Structure action" width="75%">
+</p>
 
 *Confirm the manuscript root and automatically detected book structure.*
 
 ### Contents Review
 
-![The Contents stage showing detected counts, review controls, and the collapsed manuscript outline](docs/images/07-contents-review.png)
+<p align="center">
+  <img src="docs/images/07-contents-review.png" alt="The Contents stage showing detected counts, review controls, and the collapsed manuscript outline" width="75%">
+</p>
 
 *Review Parts, Chapters, Scenes, matter, warnings, and ignored notes before export.*
 
 ### Correct Structure
 
-![Correction mode showing inclusion checkboxes, folder disclosure, role selectors, and ordering controls](docs/images/08-correct-structure.png)
+<p align="center">
+  <img src="docs/images/08-correct-structure.png" alt="Correction mode showing inclusion checkboxes, folder disclosure, role selectors, and ordering controls" width="75%">
+</p>
 
 *Correct inclusion, publishing roles, and order without moving or rewriting source notes.*
 
 ### Create File
 
-![DOCX selected with document style, indentation, scene break, title page, table of contents, and chapter controls](docs/images/13-docx-format.png)
+<p align="center">
+  <img src="docs/images/13-docx-format.png" alt="DOCX selected with document style, indentation, scene break, title page, table of contents, and chapter controls" width="75%">
+</p>
 
 *Choose the output format and meaningful publishing controls, then create the file.*
 
 ### DOCX in Microsoft Word
 
-![A compiled manuscript chapter open in Microsoft Word with named manuscript styles visible](docs/images/26-docx-in-word.png)
+<p align="center">
+  <img src="docs/images/26-docx-in-word.png" alt="A compiled manuscript chapter open in Microsoft Word with named manuscript styles visible" width="75%">
+</p>
 
 *Native DOCX opens with distinct structural formatting and named manuscript styles.*
 
 ### DOCX in Vellum
 
-![The compiled DOCX imported into Vellum with its book hierarchy and chapter preview visible](docs/images/27-docx-in-vellum.png)
+<p align="center">
+  <img src="docs/images/27-docx-in-vellum.png" alt="The compiled DOCX imported into Vellum with its book hierarchy and chapter preview visible" width="75%">
+</p>
 
 *Vellum recognises the compiled Part and Chapter hierarchy.*
 
 ### ODT in LibreOffice
 
-![A compiled manuscript ODT chapter open in LibreOffice Writer](docs/images/28-odt-in-libreoffice.png)
+<p align="center">
+  <img src="docs/images/28-odt-in-libreoffice.png" alt="A compiled manuscript ODT chapter open in LibreOffice Writer" width="75%">
+</p>
 
 *Native ODT carries the manuscript structure into LibreOffice Writer.*
 
 ### EPUB Reader
 
-![The compiled EPUB open in a reader with its contents navigation and chapter text visible](docs/images/29-epub-reader.png)
+<p align="center">
+  <img src="docs/images/29-epub-reader.png" alt="The compiled EPUB open in a reader with its contents navigation and chapter text visible" width="75%">
+</p>
 
 *The EPUB provides navigable contents and a reflowable reading view.*
 

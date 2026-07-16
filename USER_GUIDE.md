@@ -1,8 +1,4 @@
-# Manuscript Compiler User Guide
-
-<p align="center">
-  <img src="logo.svg" alt="Manuscript Compiler logo" width="128">
-</p>
+# Manuscript Compiler User Guide <img src="logo.svg" alt="Manuscript Compiler logo" width="48" align="right">
 
 ## Introduction
 
