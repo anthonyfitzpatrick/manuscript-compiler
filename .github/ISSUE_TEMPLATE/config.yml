@@ -1,0 +1,15 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://github.com/anthonyfitzpatrick/manuscript-compiler#documentation
+    about: Browse all project documentation and contributor resources.
+  - name: User Guide
+    url: https://github.com/anthonyfitzpatrick/manuscript-compiler/blob/main/USER_GUIDE.md
+    about: Learn how to install, configure, and use Manuscript Compiler.
+  - name: Developer Guide
+    url: https://github.com/anthonyfitzpatrick/manuscript-compiler/blob/main/DEVELOPER_GUIDE.md
+    about: Review development setup, testing, and extension guidance.
+  - name: GitHub Discussions
+    url: https://github.com/anthonyfitzpatrick/manuscript-compiler/discussions
+    about: Ask open-ended questions, share workflows, and discuss ideas with the community.
+

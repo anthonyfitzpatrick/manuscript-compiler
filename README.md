@@ -1,5 +1,13 @@
 # Manuscript Compiler <img src="logo.svg" alt="Manuscript Compiler logo" width="48" align="right">
 
+[![Latest release](https://img.shields.io/github/v/release/anthonyfitzpatrick/manuscript-compiler?label=release)](https://github.com/anthonyfitzpatrick/manuscript-compiler/releases/latest)
+[![MIT licence](https://img.shields.io/github/license/anthonyfitzpatrick/manuscript-compiler)](LICENSE)
+[![Obsidian 1.5.0+](https://img.shields.io/badge/Obsidian-1.5.0%2B-7C3AED?logo=obsidian&logoColor=white)](https://obsidian.md/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Tests](https://github.com/anthonyfitzpatrick/manuscript-compiler/actions/workflows/ci.yml/badge.svg)](https://github.com/anthonyfitzpatrick/manuscript-compiler/actions/workflows/ci.yml)
+[![Downloads](https://img.shields.io/github/downloads/anthonyfitzpatrick/manuscript-compiler/total)](https://github.com/anthonyfitzpatrick/manuscript-compiler/releases)
+<a href="https://buymeacoffee.com/wolf359pressab"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" height="20"></a>
+
 Compile structured Obsidian manuscripts into publication-ready DOCX, ODT, EPUB, HTML, Markdown, and XML files for Vellum and other publishing workflows.
 
 <p align="center">
@@ -9,15 +17,6 @@ Compile structured Obsidian manuscripts into publication-ready DOCX, ODT, EPUB, 
 *The final Create file stage: a reviewed 129,576-word novel, ready to compile into any of six native publishing formats.*
 
 Manuscript Compiler guides the book through **Manuscript → Contents → Create file**. By the time this screen appears, the selected notes have been scanned, their publishing roles and order have been reviewed, and one semantic Book has been prepared for every format. Choose the output and formatting you need, then create the file locally—without rewriting the Markdown manuscript.
-
-[![Latest release](https://img.shields.io/github/v/release/anthonyfitzpatrick/manuscript-compiler?label=release)](https://github.com/anthonyfitzpatrick/manuscript-compiler/releases/latest)
-[![MIT licence](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Obsidian plugin](https://img.shields.io/badge/Obsidian-plugin-7C3AED?logo=obsidian&logoColor=white)](https://obsidian.md/)
-[![TypeScript](https://img.shields.io/github/languages/top/anthonyfitzpatrick/manuscript-compiler)](https://www.typescriptlang.org/)
-[![Tests](https://github.com/anthonyfitzpatrick/manuscript-compiler/actions/workflows/ci.yml/badge.svg)](https://github.com/anthonyfitzpatrick/manuscript-compiler/actions/workflows/ci.yml)
-![Offline](https://img.shields.io/badge/works-offline-success)
-![No Pandoc](https://img.shields.io/badge/Pandoc-not%20required-success)
-[![Open source](https://img.shields.io/badge/open%20source-yes-success)](LICENSE)
 
 ## Why Manuscript Compiler?
 

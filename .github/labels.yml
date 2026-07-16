@@ -1,0 +1,69 @@
+- name: bug
+  color: "d73a4a"
+  description: Something is not working as intended.
+- name: enhancement
+  color: "a2eeef"
+  description: A focused improvement to existing behaviour.
+- name: documentation
+  color: "0075ca"
+  description: Documentation additions, corrections, or clarification.
+- name: question
+  color: "d876e3"
+  description: A focused request for help or clarification.
+- name: duplicate
+  color: "cfd3d7"
+  description: This issue or pull request already exists.
+- name: wontfix
+  color: "ffffff"
+  description: This will not be implemented or changed.
+- name: good first issue
+  color: "7057ff"
+  description: A well-scoped contribution suitable for a new contributor.
+- name: help wanted
+  color: "008672"
+  description: Maintainer guidance is available and community help is welcome.
+- name: performance
+  color: "f9d0c4"
+  description: Performance, memory use, or large-manuscript behaviour.
+- name: security
+  color: "b60205"
+  description: Security-related maintenance; vulnerabilities must be reported privately.
+- name: ui
+  color: "5319e7"
+  description: User interface, interaction, or visual presentation.
+- name: export
+  color: "1d76db"
+  description: Shared export generation, validation, or delivery behaviour.
+- name: markdown
+  color: "083fa1"
+  description: Markdown export behaviour or interoperability.
+- name: epub
+  color: "0e8a16"
+  description: EPUB export behaviour or reader interoperability.
+- name: docx
+  color: "2b579a"
+  description: DOCX export behaviour, Word, or Vellum interoperability.
+- name: odt
+  color: "f57c00"
+  description: ODT export behaviour or LibreOffice interoperability.
+- name: xml
+  color: "006b75"
+  description: XML export behaviour or semantic interchange.
+- name: html
+  color: "e34c26"
+  description: HTML export behaviour or browser interoperability.
+- name: workflow
+  color: "fbca04"
+  description: Manuscript selection, review, correction, or compilation workflow.
+- name: discussion
+  color: "c5def5"
+  description: A topic better explored through community discussion.
+- name: accessibility
+  color: "0052cc"
+  description: Accessibility, keyboard interaction, focus, or assistive technology.
+- name: maintenance
+  color: "6e7781"
+  description: Repository, dependency, tooling, or housekeeping work.
+- name: release
+  color: "0366d6"
+  description: Release preparation, packaging, or publication.

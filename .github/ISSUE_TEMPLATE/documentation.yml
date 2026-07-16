@@ -1,0 +1,28 @@
+name: Documentation improvement
+description: Report unclear, incomplete, or inaccurate project documentation.
+title: "[Documentation]: "
+labels: ["documentation"]
+body:
+  - type: input
+    id: documentation-page
+    attributes:
+      label: Documentation page
+      description: Link to the page or name the file and section.
+      placeholder: USER_GUIDE.md — Installation
+    validations:
+      required: true
+  - type: textarea
+    id: issue
+    attributes:
+      label: Issue
+      description: Explain what is unclear, missing, outdated, or incorrect.
+    validations:
+      required: true
+  - type: textarea
+    id: suggested-improvement
+    attributes:
+      label: Suggested improvement
+      description: Describe the wording, example, or organisation that would improve the documentation.
+    validations:
+      required: true
+

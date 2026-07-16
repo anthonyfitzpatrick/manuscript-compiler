@@ -1,0 +1,35 @@
+name: Feature request
+description: Propose a focused improvement to an author or publishing workflow.
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Describe the author problem before proposing implementation details. Broad ideas may be better suited to GitHub Discussions.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What author, Obsidian, or publishing problem would this solve?
+      placeholder: I find it difficult to...
+    validations:
+      required: true
+  - type: textarea
+    id: suggested-solution
+    attributes:
+      label: Suggested Solution
+      description: Describe the behaviour you would like to see.
+    validations:
+      required: true
+  - type: textarea
+    id: alternative-solutions
+    attributes:
+      label: Alternative Solutions
+      description: What workarounds or alternative approaches have you considered?
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Add examples, screenshots, or links that clarify the proposal. Remove private manuscript information.
+

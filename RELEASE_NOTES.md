@@ -1,4 +1,4 @@
-# Manuscript Compiler 0.10.0
+# Manuscript Compiler 0.10.0 <img src="logo.svg" alt="Manuscript Compiler logo" width="48" align="right">
 
 Manuscript Compiler is an Obsidian plugin for turning structured, long-form writing projects into publication-ready documents. It exists because a book is more than a folder of Markdown files: it contains Parts, Chapters, Scenes, Front Matter, Back Matter, deliberate ordering, and material that should never appear in the finished manuscript. Manuscript Compiler gives authors a guided way to review that structure and compile only the approved book into formats suited to editing, publishing, interchange, and archival workflows.
 

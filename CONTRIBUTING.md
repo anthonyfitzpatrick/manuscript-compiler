@@ -1,4 +1,4 @@
-# Contributing
+# Contributing <img src="logo.svg" alt="Manuscript Compiler logo" width="48" align="right">
 
 Thank you for helping maintain Manuscript Compiler. Read [ARCHITECTURE.md](ARCHITECTURE.md) and [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) before changing production code. This project prioritises semantic correctness, privacy, deterministic output, accessibility, and long-term maintenance over feature breadth.
 

@@ -1,4 +1,4 @@
-# Third-party notices
+# Third-party notices <img src="logo.svg" alt="Manuscript Compiler logo" width="48" align="right">
 
 ## fflate 0.8.3
 

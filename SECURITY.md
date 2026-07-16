@@ -1,4 +1,4 @@
-# Security Policy
+# Security Policy <img src="logo.svg" alt="Manuscript Compiler logo" width="48" align="right">
 
 ## Security and privacy model
 

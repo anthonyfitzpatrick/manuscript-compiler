@@ -1,4 +1,4 @@
-# Manuscript Compiler Architecture
+# Manuscript Compiler Architecture <img src="logo.svg" alt="Manuscript Compiler logo" width="48" align="right">
 
 ## Purpose and design principles
 

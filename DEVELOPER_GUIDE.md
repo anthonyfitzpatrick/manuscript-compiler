@@ -1,4 +1,4 @@
-# Manuscript Compiler Developer Guide
+# Manuscript Compiler Developer Guide <img src="logo.svg" alt="Manuscript Compiler logo" width="48" align="right">
 
 ## Repository overview
 

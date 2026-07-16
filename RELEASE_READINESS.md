@@ -1,4 +1,4 @@
-# 0.9.3 Release Readiness
+# 0.9.3 Release Readiness <img src="logo.svg" alt="Manuscript Compiler logo" width="48" align="right">
 
 ## Current status
 

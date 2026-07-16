@@ -1,4 +1,4 @@
-# Changelog
+# Changelog <img src="logo.svg" alt="Manuscript Compiler logo" width="48" align="right">
 
 ## 0.9.3 Quality and Security Release
 

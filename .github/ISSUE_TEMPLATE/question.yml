@@ -1,0 +1,27 @@
+name: Question
+description: Ask a focused question that is not answered by the documentation.
+title: "[Question]: "
+labels: ["question"]
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: What would you like help understanding or accomplishing?
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Describe your manuscript structure, intended output, and relevant environment without sharing private prose or paths.
+    validations:
+      required: true
+  - type: textarea
+    id: already-tried
+    attributes:
+      label: What have you already tried?
+      description: Link to documentation you consulted and describe the steps you attempted.
+    validations:
+      required: true
+

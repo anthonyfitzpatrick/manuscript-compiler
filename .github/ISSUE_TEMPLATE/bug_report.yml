@@ -1,0 +1,76 @@
+name: Bug report
+description: Report a reproducible problem with Manuscript Compiler.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting a problem. Please use synthetic manuscript content and remove private paths, prose, metadata, and diagnostics before attaching anything.
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Briefly describe the problem and its impact on your workflow.
+      placeholder: What went wrong, and when did you first notice it?
+  - type: input
+    id: plugin-version
+    attributes:
+      label: Plugin Version
+      description: Find this under Settings → Community plugins.
+      placeholder: 0.10.0
+    validations:
+      required: true
+  - type: input
+    id: obsidian-version
+    attributes:
+      label: Obsidian Version
+      description: Include the full desktop or mobile version.
+      placeholder: 1.9.12
+    validations:
+      required: true
+  - type: input
+    id: operating-system
+    attributes:
+      label: Operating System
+      description: Include the platform and version, and state whether this is desktop or mobile.
+      placeholder: macOS 15.5 desktop
+    validations:
+      required: true
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: Provide the smallest repeatable sequence using synthetic content.
+      placeholder: |
+        1. Create a test manuscript folder containing...
+        2. Right-click the folder and choose...
+        3. Select...
+        4. Observe...
+    validations:
+      required: true
+  - type: textarea
+    id: expected-behaviour
+    attributes:
+      label: Expected Behaviour
+      description: What did you expect Manuscript Compiler to do?
+    validations:
+      required: true
+  - type: textarea
+    id: actual-behaviour
+    attributes:
+      label: Actual Behaviour
+      description: What happened instead? Include the exact visible error after removing private information.
+    validations:
+      required: true
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: Drag in redacted screenshots if they help explain the problem. Do not include manuscript prose or private vault paths.
+  - type: textarea
+    id: additional-information
+    attributes:
+      label: Additional Information
+      description: Add any other relevant context, redacted diagnostics, or target-application details.
+
