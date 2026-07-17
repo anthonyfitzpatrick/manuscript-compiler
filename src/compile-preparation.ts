@@ -13,7 +13,7 @@
 import { normalizePath, TFile, TFolder, type Vault } from "obsidian";
 import { ManuscriptCompiler } from "./compiler";
 import { applyContentPlan, classifyContentPlan, createContentPlan, isPlanItemIncluded, type ContentPlanItem } from "./content-plan";
-import type { Book, CompileResult, CompileWarning, ManuscriptStatistics } from "./model";
+import type { Book, CompileResult, CompileWarning, ManuscriptDocument, ManuscriptStatistics } from "./model";
 import type { CompileProfile, StructurePreset } from "./settings";
 import { inchesToCentimetres } from "./measurements";
 import { applyContentPlanAuthority, applyWorkspacePlanAuthority, inferStructurePreset, resolveSimpleCompileRequest, type SimpleCompileRequest } from "./simple-workflow";
@@ -177,16 +177,22 @@ export function preparedSessionMatchesInputs(session: PreparedCompileSession, re
 
 function collectExclusions(plan: ContentPlanItem[], book: Book, rootPath: string): PreparedExclusion[] {
   const values = new Map<string, PreparedExclusion>();
-  plan.filter((item) => !isPlanItemIncluded(item, plan, rootPath)).forEach((item) => values.set(item.path, { path: item.path, name: item.name, reason: item.exclusionReason ?? "Excluded from the manuscript." }));
-  book.excludedFiles.forEach((item) => values.set(item.file.path, { path: item.file.path, name: item.file.basename, reason: item.reason }));
+  for (const item of plan) if (!isPlanItemIncluded(item, plan, rootPath)) values.set(item.path, { path: item.path, name: item.name, reason: item.exclusionReason ?? "Excluded from the manuscript." });
+  for (const item of book.excludedFiles) values.set(item.file.path, { path: item.file.path, name: item.file.basename, reason: item.reason });
   for (const document of allDocuments(book)) {
     if (!document.excluded && !document.content.trim()) values.set(document.file.path, { path: document.file.path, name: document.title, reason: "No manuscript body remains after cleaning." });
   }
   return [...values.values()].sort((a, b) => a.path.localeCompare(b.path));
 }
 
-function allDocuments(book: Book) {
-  return [...book.frontMatter.documents, ...book.parts.flatMap((part) => [...part.orphanScenes, ...part.chapters.flatMap((chapter) => chapter.scenes)]), ...book.orphanScenes, ...book.backMatter.documents];
+function allDocuments(book: Book): ManuscriptDocument[] {
+  const documents: ManuscriptDocument[] = [...book.frontMatter.documents];
+  for (const part of book.parts) {
+    documents.push(...part.orphanScenes);
+    for (const chapter of part.chapters) documents.push(...chapter.scenes);
+  }
+  documents.push(...book.orphanScenes, ...book.backMatter.documents);
+  return documents;
 }
 function simpleRequestFromProfile(request: CompilePreparationRequest, plan: ContentPlanItem[]): SimpleCompileRequest {
   const profile = request.profile;

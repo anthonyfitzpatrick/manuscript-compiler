@@ -16,6 +16,7 @@ import { extractNumber, sortDocuments, sortParts, titleName } from "./ordering";
 import type { CompileOptions, CompileProfile } from "./settings";
 import type { ScannedBook, ScannedChapter, ScannedPart } from "./types";
 import { throwIfCancelled } from "./cancellation";
+import { isUnknownRecord } from "./type-guards";
 
 /** Vault-bound parser; each parse call owns caches, warnings, and cancellation. */
 export class ManuscriptParser {
@@ -51,7 +52,12 @@ export class ManuscriptParser {
 
     this.addStructuralWarnings(parts, orphanScenes, warnings);
     this.addDuplicateFilenameWarnings(scan.allMarkdown, warnings);
-    const allDocuments = [...frontDocuments, ...parts.flatMap((part) => [...part.orphanScenes, ...part.chapters.flatMap((chapter) => chapter.scenes)]), ...orphanScenes, ...backDocuments];
+    const allDocuments: ManuscriptDocument[] = [...frontDocuments];
+    for (const part of parts) {
+      allDocuments.push(...part.orphanScenes);
+      for (const chapter of part.chapters) allDocuments.push(...chapter.scenes);
+    }
+    allDocuments.push(...orphanScenes, ...backDocuments);
     for (const document of allDocuments) if (!document.excluded && document.content.trim().length === 0) warnings.push(`Empty scene file: “${document.file.path}”.`);
     for (const document of allDocuments) if (document.metadataError) warnings.push(`Invalid metadata in “${document.file.path}”: ${document.metadataError}`);
     const excludedFiles = allDocuments.filter((document) => document.excluded).map((document) => ({ file: document.file, reason: document.exclusionReason ?? "Excluded" }));
@@ -60,7 +66,8 @@ export class ManuscriptParser {
     if (!settings.includeBackMatter) backDocuments.forEach((document) => excludedFiles.push({ file: document.file, reason: "Back matter disabled" }));
     const uniqueExclusions = new Map(excludedFiles.map((entry) => [entry.file.path, entry]));
     const excludedPaths = new Set(uniqueExclusions.keys());
-    const includedFiles = allDocuments.map((document) => document.file).filter((file) => !excludedPaths.has(file.path));
+    const includedFiles: TFile[] = [];
+    for (const document of allDocuments) if (!excludedPaths.has(document.file.path)) includedFiles.push(document.file);
     return {
       root: scan.root, title: scan.root.name,
       frontMatter: { kind: "front", title: "Front Matter", documents: frontDocuments },
@@ -91,8 +98,9 @@ export class ManuscriptParser {
     if (!match) return { metadata: { values: {} } };
     let yaml: unknown;
     try { yaml = parseYaml(match[1]); } catch { return { metadata: { values: {} }, error: "YAML frontmatter could not be parsed." }; }
-    if (!yaml || typeof yaml !== "object" || Array.isArray(yaml)) return { metadata: { values: {} }, error: "YAML frontmatter must be a mapping." };
-    const normalizedValues = Object.fromEntries(Object.entries(yaml as Record<string, unknown>).map(([key, value]) => [normalizeKey(key), value]));
+    if (!isUnknownRecord(yaml)) return { metadata: { values: {} }, error: "YAML frontmatter must be a mapping." };
+    const normalizedValues: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(yaml)) normalizedValues[normalizeKey(key)] = value;
     const scalar = (key: string): string | number | undefined => { const value = normalizedValues[key]; return typeof value === "string" || typeof value === "number" ? value : undefined; };
     const order = extractNumber(scalar("order"));
     const editingStatus = scalar("editingstatus");
@@ -104,13 +112,22 @@ export class ManuscriptParser {
     const noteChapters = settings.chapterSource === "notes" ? direct.map((scene) => this.chapterFromDocument(scene, settings)) : [];
     const orphanScenes = settings.chapterSource === "folders" ? direct : [];
     const chapters = [...noteChapters, ...scanned.chapters.map((chapter) => this.createChapter(chapter, documents, settings))];
-    const representative = [...orphanScenes, ...chapters.flatMap((chapter) => chapter.scenes)].find((scene) => scene.metadata.part !== undefined);
+    const partScenes: Scene[] = [...orphanScenes];
+    for (const chapter of chapters) partScenes.push(...chapter.scenes);
+    const representative = partScenes.find((scene) => scene.metadata.part !== undefined);
     const metadataNumber = extractNumber(representative?.metadata.part);
     return { title: scanned.folder.name, name: titleName(scanned.folder.name), number: settings.metadataOrdering ? metadataNumber ?? extractNumber(scanned.folder.name) : extractNumber(scanned.folder.name), path: scanned.folder.path, order: metadataNumber, chapters, orphanScenes };
   }
   private createPartlessBook(scan: ScannedBook, rootDocuments: Scene[], documents: (files: TFile[]) => ManuscriptDocument[], settings: CompileOptions): Part {
     const rootChapters = settings.chapterSource === "notes" ? rootDocuments.map((scene) => this.chapterFromDocument(scene, settings)) : [];
-    const folderChapters = scan.parts.map((folder) => { const scenes = [...documents(folder.looseScenes), ...folder.chapters.flatMap((chapter) => documents(chapter.scenes))]; const representative = scenes.find((scene) => scene.metadata.chapter !== undefined); const metadataNumber = extractNumber(representative?.metadata.chapter); return { title: folder.folder.name, name: titleName(folder.folder.name), number: settings.metadataOrdering ? metadataNumber ?? extractNumber(folder.folder.name) : extractNumber(folder.folder.name), path: folder.folder.path, order: metadataNumber, scenes, orphan: false }; });
+    const folderChapters: Chapter[] = [];
+    for (const folder of scan.parts) {
+      const scenes: ManuscriptDocument[] = [...documents(folder.looseScenes)];
+      for (const chapter of folder.chapters) scenes.push(...documents(chapter.scenes));
+      const representative = scenes.find((scene) => scene.metadata.chapter !== undefined);
+      const metadataNumber = extractNumber(representative?.metadata.chapter);
+      folderChapters.push({ title: folder.folder.name, name: titleName(folder.folder.name), number: settings.metadataOrdering ? metadataNumber ?? extractNumber(folder.folder.name) : extractNumber(folder.folder.name), path: folder.folder.path, order: metadataNumber, scenes, orphan: false });
+    }
     return { title: scan.root.name, name: scan.root.name, path: scan.root.path, chapters: [...rootChapters, ...folderChapters], orphanScenes: settings.chapterSource === "folders" ? rootDocuments : [], synthetic: true };
   }
   private chapterFromDocument(scene: Scene, settings: CompileOptions): Chapter { const metadataNumber = extractNumber(scene.metadata.chapter); return { title: scene.title, name: titleName(scene.title), number: settings.metadataOrdering ? metadataNumber ?? scene.number : scene.number, path: scene.file.path, order: metadataNumber ?? scene.metadata.order, scenes: [scene], orphan: false }; }
@@ -134,7 +151,8 @@ export class ManuscriptParser {
         chapter.scenes.filter((scene) => !scene.excluded && (extractNumber(scene.metadata.scene) ?? scene.number) === undefined).forEach((scene) => warnings.push(`Missing scene number: “${scene.file.path}”.`));
       });
     }
-    [...rootOrphans, ...parts.flatMap((part) => part.orphanScenes)].forEach((scene) => { if (!scene.excluded) warnings.push(`Orphan scene: “${scene.file.path}”.`); });
+    for (const scene of rootOrphans) if (!scene.excluded) warnings.push(`Orphan scene: “${scene.file.path}”.`);
+    for (const part of parts) for (const scene of part.orphanScenes) if (!scene.excluded) warnings.push(`Orphan scene: “${scene.file.path}”.`);
   }
   private warnDuplicates(numbers: number[], label: string, warnings: string[]): void {
     const seen = new Set<number>(); const duplicates = new Set<number>();

@@ -21,6 +21,7 @@ import { ContentsTreeViewState } from "./workspace/contents-tree-view-state";
 import { renderCreateDocxStep } from "./workspace/create-docx-step";
 import { resolveAuthor, resolveBookTitle } from "./workspace/workspace-view-model";
 import { EXPORT_FORMAT_DETAILS } from "./export-types";
+import { isUnknownRecord } from "./type-guards";
 
 class FolderPicker extends FuzzySuggestModal<TFolder> {
   constructor(app: App, private readonly selected: (folder: TFolder) => void) { super(app); this.setPlaceholder("Choose a folder…"); }
@@ -105,6 +106,17 @@ export class SimpleCompileModal extends Modal {
 }
 
 function cleanIdentity(value: string): string { return value.replace(/\.[^.]+$/, "").replace(/[^a-z0-9]+/gi, " ").trim().toLowerCase(); }
-function metadataValue(record: Record<string, unknown> | undefined, keys: string[]): unknown { if (!record) return; const normalized = new Map(Object.entries(record).map(([key, value]) => [key.toLowerCase().replace(/[_-]+/g, " "), value])); for (const key of keys) { const value = normalized.get(key); if (typeof value === "string" && value.trim()) return value; } return; }
+function metadataValue(record: Record<string, unknown> | undefined, keys: string[]): unknown {
+  if (!record) return;
+  const normalized = new Map<string, unknown>();
+  for (const [key, value] of Object.entries(record)) normalized.set(key.toLowerCase().replace(/[_-]+/g, " "), value);
+  for (const key of keys) { const value = normalized.get(key); if (typeof value === "string" && value.trim()) return value; }
+  return;
+}
 function isBookMetadata(record: Record<string, unknown> | undefined): boolean { if (!record) return false; const type = metadataValue(record, ["type", "note type", "category"]); return typeof type === "string" && /^(?:book|project|manuscript)$/i.test(type.trim()) || metadataValue(record, ["booktitle", "book title", "project title"]) !== undefined; }
-function recordValue(value: unknown): Record<string, unknown> | undefined { return value !== null && typeof value === "object" && !Array.isArray(value) ? Object.fromEntries(Object.entries(value)) : undefined; }
+function recordValue(value: unknown): Record<string, unknown> | undefined {
+  if (!isUnknownRecord(value)) return;
+  const record: Record<string, unknown> = {};
+  for (const [key, item] of Object.entries(value)) record[key] = item;
+  return record;
+}

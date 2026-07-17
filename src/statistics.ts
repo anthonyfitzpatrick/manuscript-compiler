@@ -9,16 +9,27 @@
  * platform-neutral. Future counters must derive from semantic content and avoid
  * quadratic rescans of large manuscripts.
  */
-import type { Book, ManuscriptStatistics, NamedStatistic } from "./model";
+import type { Book, Chapter, ManuscriptDocument, ManuscriptStatistics, NamedStatistic } from "./model";
 import type { CompileProfile } from "./settings";
 export function documentWordCount(content: string): number { const text = content.replace(/```[\s\S]*?```/g, " ").replace(/`[^`]*`/g, " ").replace(/[\p{P}\p{S}]+/gu, " ").trim(); return text ? text.split(/\s+/u).length : 0; }
 /** Stateless calculator over the final semantic Book. */
 export class StatisticsEngine {
   calculate(book: Book, profile: CompileProfile, wordsPerMinute: number): ManuscriptStatistics {
-    const scenes = [...book.orphanScenes, ...book.parts.flatMap((part) => [...part.orphanScenes, ...part.chapters.flatMap((chapter) => chapter.scenes)])].filter((scene) => !scene.excluded && !!scene.content.trim());
-    const chapters = book.parts.flatMap((part) => part.chapters);
+    const allScenes: ManuscriptDocument[] = [...book.orphanScenes];
+    const chapters: Chapter[] = [];
+    for (const part of book.parts) {
+      allScenes.push(...part.orphanScenes);
+      chapters.push(...part.chapters);
+      for (const chapter of part.chapters) allScenes.push(...chapter.scenes);
+    }
+    const scenes = allScenes.filter((scene) => !scene.excluded && !!scene.content.trim());
     const sceneLengths = scenes.map((scene) => ({ name: scene.title, words: documentWordCount(scene.content) }));
-    const chapterLengths = chapters.map((chapter) => ({ name: chapter.title, words: chapter.scenes.filter((scene) => !scene.excluded && !!scene.content.trim()).reduce((sum, scene) => sum + documentWordCount(scene.content), 0) }));
+    const chapterLengths: NamedStatistic[] = [];
+    for (const chapter of chapters) {
+      let words = 0;
+      for (const scene of chapter.scenes) if (!scene.excluded && scene.content.trim()) words += documentWordCount(scene.content);
+      chapterLengths.push({ name: chapter.title, words });
+    }
     const bodyWords = sceneLengths.reduce((sum, item) => sum + item.words, 0);
     const matter = [...(profile.includeFrontMatter ? book.frontMatter.documents : []), ...(profile.includeBackMatter ? book.backMatter.documents : [])];
     const matterWords = matter.filter((document) => !document.excluded && !!document.content.trim()).reduce((sum, document) => sum + documentWordCount(document.content), 0);

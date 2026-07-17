@@ -9,7 +9,7 @@
  * throwing. Validation is synchronous/non-cancellable and mobile-neutral.
  * Future format changes must update generation and validation together.
  */
-import { strFromU8, unzipSync } from "fflate";
+import { strFromU8, unzipSync, type Unzipped } from "fflate";
 import { validateDocxBytes } from "./docx-validator";
 import type { ExportFormat, ExportValidationResult, ExportValidator, ManuscriptExportContext } from "./export-types";
 import { renderSemanticMarkdown } from "./markdown-exporter";
@@ -20,10 +20,50 @@ const decode = (bytes: Uint8Array): string => new TextDecoder("utf-8", { fatal: 
 
 class DocxValidator implements ExportValidator { validate(bytes: Uint8Array): ExportValidationResult { return validateDocxBytes(bytes); } }
 class OdtValidator implements ExportValidator {
-  validate(bytes: Uint8Array): ExportValidationResult { try { const files = unzipSync(bytes); const required = ["mimetype", "META-INF/manifest.xml", "content.xml", "styles.xml", "meta.xml", "settings.xml"]; const missing = required.filter((name) => !files[name]); if (missing.length) return invalid(`Missing ODT entries: ${missing.join(", ")}`); if (strFromU8(files.mimetype) !== "application/vnd.oasis.opendocument.text") return invalid("ODT mimetype is invalid."); if (firstZipEntry(bytes) !== "mimetype" || !firstZipEntryStored(bytes)) return invalid("ODT mimetype must be the first uncompressed package entry."); const manifest = strFromU8(files["META-INF/manifest.xml"]); for (const match of manifest.matchAll(/manifest:full-path="([^"]+)"/g)) if (match[1] !== "/" && !files[match[1]]) return invalid(`ODT manifest target ${match[1]} is missing.`); const content = strFromU8(files["content.xml"]); const styles = strFromU8(files["styles.xml"]); if (![manifest, content, styles, strFromU8(files["meta.xml"]), strFromU8(files["settings.xml"])].every(wellFormedXml)) return invalid("ODT contains malformed XML."); if (!/<office:text>[\s\S]*<text:p/.test(content)) return invalid("ODT has no text body."); for (const style of requiredStyles) if (!styles.includes(`style:name="${style}"`)) return invalid(`ODT style ${style} is missing.`); return valid(); } catch { return invalid("ODT is not a readable ZIP package."); } }
+  validate(bytes: Uint8Array): ExportValidationResult {
+    try {
+      const files: Unzipped = unzipSync(bytes);
+      const required = ["mimetype", "META-INF/manifest.xml", "content.xml", "styles.xml", "meta.xml", "settings.xml"];
+      const missing = required.filter((name) => !files[name]);
+      if (missing.length) return invalid(`Missing ODT entries: ${missing.join(", ")}`);
+      if (strFromU8(files.mimetype) !== "application/vnd.oasis.opendocument.text") return invalid("ODT mimetype is invalid.");
+      if (firstZipEntry(bytes) !== "mimetype" || !firstZipEntryStored(bytes)) return invalid("ODT mimetype must be the first uncompressed package entry.");
+      const manifest = strFromU8(files["META-INF/manifest.xml"]);
+      for (const match of manifest.matchAll(/manifest:full-path="([^"]+)"/g)) if (match[1] !== "/" && !files[match[1]]) return invalid(`ODT manifest target ${match[1]} is missing.`);
+      const content = strFromU8(files["content.xml"]);
+      const styles = strFromU8(files["styles.xml"]);
+      const xmlDocuments: string[] = [manifest, content, styles, strFromU8(files["meta.xml"]), strFromU8(files["settings.xml"])];
+      if (!xmlDocuments.every(wellFormedXml)) return invalid("ODT contains malformed XML.");
+      if (!/<office:text>[\s\S]*<text:p/.test(content)) return invalid("ODT has no text body.");
+      for (const style of requiredStyles) if (!styles.includes(`style:name="${style}"`)) return invalid(`ODT style ${style} is missing.`);
+      return valid();
+    } catch { return invalid("ODT is not a readable ZIP package."); }
+  }
 }
 class EpubValidator implements ExportValidator {
-  validate(bytes: Uint8Array): ExportValidationResult { try { const files = unzipSync(bytes); if (firstZipEntry(bytes) !== "mimetype" || !firstZipEntryStored(bytes) || strFromU8(files.mimetype ?? new Uint8Array()) !== "application/epub+zip") return invalid("EPUB mimetype is invalid, compressed, or misplaced."); for (const name of ["META-INF/container.xml", "OEBPS/content.opf", "OEBPS/nav.xhtml", "OEBPS/style.css"]) if (!files[name]) return invalid(`EPUB entry ${name} is missing.`); const container = strFromU8(files["META-INF/container.xml"]); if (!wellFormedXml(container) || !container.includes(`full-path="OEBPS/content.opf"`)) return invalid("EPUB container rootfile is invalid."); const opf = strFromU8(files["OEBPS/content.opf"]); if (!wellFormedXml(opf)) return invalid("EPUB package document is malformed."); const ids = new Set([...opf.matchAll(/<item\s+id="([^"]+)"[^>]*href="([^"]+)"/g)].map((match) => match[1])); for (const match of opf.matchAll(/<item\s+id="[^"]+"[^>]*href="([^"]+)"/g)) if (!files[`OEBPS/${match[1]}`]) return invalid(`EPUB manifest target ${match[1]} is missing.`); for (const match of opf.matchAll(/<itemref\s+idref="([^"]+)"/g)) if (!ids.has(match[1])) return invalid(`EPUB spine reference ${match[1]} is invalid.`); const xhtmlEntries = Object.entries(files).filter(([name]) => name.endsWith(".xhtml")); const xhtml = xhtmlEntries.map(([, value]) => strFromU8(value)).join("\n"); if (!xhtmlEntries.every(([, value]) => wellFormedXml(strFromU8(value)))) return invalid("EPUB XHTML is malformed."); for (const match of xhtml.matchAll(/(?:src|href)=["']([^"'#]+)(?:#[^"']*)?["']/gi)) if (!/^[a-z]+:/i.test(match[1]) && !files[`OEBPS/${match[1]}`]) return invalid(`EPUB internal reference ${match[1]} is missing.`); const css = strFromU8(files["OEBPS/style.css"]); if (containsActiveContent(xhtml) || /@import\b|url\s*\(|expression\s*\(|-moz-binding\s*:/i.test(css)) return invalid("EPUB contains active or external content."); return valid(); } catch { return invalid("EPUB is not a readable ZIP package."); } }
+  validate(bytes: Uint8Array): ExportValidationResult {
+    try {
+      const files: Unzipped = unzipSync(bytes);
+      if (firstZipEntry(bytes) !== "mimetype" || !firstZipEntryStored(bytes) || strFromU8(files.mimetype ?? new Uint8Array()) !== "application/epub+zip") return invalid("EPUB mimetype is invalid, compressed, or misplaced.");
+      for (const name of ["META-INF/container.xml", "OEBPS/content.opf", "OEBPS/nav.xhtml", "OEBPS/style.css"]) if (!files[name]) return invalid(`EPUB entry ${name} is missing.`);
+      const container = strFromU8(files["META-INF/container.xml"]);
+      if (!wellFormedXml(container) || !container.includes(`full-path="OEBPS/content.opf"`)) return invalid("EPUB container rootfile is invalid.");
+      const opf = strFromU8(files["OEBPS/content.opf"]);
+      if (!wellFormedXml(opf)) return invalid("EPUB package document is malformed.");
+      const ids = new Set<string>();
+      for (const match of opf.matchAll(/<item\s+id="([^"]+)"[^>]*href="([^"]+)"/g)) ids.add(match[1]);
+      for (const match of opf.matchAll(/<item\s+id="[^"]+"[^>]*href="([^"]+)"/g)) if (!files[`OEBPS/${match[1]}`]) return invalid(`EPUB manifest target ${match[1]} is missing.`);
+      for (const match of opf.matchAll(/<itemref\s+idref="([^"]+)"/g)) if (!ids.has(match[1])) return invalid(`EPUB spine reference ${match[1]} is invalid.`);
+      const xhtmlDocuments: string[] = [];
+      for (const [name, value] of Object.entries(files)) if (name.endsWith(".xhtml")) xhtmlDocuments.push(strFromU8(value));
+      if (xhtmlDocuments.some((value) => !wellFormedXml(value))) return invalid("EPUB XHTML is malformed.");
+      const xhtml = xhtmlDocuments.join("\n");
+      for (const match of xhtml.matchAll(/(?:src|href)=["']([^"'#]+)(?:#[^"']*)?["']/gi)) if (!/^[a-z]+:/i.test(match[1]) && !files[`OEBPS/${match[1]}`]) return invalid(`EPUB internal reference ${match[1]} is missing.`);
+      const css = strFromU8(files["OEBPS/style.css"]);
+      if (containsActiveContent(xhtml) || /@import\b|url\s*\(|expression\s*\(|-moz-binding\s*:/i.test(css)) return invalid("EPUB contains active or external content.");
+      return valid();
+    } catch { return invalid("EPUB is not a readable ZIP package."); }
+  }
 }
 class HtmlValidator implements ExportValidator { validate(bytes: Uint8Array): ExportValidationResult { const text = decode(bytes); if (!/^<!doctype html>/i.test(text) || !/<html\b[\s\S]*<head\b[\s\S]*<body\b/i.test(text)) return invalid("HTML document structure is incomplete."); if (!/<meta charset="utf-8">/i.test(text) || !/<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'">/i.test(text) || !/<title>[^<]+<\/title>/i.test(text) || !/<main>[\s\S]*<section\b/.test(text)) return invalid("HTML metadata or manuscript content is missing."); if (containsActiveContent(text) || /@import\b|url\s*\(|expression\s*\(|-moz-binding\s*:/i.test(text)) return invalid("HTML contains active or external content."); return valid(); } }
 /**
@@ -59,7 +99,9 @@ export class MarkdownValidator implements ExportValidator {
       if ((section.kind === "front-matter" || section.kind === "back-matter") && !text.includes(`# ${section.title}`)) errors.push(`Markdown ${section.kind} heading is missing.`);
       if ((section.kind === "part" || section.kind === "chapter") && section.number !== 0 && !section.blocks.some((block) => block.kind === "heading" && text.includes(block.inlines.map((item) => item.text).join("")))) errors.push(`Markdown ${section.kind} heading is missing.`);
     }
-    const separators = document.sections.flatMap((section) => section.blocks).filter((block) => block.kind === "scene-break").map((block) => block.kind === "scene-break" ? block.text.trim() || "* * *" : ""); const outputLines = text.split("\n");
+    const separators: string[] = [];
+    for (const section of document.sections) for (const block of section.blocks) if (block.kind === "scene-break") separators.push(block.text.trim() || "* * *");
+    const outputLines = text.split("\n");
     for (const separator of new Set(separators)) if (outputLines.filter((line) => line === separator).length !== separators.filter((value) => value === separator).length) errors.push("Markdown scene separator count is incorrect.");
   }
 }

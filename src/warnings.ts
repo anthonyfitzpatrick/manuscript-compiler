@@ -8,7 +8,7 @@
  * New warnings require stable codes and bounded details; never embed prose, YAML
  * values, or absolute source paths.
  */
-import type { Book, CompileWarning, WarningSeverity } from "./model";
+import type { Book, Chapter, CompileWarning, ManuscriptDocument, WarningSeverity } from "./model";
 import type { CompileProfile } from "./settings";
 import { extractNumber } from "./ordering";
 import { normalizeKey } from "./metadata-filter";
@@ -17,16 +17,37 @@ import { normalizeKey } from "./metadata-filter";
 export class WarningEngine {
   analyze(book: Book, profile: CompileProfile, _outputPath: string): CompileWarning[] {
     const issues: CompileWarning[] = book.warnings.map((message) => ({ severity: this.legacySeverity(message), code: "structure", message }));
-    const chapters = book.parts.flatMap((part) => part.chapters);
-    const scenes = [...book.orphanScenes, ...book.parts.flatMap((part) => [...part.orphanScenes, ...part.chapters.flatMap((chapter) => chapter.scenes)])];
+    const chapters: Chapter[] = [];
+    const scenes: ManuscriptDocument[] = [...book.orphanScenes];
+    for (const part of book.parts) {
+      chapters.push(...part.chapters);
+      scenes.push(...part.orphanScenes);
+      for (const chapter of part.chapters) scenes.push(...chapter.scenes);
+    }
     this.duplicates(chapters.map((chapter) => ({ value: chapter.title, path: chapter.path })), "duplicate-chapter-title", "Duplicate chapter title", issues);
     this.duplicates(scenes.map((scene) => ({ value: scene.title, path: scene.file.path })), "duplicate-scene-title", "Duplicate scene title", issues);
-    this.inconsistent(chapters.map((chapter) => chapter.number), "chapter", issues);
-    chapters.forEach((chapter) => this.inconsistent(chapter.scenes.filter((scene) => !scene.excluded).map((scene) => extractNumber(scene.metadata.scene) ?? scene.number), `scene in “${chapter.title}”`, issues));
-    book.parts.filter((part) => part.chapters.length === 0 && part.orphanScenes.length === 0).forEach((part) => issues.push(this.warning("empty-part", `Empty part: “${part.title}”.`, part.path)));
-    book.parts.filter((part) => { const content = [...part.orphanScenes, ...part.chapters.flatMap((chapter) => chapter.scenes)]; return content.length > 0 && content.every((scene) => scene.excluded || !scene.content.trim()); }).forEach((part) => issues.push(this.warning("empty-part-content", `Part has no included content: “${part.title}”.`, part.path)));
-    chapters.filter((chapter) => chapter.scenes.length === 0).forEach((chapter) => issues.push(this.warning("chapter-without-scenes", `Chapter without scenes: “${chapter.title}”.`, chapter.path)));
-    chapters.filter((chapter) => chapter.scenes.length > 0 && chapter.scenes.every((scene) => scene.excluded || !scene.content.trim())).forEach((chapter) => issues.push(this.warning("empty-chapter", `Chapter has no included content: “${chapter.title}”.`, chapter.path)));
+    const chapterNumbers: Array<number | undefined> = [];
+    for (const chapter of chapters) chapterNumbers.push(chapter.number);
+    this.inconsistent(chapterNumbers, "chapter", issues);
+    for (const chapter of chapters) {
+      const sceneNumbers: Array<number | undefined> = [];
+      for (const scene of chapter.scenes) if (!scene.excluded) sceneNumbers.push(extractNumber(scene.metadata.scene) ?? scene.number);
+      this.inconsistent(sceneNumbers, `scene in “${chapter.title}”`, issues);
+    }
+    for (const part of book.parts) if (part.chapters.length === 0 && part.orphanScenes.length === 0) issues.push(this.warning("empty-part", `Empty part: “${part.title}”.`, part.path));
+    for (const part of book.parts) {
+      const content: ManuscriptDocument[] = [...part.orphanScenes];
+      for (const chapter of part.chapters) content.push(...chapter.scenes);
+      let hasIncludedContent = false;
+      for (const scene of content) if (!scene.excluded && scene.content.trim()) { hasIncludedContent = true; break; }
+      if (content.length > 0 && !hasIncludedContent) issues.push(this.warning("empty-part-content", `Part has no included content: “${part.title}”.`, part.path));
+    }
+    for (const chapter of chapters) if (chapter.scenes.length === 0) issues.push(this.warning("chapter-without-scenes", `Chapter without scenes: “${chapter.title}”.`, chapter.path));
+    for (const chapter of chapters) {
+      let hasIncludedContent = false;
+      for (const scene of chapter.scenes) if (!scene.excluded && scene.content.trim()) { hasIncludedContent = true; break; }
+      if (chapter.scenes.length > 0 && !hasIncludedContent) issues.push(this.warning("empty-chapter", `Chapter has no included content: “${chapter.title}”.`, chapter.path));
+    }
     if (book.frontMatter.documents.length === 0) issues.push(this.info("missing-front-matter", "No front matter was detected."));
     if (book.backMatter.documents.length === 0) issues.push(this.info("missing-back-matter", "No back matter was detected."));
     if (!profile.name.trim()) issues.push({ severity: "error", code: "invalid-profile", message: "The active profile has no name." });

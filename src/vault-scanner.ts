@@ -34,10 +34,17 @@ export class VaultScanner {
     if (frontFolders.length > 1) warnings.push(`Multiple front matter folders found (${frontFolders.map((folder) => folder.name).join(", ")}); all will be included.`);
     if (backFolders.length > 1) warnings.push(`Multiple back matter folders found (${backFolders.map((folder) => folder.name).join(", ")}); all will be included.`);
     if (looseScenes.length > 0) warnings.push(`${looseScenes.length} orphan scene(s) found directly in the manuscript root.`);
-    const frontMatter = frontFolders.flatMap((folder) => this.collectMarkdown(folder));
-    const backMatter = backFolders.flatMap((folder) => this.collectMarkdown(folder));
+    const frontMatter: TFile[] = [];
+    for (const folder of frontFolders) frontMatter.push(...this.collectMarkdown(folder));
+    const backMatter: TFile[] = [];
+    for (const folder of backFolders) backMatter.push(...this.collectMarkdown(folder));
     const parts = structuralFolders.map((folder) => this.scanPart(folder, warnings));
-    const allMarkdown = [...frontMatter, ...parts.flatMap((part) => [...part.looseScenes, ...part.chapters.flatMap((chapter) => chapter.scenes)]), ...looseScenes, ...backMatter];
+    const allMarkdown: TFile[] = [...frontMatter];
+    for (const part of parts) {
+      allMarkdown.push(...part.looseScenes);
+      for (const chapter of part.chapters) allMarkdown.push(...chapter.scenes);
+    }
+    allMarkdown.push(...looseScenes, ...backMatter);
     return { root, frontMatter, parts, looseScenes, backMatter, allMarkdown, warnings };
   }
   private scanPart(folder: TFolder, warnings: string[]): ScannedPart {

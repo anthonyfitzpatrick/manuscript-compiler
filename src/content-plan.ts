@@ -15,6 +15,7 @@ import { parseYaml, TAbstractFile, TFile, TFolder, type Vault } from "obsidian";
 import type { CompileProfile, StructurePreset } from "./settings";
 import type { ScannedBook, ScannedChapter, ScannedPart } from "./types";
 import { cleanManuscriptContent, hasProjectMetadataLeakage } from "./filters";
+import { isUnknownRecord } from "./type-guards";
 
 export type ContentRole = "front-matter" | "transparent" | "part" | "chapter" | "scene" | "back-matter" | "ignore";
 /**
@@ -147,7 +148,17 @@ export function applyMatterRoleInheritance(plan: ContentPlanItem[], folderPath: 
  */
 export function isPlanItemIncluded(item: ContentPlanItem, plan: ContentPlanItem[], rootPath: string): boolean { const byPath = new Map(plan.map((candidate) => [candidate.path, candidate])); let current: ContentPlanItem | undefined = item; while (current) { if (!current.included || current.role === "ignore") return false; if (current.parentPath === rootPath) break; current = byPath.get(current.parentPath); } return true; }
 
-function frontmatter(markdown: string): Record<string, unknown> { const match = markdown.replace(/^\uFEFF/, "").match(/^---[\t ]*\r?\n([\s\S]*?)\r?\n(?:---|\.\.\.)[\t ]*(?:\r?\n|$)/); if (!match) return {}; try { const value: unknown = parseYaml(match[1]); if (!value || typeof value !== "object" || Array.isArray(value)) return {}; return Object.fromEntries(Object.entries(value).map(([key, item]) => [normalizedProjectName(key), item])); } catch { return {}; } }
+function frontmatter(markdown: string): Record<string, unknown> {
+  const match = markdown.replace(/^\uFEFF/, "").match(/^---[\t ]*\r?\n([\s\S]*?)\r?\n(?:---|\.\.\.)[\t ]*(?:\r?\n|$)/);
+  if (!match) return {};
+  try {
+    const value: unknown = parseYaml(match[1]);
+    if (!isUnknownRecord(value)) return {};
+    const normalized: Record<string, unknown> = {};
+    for (const [key, item] of Object.entries(value)) normalized[normalizedProjectName(key)] = item;
+    return normalized;
+  } catch { return {}; }
+}
 
 /**
  * Reconstructs scanner output using nearest included structural ancestors. This
@@ -204,7 +215,11 @@ export function applyContentPlan(scan: ScannedBook, plan: ContentPlanItem[], pro
     parts = chapterFolders.sort((a, b) => rank(a.path) - rank(b.path)).map((folder) => ({ folder, chapters: [], looseScenes: chapter(folder).scenes }));
     const chapterPaths = chapterFolders.map((folder) => folder.path); looseScenes = sortFiles(body.filter((file) => !chapterPaths.some((path) => file.path.startsWith(`${path}/`))));
   }
-  const potentialOrphans = profile.chapterSource === "folders" ? [...looseScenes, ...parts.flatMap((part) => part.looseScenes)] : [];
+  const potentialOrphans: TFile[] = [];
+  if (profile.chapterSource === "folders") {
+    potentialOrphans.push(...looseScenes);
+    for (const part of parts) potentialOrphans.push(...part.looseScenes);
+  }
   const hierarchyDiagnostics = potentialOrphans.map((file) => hierarchyDiagnostic(file, scan.root.path, byPath, itemEnabled, nearestAncestorWithRole));
   return { ...scan, frontMatter, backMatter, parts, looseScenes, allMarkdown: [...frontMatter, ...body, ...backMatter], warnings: scan.warnings.filter((warning) => !/orphan scene|front matter folder|back matter folder/i.test(warning)), hierarchyDiagnostics };
 }

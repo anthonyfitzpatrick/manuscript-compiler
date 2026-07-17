@@ -68,7 +68,12 @@ export class EpubExporter extends NativeExporter {
 
 export const EXPORTERS: Record<ExportFormat, ManuscriptExporter> = { docx: new DocxMemoryExporter(), odt: new OdtExporter(), epub: new EpubExporter(), html: new HtmlExporter(), markdown: new MarkdownExporter(), xml: new XmlExporter() };
 
-function odtContent(document: SemanticDocument, options: ManuscriptExportContext["options"]): string { const toc = options.tableOfContents ? `<text:table-of-content text:name="Table of Contents"><text:table-of-content-source text:outline-level="3"/><text:index-body><text:index-title text:name="Table of Contents"><text:p text:style-name="ChapterTitle">Contents</text:p></text:index-title></text:index-body></text:table-of-content>` : ""; return `${XML}<office:document-content xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0"><office:body><office:text>${toc}${document.sections.flatMap((section) => section.blocks).map(odtBlock).join("")}</office:text></office:body></office:document-content>`; }
+function odtContent(document: SemanticDocument, options: ManuscriptExportContext["options"]): string {
+  const toc = options.tableOfContents ? `<text:table-of-content text:name="Table of Contents"><text:table-of-content-source text:outline-level="3"/><text:index-body><text:index-title text:name="Table of Contents"><text:p text:style-name="ChapterTitle">Contents</text:p></text:index-title></text:index-body></text:table-of-content>` : "";
+  const blocks: SemanticBlock[] = [];
+  for (const section of document.sections) blocks.push(...section.blocks);
+  return `${XML}<office:document-content xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0"><office:body><office:text>${toc}${blocks.map(odtBlock).join("")}</office:text></office:body></office:document-content>`;
+}
 function odtBlock(block: SemanticBlock): string { if (block.kind === "page-break") return `<text:p text:style-name="PageBreak"/>`; if (block.kind === "scene-break") return `<text:p text:style-name="SceneBreak">${xml(block.text)}</text:p>`; const style = block.kind === "paragraph" ? block.first ? "FirstParagraph" : "BodyText" : odtStyle(block.style); const pageBreak = block.kind === "heading" && block.pageBreakBefore ? `<text:p text:style-name="PageBreak"/>` : ""; return `${pageBreak}<text:p text:style-name="${style}">${odtInlines(block.inlines)}</text:p>`; }
 function odtInlines(inlines: SemanticInline[]): string { return inlines.map((item) => item.bold || item.italic ? `<text:span text:style-name="${item.bold && item.italic ? "BoldItalic" : item.bold ? "Bold" : "Italic"}">${xml(item.text)}</text:span>` : xml(item.text)).join(""); }
 function odtStyle(style: Extract<SemanticBlock, { kind: "heading" }>["style"]): string { return ({ title: "Title", author: "Author", "front-matter": "FrontMatterHeading", "back-matter": "BackMatterHeading", "part-number": "PartNumber", "part-title": "PartTitle", "chapter-number": "ChapterNumber", "chapter-title": "ChapterTitle", "body-heading": "BodyHeading" })[style]; }
@@ -96,7 +101,14 @@ function xmlDocument(document: SemanticDocument): string {
   return `${XML}<manuscript xmlns="https://manuscript-compiler.dev/schema" schemaVersion="1.0"><metadata><title>${xml(document.title)}</title><author>${xml(document.author)}</author><language>${xml(document.language)}</language><wordCount>${document.wordCount}</wordCount></metadata><frontMatter>${front}</frontMatter><body>${body.join("")}</body><backMatter>${back}</backMatter></manuscript>`;
 }
 function xmlDocumentSection(section: SemanticSection): string { return `<document id="${xmlAttr(section.id)}" title="${xmlAttr(section.title)}">${xmlScenes(section.blocks)}</document>`; }
-function xmlScenes(blocks: SemanticBlock[]): string { const scenes: SemanticBlock[][] = [[]]; for (const block of blocks) { if (block.kind === "scene-break") scenes.push([]); else scenes.at(-1)!.push(block); } return scenes.filter((scene) => scene.length).map((scene, index) => `<scene order="${index + 1}">${scene.map(xmlBlock).join("")}</scene>`).join(""); }
+function xmlScenes(blocks: SemanticBlock[]): string {
+  const scenes: SemanticBlock[][] = [[]];
+  for (const block of blocks) {
+    if (block.kind === "scene-break") scenes.push([]);
+    else scenes[scenes.length - 1].push(block);
+  }
+  return scenes.filter((scene) => scene.length).map((scene, index) => `<scene order="${index + 1}">${scene.map(xmlBlock).join("")}</scene>`).join("");
+}
 function xmlBlock(block: SemanticBlock): string { if (block.kind === "page-break") return `<pageBreak/>`; if (block.kind === "scene-break") return `<sceneBreak>${xml(block.text)}</sceneBreak>`; const content = block.inlines.map((item) => item.bold || item.italic ? `<span${item.bold ? ` bold="true"` : ""}${item.italic ? ` italic="true"` : ""}>${xml(item.text)}</span>` : xml(item.text)).join(""); return block.kind === "paragraph" ? `<paragraph${block.first ? ` first="true"` : ""}>${content}</paragraph>` : `<heading type="${block.style}">${content}</heading>`; }
 
 /**

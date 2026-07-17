@@ -43,7 +43,8 @@ export function renderSemanticMarkdown(document: SemanticDocument): string {
   const add = (value: string): void => {
     const clean = value.replace(/[\t ]+$/gm, "").trim();
     if (!clean) return;
-    if (isHeading(clean) && isHeading(output.at(-1) ?? "") && headingText(clean) === headingText(output.at(-1) ?? "")) return;
+    const previous = output.length > 0 ? output[output.length - 1] : "";
+    if (isHeading(clean) && isHeading(previous) && headingText(clean) === headingText(previous)) return;
     output.push(clean);
   };
   for (const section of document.sections) renderSection(section, add);
