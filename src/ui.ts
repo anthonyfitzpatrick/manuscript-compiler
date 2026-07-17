@@ -19,6 +19,7 @@ import { redactTechnicalMessage } from "./diagnostics";
 import { EXPORT_FORMAT_DETAILS, EXPORT_FORMATS, type ExportFormat } from "./export-types";
 import buyMeACoffeeArtwork from "./assets/bmc-button.svg";
 import pluginLogo from "../logo.svg";
+import { optionalNoArgMethod } from "./type-guards";
 
 const svgDataUrl = (svg: string): string => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 const buyMeACoffeeArtworkUrl = svgDataUrl(buyMeACoffeeArtwork);
@@ -180,7 +181,7 @@ export class ManuscriptCompilerSettingTab extends PluginSettingTab {
   private text(parent: HTMLElement, name: string, value: string, change: (value: string) => void): void { new Setting(parent).setName(name).addText((text) => text.setValue(value).onChange(async (next) => { change(next.trim()); await this.plugin.saveSettings(); })); }
   private toggle(parent: HTMLElement, name: string, value: boolean, change: (value: boolean) => void): void { new Setting(parent).setName(name).addToggle((toggle) => toggle.setValue(value).onChange(async (next) => { change(next); await this.plugin.saveSettings(); })); }
   private async importProfileJson(json?: string): Promise<void> { if (!json) return; if (new TextEncoder().encode(json).length > 262_144) { new Notice("Profile JSON is too large. Profiles must be smaller than 256 kb.", 8000); return; } let parsed: unknown; try { parsed = JSON.parse(json); } catch { new Notice("Profile JSON is invalid. Correct the JSON syntax and try again.", 8000); return; } const validation = validateProfile(parsed); if (!validation.profile) { new Notice(validation.errors.join(" "), 8000); return; } this.plugin.settings.profiles.push(validation.profile); this.plugin.settings.activeProfileId = validation.profile.id; await this.saveAndRender(); }
-  private async saveAndRender(): Promise<void> { await this.plugin.saveSettings(); const update = (this as unknown as Record<string, unknown>)["update"]; if (typeof update === "function") update.call(this); else this.renderSettings(); }
+  private async saveAndRender(): Promise<void> { await this.plugin.saveSettings(); const update = optionalNoArgMethod(this, "update"); if (update) update(); else this.renderSettings(); }
 }
 
 function row(list: HTMLElement, label: string, value: string): void { list.createEl("dt", { text: label }); list.createEl("dd", { text: value }); }
@@ -192,4 +193,4 @@ function row(list: HTMLElement, label: string, value: string): void { list.creat
 export function showError(error: unknown): void { const message = redactTechnicalMessage(error); new Notice(`Manuscript Compiler: ${message}`, 8000); console.error(`Manuscript Compiler: ${message}`); }
 
 /** Uses the current destructive API while retaining compatibility with Obsidian before 1.13. */
-function destructive(button: ButtonComponent): ButtonComponent { const method = (button as unknown as Record<string, unknown>)["setDestructive"]; if (typeof method === "function") { method.call(button); return button; } button.buttonEl.addClass("mod-warning"); return button; }
+function destructive(button: ButtonComponent): ButtonComponent { const method = optionalNoArgMethod(button, "setDestructive"); if (method) { method(); return button; } button.buttonEl.addClass("mod-warning"); return button; }

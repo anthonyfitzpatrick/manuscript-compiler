@@ -1,5 +1,14 @@
 # Changelog <img src="logo.svg" alt="Manuscript Compiler logo" width="48" align="right">
 
+## 0.10.2 Type-Safety Maintenance
+
+- Strengthened external-data, collection, parser, and exporter type boundaries so the complete unsafe TypeScript lint family remains clean without suppressions or unsafe casts.
+
+## 0.10.1 Release Integrity
+
+- Bundled the editable logo artwork into `main.js`, reduced the runtime and release package to `main.js`, `manifest.json`, and `styles.css`, and retained `logo.svg` only as repository branding source.
+- Added first-party GitHub Artifact Attestations for the three runtime release assets with least-privilege workflow permissions.
+
 ## 0.10.0 Initial Public Release
 
 - Added searchable settings definitions for Obsidian 1.13+ while retaining the imperative settings fallback required by the declared Obsidian 1.5 minimum.

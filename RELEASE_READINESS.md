@@ -1,8 +1,8 @@
-# 0.10.0 Release Readiness <img src="logo.svg" alt="Manuscript Compiler logo" width="48" align="right">
+# Release Readiness <img src="logo.svg" alt="Manuscript Compiler logo" width="48" align="right">
 
 ## Current status
 
-Version 0.10.0 remains a prerelease candidate. Automated gates cover the shared prepared Book, six native generators, format validators, browser-download cleanup, privacy, migration, and release allowlist. Live interoperability and platform download testing remain release blockers; this document does not claim they were performed.
+The current manifest version remains a prerelease candidate until every applicable gate is complete. Automated gates cover the shared prepared Book, six native generators, format validators, browser-download cleanup, privacy, migration, and release allowlist. Live interoperability and platform download testing remain release blockers; this document does not claim they were performed.
 
 Maintainer and author documentation is provided in `ARCHITECTURE.md`, `DEVELOPER_GUIDE.md`, `USER_GUIDE.md`, `SECURITY.md`, and `CONTRIBUTING.md`. Screenshot placeholders in the user guide remain publication work and are not claims of completed manual testing.
 
@@ -38,9 +38,9 @@ Run and record current output before publishing:
 - `npm audit`
 - `git diff --check`
 
-The release archive must be `release/manuscript-compiler-0.10.0.zip` and contain exactly `main.js`, `manifest.json`, and `styles.css`.
+The release archive must be `release/manuscript-compiler-<version>.zip` and contain exactly `main.js`, `manifest.json`, and `styles.css`.
 
-The three runtime assets are `main.js`, `manifest.json`, and `styles.css`. GitHub Artifact Attestations cover those files. The release tag must be exactly `0.10.0`, without a `v` prefix; the ZIP is optional and is not an installation dependency.
+The three runtime assets are `main.js`, `manifest.json`, and `styles.css`. GitHub Artifact Attestations cover those files. The release tag must exactly match `manifest.json`, without a `v` prefix; the ZIP is optional and is not an installation dependency.
 
 `logo.svg` remains the master editable artwork in the repository for branding and documentation. The build bundles its SVG text into `main.js`, so neither the release package nor an installed plugin needs a separate logo file.
 

@@ -1,4 +1,4 @@
-# Manuscript Compiler 0.10.0 Manual Release Checklist <img src="logo.svg" alt="Manuscript Compiler logo" width="48" align="right">
+# Manuscript Compiler Manual Release Checklist <img src="logo.svg" alt="Manuscript Compiler logo" width="48" align="right">
 
 All items are intentionally unchecked. Record date, tester, Obsidian version, operating system, and application versions. Automated tests do not complete these gates.
 

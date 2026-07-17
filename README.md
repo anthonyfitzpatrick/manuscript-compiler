@@ -229,7 +229,7 @@ npm audit
 git diff --check
 ```
 
-The release archive is `release/manuscript-compiler-0.10.0.zip` and contains exactly `main.js`, `manifest.json`, and `styles.css`. The editable `logo.svg` remains in the repository for README, GitHub, documentation, website, and social branding; its artwork is compiled into `main.js` and it is not a runtime or release-package file.
+The release archive is `release/manuscript-compiler-<version>.zip` and contains exactly `main.js`, `manifest.json`, and `styles.css`. The editable `logo.svg` remains in the repository for README, GitHub, documentation, website, and social branding; its artwork is compiled into `main.js` and it is not a runtime or release-package file.
 
 Automated structural validation is not a substitute for opening outputs in Word, Vellum, LibreOffice, multiple EPUB readers, text editors, and browsers. See the [Manual Release Checklist](MANUAL_TESTING.md).
 
