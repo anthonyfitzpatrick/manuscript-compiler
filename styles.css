@@ -90,7 +90,7 @@
 .manuscript-review-sections { display: grid; gap: var(--size-4-2); margin: var(--size-4-3) 0; }
 .manuscript-review-row { display: grid; grid-template-columns: minmax(0, 1fr) max-content max-content; align-items: center; gap: var(--size-4-3); padding: var(--size-4-2) var(--size-4-3); border: 1px solid var(--background-modifier-border); border-radius: var(--radius-s); }
 .manuscript-compact-outline { border: 1px solid var(--background-modifier-border); border-radius: var(--radius-m); overflow: hidden; }
-.manuscript-outline-row { display: grid; grid-template-columns: 30px minmax(0, 1fr) max-content; align-items: center; column-gap: 14px; padding: var(--size-4-2) var(--size-4-3); padding-inline-start: calc(var(--size-4-3) + var(--manuscript-depth) * 18px); border-bottom: 1px solid var(--background-modifier-border); }
+.manuscript-outline-row { display: grid; grid-template-columns: 30px minmax(0, 1fr) max-content; align-items: center; gap: 0 14px; padding: var(--size-4-2) var(--size-4-3); padding-inline-start: calc(var(--size-4-3) + var(--manuscript-depth) * 18px); border-bottom: 1px solid var(--background-modifier-border); }
 .manuscript-outline-row.is-transparent { background: var(--background-secondary-alt); color: var(--text-muted); }
 .manuscript-folder-toggle {
   display: inline-flex;
@@ -110,7 +110,7 @@
 }
 .manuscript-folder-toggle.is-expanded { transform: rotate(90deg); }
 .manuscript-outline-marker { width: 24px; text-align: center; color: var(--text-muted); }
-.manuscript-outline-label { min-width: 0; display: flex; flex-wrap: wrap; column-gap: var(--size-4-2); align-items: baseline; }
+.manuscript-outline-label { min-width: 0; display: flex; flex-wrap: wrap; gap: 0 var(--size-4-2); align-items: baseline; }
 .manuscript-outline-label > span { overflow-wrap: anywhere; }
 .manuscript-outline-label small { color: var(--text-muted); white-space: nowrap; }
 .manuscript-outline-status { font-size: var(--font-ui-smaller); font-weight: var(--font-semibold); color: var(--text-warning); }
@@ -123,7 +123,7 @@
 .manuscript-content-row { display: grid; grid-template-columns: 28px minmax(220px, 1fr) minmax(130px, 180px) 76px; align-items: center; gap: var(--size-4-2); padding: var(--size-4-2) var(--size-4-3); padding-inline-start: calc(var(--size-4-3) + var(--manuscript-depth) * 22px); border-bottom: 1px solid var(--background-modifier-border); }
 .manuscript-content-row:last-child { border-bottom: 0; }
 .manuscript-content-row.is-excluded { opacity: .55; background: var(--background-secondary-alt); }
-.manuscript-content-name { display: grid; grid-template-columns: 30px 1fr; column-gap: 14px; align-items: center; min-width: 0; }
+.manuscript-content-name { display: grid; grid-template-columns: 30px 1fr; gap: 0 14px; align-items: center; min-width: 0; }
 .manuscript-content-name > span:nth-child(2) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .manuscript-content-name small { grid-column: 2; color: var(--text-muted); }
 .manuscript-content-icon { color: var(--text-muted); }

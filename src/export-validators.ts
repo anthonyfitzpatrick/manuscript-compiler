@@ -29,7 +29,12 @@ class OdtValidator implements ExportValidator {
       if (strFromU8(files.mimetype) !== "application/vnd.oasis.opendocument.text") return invalid("ODT mimetype is invalid.");
       if (firstZipEntry(bytes) !== "mimetype" || !firstZipEntryStored(bytes)) return invalid("ODT mimetype must be the first uncompressed package entry.");
       const manifest = strFromU8(files["META-INF/manifest.xml"]);
-      for (const match of manifest.matchAll(/manifest:full-path="([^"]+)"/g)) if (match[1] !== "/" && !files[match[1]]) return invalid(`ODT manifest target ${match[1]} is missing.`);
+      const manifestTargetPattern = /manifest:full-path="([^"]+)"/g;
+      let manifestTargetMatch: RegExpExecArray | null;
+      while ((manifestTargetMatch = manifestTargetPattern.exec(manifest)) !== null) {
+        const target = manifestTargetMatch[1];
+        if (target !== "/" && !files[target]) return invalid(`ODT manifest target ${target} is missing.`);
+      }
       const content = strFromU8(files["content.xml"]);
       const styles = strFromU8(files["styles.xml"]);
       const xmlDocuments: string[] = [manifest, content, styles, strFromU8(files["meta.xml"]), strFromU8(files["settings.xml"])];
@@ -51,14 +56,31 @@ class EpubValidator implements ExportValidator {
       const opf = strFromU8(files["OEBPS/content.opf"]);
       if (!wellFormedXml(opf)) return invalid("EPUB package document is malformed.");
       const ids = new Set<string>();
-      for (const match of opf.matchAll(/<item\s+id="([^"]+)"[^>]*href="([^"]+)"/g)) ids.add(match[1]);
-      for (const match of opf.matchAll(/<item\s+id="[^"]+"[^>]*href="([^"]+)"/g)) if (!files[`OEBPS/${match[1]}`]) return invalid(`EPUB manifest target ${match[1]} is missing.`);
-      for (const match of opf.matchAll(/<itemref\s+idref="([^"]+)"/g)) if (!ids.has(match[1])) return invalid(`EPUB spine reference ${match[1]} is invalid.`);
+      const manifestItemPattern = /<item\s+id="([^"]+)"[^>]*href="([^"]+)"/g;
+      let manifestItemMatch: RegExpExecArray | null;
+      while ((manifestItemMatch = manifestItemPattern.exec(opf)) !== null) ids.add(manifestItemMatch[1]);
+      const manifestHrefPattern = /<item\s+id="[^"]+"[^>]*href="([^"]+)"/g;
+      let manifestHrefMatch: RegExpExecArray | null;
+      while ((manifestHrefMatch = manifestHrefPattern.exec(opf)) !== null) {
+        const href = manifestHrefMatch[1];
+        if (!files[`OEBPS/${href}`]) return invalid(`EPUB manifest target ${href} is missing.`);
+      }
+      const spineReferencePattern = /<itemref\s+idref="([^"]+)"/g;
+      let spineReferenceMatch: RegExpExecArray | null;
+      while ((spineReferenceMatch = spineReferencePattern.exec(opf)) !== null) {
+        const id = spineReferenceMatch[1];
+        if (!ids.has(id)) return invalid(`EPUB spine reference ${id} is invalid.`);
+      }
       const xhtmlDocuments: string[] = [];
       for (const [name, value] of Object.entries(files)) if (name.endsWith(".xhtml")) xhtmlDocuments.push(strFromU8(value));
       if (xhtmlDocuments.some((value) => !wellFormedXml(value))) return invalid("EPUB XHTML is malformed.");
       const xhtml = xhtmlDocuments.join("\n");
-      for (const match of xhtml.matchAll(/(?:src|href)=["']([^"'#]+)(?:#[^"']*)?["']/gi)) if (!/^[a-z]+:/i.test(match[1]) && !files[`OEBPS/${match[1]}`]) return invalid(`EPUB internal reference ${match[1]} is missing.`);
+      const internalReferencePattern = /(?:src|href)=["']([^"'#]+)(?:#[^"']*)?["']/gi;
+      let internalReferenceMatch: RegExpExecArray | null;
+      while ((internalReferenceMatch = internalReferencePattern.exec(xhtml)) !== null) {
+        const reference = internalReferenceMatch[1];
+        if (!/^[a-z]+:/i.test(reference) && !files[`OEBPS/${reference}`]) return invalid(`EPUB internal reference ${reference} is missing.`);
+      }
       const css = strFromU8(files["OEBPS/style.css"]);
       if (containsActiveContent(xhtml) || /@import\b|url\s*\(|expression\s*\(|-moz-binding\s*:/i.test(css)) return invalid("EPUB contains active or external content.");
       return valid();
@@ -113,4 +135,19 @@ export const EXPORT_VALIDATORS: Record<ExportFormat, ExportValidator> = { docx: 
 function firstZipEntry(bytes: Uint8Array): string { if (bytes.length < 30 || bytes[0] !== 0x50 || bytes[1] !== 0x4b || bytes[2] !== 0x03 || bytes[3] !== 0x04) return ""; const length = bytes[26] | bytes[27] << 8; return new TextDecoder().decode(bytes.slice(30, 30 + length)); }
 function firstZipEntryStored(bytes: Uint8Array): boolean { return bytes.length >= 10 && bytes[8] === 0 && bytes[9] === 0; }
 function containsActiveContent(value: string): boolean { return /<(?:script|iframe|object|embed|base)\b|\son[a-z]+\s*=|(?:src|href)\s*=\s*["']\s*(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(value); }
-function wellFormedXml(value: string): boolean { const stack: string[] = []; for (const match of value.matchAll(/<([^!?][^>]*?)>/g)) { const token = match[1].trim(); if (!token || token.endsWith("/")) continue; if (token.startsWith("/")) { if (stack.pop() !== token.slice(1).trim()) return false; } else stack.push(token.split(/\s/, 1)[0]); } return stack.length === 0; }
+function wellFormedXml(value: string): boolean {
+  const stack: string[] = [];
+  const elementPattern = /<([^!?][^>]*?)>/g;
+  let elementMatch: RegExpExecArray | null;
+  while ((elementMatch = elementPattern.exec(value)) !== null) {
+    const token = elementMatch[1].trim();
+    if (!token || token.endsWith("/")) continue;
+    if (token.startsWith("/")) {
+      if (stack.pop() !== token.slice(1).trim()) return false;
+    } else {
+      const elementName = token.split(/\s/, 1)[0];
+      stack.push(elementName);
+    }
+  }
+  return stack.length === 0;
+}

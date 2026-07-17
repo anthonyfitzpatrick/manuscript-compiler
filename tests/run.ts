@@ -494,7 +494,7 @@ test("folder disclosure controls have a 30px target without enlarging note marke
   assert.doesNotMatch(contents, /role === "transparent"\) \{ renderOutlineChildren/);
   assert.match(contents, /setAttribute\("aria-expanded", String\(expanded\)\)/); assert.match(contents, /setAttribute\("aria-label", `\$\{expanded \? "Collapse" : "Expand"\}/);
   assert.match(css, /\.manuscript-folder-toggle\s*\{[\s\S]*min-width:\s*30px;[\s\S]*min-height:\s*30px;[\s\S]*font-size:\s*21px;[\s\S]*transition:\s*transform/);
-  assert.match(css, /\.manuscript-outline-row[^}]*column-gap:\s*14px/); assert.match(css, /\.manuscript-content-name[^}]*column-gap:\s*14px/);
+  assert.match(css, /\.manuscript-outline-row[^}]*gap:\s*0 14px/); assert.match(css, /\.manuscript-content-name[^}]*gap:\s*0 14px/); assert.doesNotMatch(css, /\bcolumn-gap\s*:/);
   assert.doesNotMatch(css, /\.manuscript-order-buttons[^}]*font-size:\s*21px/); assert.doesNotMatch(css, /\.manuscript-outline-marker[^}]*font-size:\s*21px/);
 });
 
