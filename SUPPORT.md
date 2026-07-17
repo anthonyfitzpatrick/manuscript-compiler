@@ -5,7 +5,7 @@ Manuscript Compiler is independently maintained. The documentation is the fastes
 ## Before requesting help
 
 1. Read the [User Guide](USER_GUIDE.md), especially its troubleshooting and known-limitations sections.
-2. Confirm the installed `main.js`, `manifest.json`, `styles.css`, and `logo.svg` came from the same release.
+2. Confirm the installed `main.js`, `manifest.json`, and `styles.css` came from the same release.
 3. Reproduce the problem with a small synthetic manuscript where possible.
 4. Remove manuscript prose, private metadata, absolute vault paths, account details, and access tokens from anything you share.
 5. Search existing [issues](https://github.com/anthonyfitzpatrick/manuscript-compiler/issues) and [Discussions](https://github.com/anthonyfitzpatrick/manuscript-compiler/discussions).

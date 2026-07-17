@@ -30,21 +30,21 @@ For a first export, work through all three stages without skipping the Contents 
 
 Until Manuscript Compiler is available through Obsidian's Community Plugins catalogue:
 
-1. Download `main.js`, `manifest.json`, `styles.css`, and `logo.svg` from a release whose tag exactly matches the manifest version.
+1. Download `main.js`, `manifest.json`, and `styles.css` from a release whose tag exactly matches the manifest version.
 2. Create `<vault>/.obsidian/plugins/manuscript-compiler/` if it does not exist.
-3. Put only those four files in that folder.
+3. Put only those three files in that folder. The settings logo is already bundled into `main.js`.
 4. Restart Obsidian or reload community plugins.
 5. Open **Settings → Community plugins** and enable **Manuscript Compiler**.
 
 The plugin is mobile-safe, but the exact save/share experience depends on the mobile operating system and Obsidian host.
 
-After enabling the plugin, confirm the installation before working with a real manuscript. Open the command palette and search for Manuscript Compiler, or right-click a test folder in File Explorer and confirm that **Compile manuscript from this folder** appears. If the command is missing, verify that the four release files are directly inside the plugin folder rather than inside an additional nested directory.
+After enabling the plugin, confirm the installation before working with a real manuscript. Open the command palette and search for Manuscript Compiler, or right-click a test folder in File Explorer and confirm that **Compile manuscript from this folder** appears. If the command is missing, verify that the three release files are directly inside the plugin folder rather than inside an additional nested directory.
 
 ## Updating
 
 1. Close any open Manuscript Compiler window.
 2. Back up the vault using the same process used for other important Obsidian data.
-3. Replace `main.js`, `manifest.json`, `styles.css`, and `logo.svg` with all four files from the same release.
+3. Replace `main.js`, `manifest.json`, and `styles.css` with all three files from the same release.
 4. Restart Obsidian.
 5. Open the plugin once and confirm existing profiles and formatting choices remain available.
 

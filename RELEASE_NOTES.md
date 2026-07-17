@@ -101,12 +101,11 @@ The User Guide covers installation, manuscript organisation, the complete three-
 
 Until Manuscript Compiler is accepted into the Obsidian Community Plugins directory, install it manually from this GitHub Release.
 
-Download all four release assets:
+Download all three runtime release assets:
 
 - `main.js`
 - `manifest.json`
 - `styles.css`
-- `logo.svg`
 
 Create the following folder inside the vault if it does not already exist:
 
@@ -114,7 +113,7 @@ Create the following folder inside the vault if it does not already exist:
 <vault>/.obsidian/plugins/manuscript-compiler/
 ```
 
-Place the four files directly inside that folder. Do not mix files from different releases.
+Place the three files directly inside that folder. Do not mix files from different releases. The settings logo is already bundled into `main.js`; the repository's `logo.svg` is branding source artwork and is not required for installation.
 
 Restart Obsidian or reload Community Plugins, then open **Settings → Community plugins** and enable **Manuscript Compiler**.
 

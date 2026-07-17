@@ -89,4 +89,4 @@ Keep the PR focused. Address review comments with new commits unless the maintai
 
 ## Releases
 
-A release tag must exactly equal the version in `manifest.json`, without a `v` prefix. Attach `main.js`, `manifest.json`, `styles.css`, and `logo.svg` individually. The optional ZIP must contain exactly those four files. Follow [RELEASE_READINESS.md](RELEASE_READINESS.md) and preserve every unchecked manual gate in [MANUAL_TESTING.md](MANUAL_TESTING.md) until it is actually completed.
+A release tag must exactly equal the version in `manifest.json`, without a `v` prefix. Attach `main.js`, `manifest.json`, and `styles.css` individually. The optional ZIP must contain exactly those three files; `logo.svg` remains repository branding and is bundled into `main.js` for runtime display. Follow [RELEASE_READINESS.md](RELEASE_READINESS.md) and preserve every unchecked manual gate in [MANUAL_TESTING.md](MANUAL_TESTING.md) until it is actually completed.

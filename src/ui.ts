@@ -20,6 +20,10 @@ import { EXPORT_FORMAT_DETAILS, EXPORT_FORMATS, type ExportFormat } from "./expo
 import buyMeACoffeeArtwork from "./assets/bmc-button.svg";
 import pluginLogo from "../logo.svg";
 
+const svgDataUrl = (svg: string): string => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+const buyMeACoffeeArtworkUrl = svgDataUrl(buyMeACoffeeArtwork);
+const pluginLogoUrl = svgDataUrl(pluginLogo);
+
 /** Reusable vault-folder picker for compatibility commands/settings. */
 export class FolderSuggestModal extends FuzzySuggestModal<TFolder> {
   constructor(app: App, private readonly onChoose: (folder: TFolder) => void) { super(app); }
@@ -151,7 +155,7 @@ export class ManuscriptCompilerSettingTab extends PluginSettingTab {
   }
   private renderSupportContent(panel: HTMLElement): void {
     const identity = panel.createDiv({ cls: "manuscript-support-identity" });
-    identity.createEl("img", { cls: "manuscript-support-logo", attr: { src: pluginLogo, alt: "", "aria-hidden": "true" } });
+    identity.createEl("img", { cls: "manuscript-support-logo", attr: { src: pluginLogoUrl, alt: "", "aria-hidden": "true" } });
     const identityText = identity.createDiv({ cls: "manuscript-support-identity-text" });
     identityText.createEl("strong", { cls: "manuscript-support-name", text: "Manuscript Compiler" });
     identityText.createEl("p", { text: `Version ${this.plugin.manifest.version}` });
@@ -162,7 +166,7 @@ export class ManuscriptCompilerSettingTab extends PluginSettingTab {
       const button = new ButtonComponent(actions).setTooltip(action.label).setClass("manuscript-support-button");
       if (action.label === "Buy me a coffee") {
         const icon = button.buttonEl.createSpan({ cls: "manuscript-support-bmc-icon", attr: { "aria-hidden": "true" } });
-        icon.createEl("img", { attr: { src: buyMeACoffeeArtwork, alt: "" } });
+        icon.createEl("img", { attr: { src: buyMeACoffeeArtworkUrl, alt: "" } });
       } else {
         button.setIcon(action.icon);
       }

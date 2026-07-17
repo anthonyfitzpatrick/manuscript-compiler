@@ -2,7 +2,8 @@ import { mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { unzipSync, zipSync } from "fflate";
 
-const required = ["main.js", "manifest.json", "styles.css", "logo.svg"];
+const required = ["main.js", "manifest.json", "styles.css"];
+const repositoryLogo = "logo.svg";
 const allowedManifestKeys = new Set(["id", "name", "version", "minAppVersion", "description", "author", "authorUrl", "fundingUrl", "isDesktopOnly"]);
 const semverPattern = /^\d+\.\d+\.\d+$/;
 const packageJson = await jsonFile("package.json");
@@ -35,13 +36,17 @@ async function validateAssets() {
     const info = await stat(name);
     assert(info.isFile() && info.size > 0, `Required release asset is missing or empty: ${name}`);
   }
+  const logoInfo = await stat(repositoryLogo);
+  assert(logoInfo.isFile() && logoInfo.size > 0, `Repository branding asset is missing or empty: ${repositoryLogo}`);
   const bundle = await readFile("main.js", "utf8");
-  const logo = await readFile("logo.svg", "utf8");
-  const releaseText = `${bundle}\n${await readFile("manifest.json", "utf8")}\n${await readFile("styles.css", "utf8")}\n${logo}`;
+  const logo = await readFile(repositoryLogo, "utf8");
+  const releaseText = `${bundle}\n${await readFile("manifest.json", "utf8")}\n${await readFile("styles.css", "utf8")}`;
   assert(!/sourceMappingURL|\.map(?:\s|$)/i.test(bundle), "Production bundle contains a source map reference.");
   assert(!/require\(["'](?:electron|(?:node:)?(?:fs|path|os|child_process))["']\)/.test(bundle), "Production bundle contains a prohibited desktop or Node import.");
   assert(!/\b(?:fetch|requestUrl|XMLHttpRequest|WebSocket|sendBeacon)\s*\(/.test(bundle), "Production bundle contains a prohibited network API.");
   assert(!/\b(?:eval|Function)\s*\(/.test(bundle), "Production bundle contains dynamic code execution.");
+  assert(!bundle.includes(repositoryLogo), "Production bundle contains a runtime logo file path.");
+  assert(bundle.includes("Semantic Tree") && bundle.includes("A hierarchy of parts, chapters and scenes inside a document."), "Production bundle is missing the bundled plugin logo.");
   assert(/<svg\b/i.test(logo), "logo.svg is not an SVG document.");
   assert(!/<(?:script|foreignObject|iframe|object|embed)\b/i.test(logo), "logo.svg contains active or embedded content.");
   assert(!/\b(?:href|src)\s*=\s*["'](?:https?:|data:|javascript:)/i.test(logo), "logo.svg contains an external or active reference.");
