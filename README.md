@@ -6,9 +6,9 @@ A Saved compilation stores a reusable compilation setup for a manuscript, not a 
 
 Use **Save changes** to update the current saved setup. Use **Save as…** to create another saved setup from the current choices. When the manuscript changes, review the Contents stage: new content can be accepted, missing saved references can be removed, and uncertain matches require your explicit choice. If a manuscript folder moves, use **Locate manuscript…** and then Save changes to keep the new association.
 
-The workspace distinguishes **Unsaved changes**, **Manuscript changed**, and export status: **Not exported yet**, **Export up to date**, **Export out of date**, **Export not current**, or **Export status unknown**. “Export up to date” records that this saved setup and manuscript state were exported successfully; it does not verify that an external file still exists.
+The workspace shows **Unsaved changes** for saved setup edits.
 
-Use **Manage…** to browse saved compilations for the current manuscript. **Rename** changes only a saved compilation’s display name. **Duplicate** copies its persisted setup without switching to the copy and does not copy export facts. **Delete** removes only the saved setup—it never deletes manuscript or exported files. Deleting the current saved compilation keeps the usable workspace as a **New compilation**; use **Save as…** if you want to save it again.
+Use **Manage…** to browse saved compilations for the current manuscript. **Rename** changes only a saved compilation’s display name. **Duplicate** copies its persisted setup without switching to the copy. **Delete** removes only the saved setup—it never deletes manuscript or exported files. Deleting the current saved compilation keeps the usable workspace as a **New compilation**; use **Save as…** if you want to save it again.
 
 [![Latest release](https://img.shields.io/github/v/release/anthonyfitzpatrick/manuscript-compiler?label=release)](https://github.com/anthonyfitzpatrick/manuscript-compiler/releases/latest)
 [![MIT licence](https://img.shields.io/github/license/anthonyfitzpatrick/manuscript-compiler)](LICENSE)

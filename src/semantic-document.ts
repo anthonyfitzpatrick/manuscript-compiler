@@ -48,7 +48,7 @@ export function createSemanticDocument(book: Book, profile: CompileProfile, opti
 }
 
 function addSceneSection(output: SemanticSection[], section: SemanticSection, scenes: ManuscriptDocument[], profile: CompileProfile, options: ExportFormattingOptions): void { if (!scenes.length) return; addScenes(section.blocks, scenes, profile, options.sceneSeparator); output.push(section); }
-function addScenes(blocks: SemanticBlock[], scenes: ManuscriptDocument[], profile: CompileProfile, separator: string): void { scenes.forEach((scene, index) => { if (index) blocks.push({ kind: "scene-break", text: separator }); if (profile.includeSceneTitles) blocks.push(heading("body-heading", scene.title)); blocks.push(...bodyBlocks(scene.content)); }); }
+function addScenes(blocks: SemanticBlock[], scenes: ManuscriptDocument[], _profile: CompileProfile, separator: string): void { scenes.forEach((scene, index) => { if (index) blocks.push({ kind: "scene-break", text: separator }); blocks.push(...bodyBlocks(scene.content)); }); }
 function included(items: ManuscriptDocument[]): ManuscriptDocument[] { return items.filter((item) => !item.excluded && Boolean(item.content.trim())); }
 function heading(style: Extract<SemanticBlock, { kind: "heading" }>["style"], value: string, pageBreakBefore = false): Extract<SemanticBlock, { kind: "heading" }> { return { kind: "heading", style, inlines: [{ text: value }], pageBreakBefore }; }
 

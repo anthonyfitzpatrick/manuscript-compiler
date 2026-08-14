@@ -2,12 +2,10 @@
  * Coordinates Saved Compilation lifecycle state. It deliberately delegates all
  * durable changes to SavedCompilationService and all bytes to ExportCoordinator.
  */
-import type { ExportFormat } from "./export-types";
 import type { PreparedCompileSession } from "./compile-preparation";
 import { reconcileSavedCompilation } from "./saved-compilation-reconciliation";
 import type { SavedCompilationOperation, SavedCompilationService } from "./saved-compilation-service";
 import { savedCompilationRequest } from "./saved-compilation-integration";
-import { savedCompilationRecipeSignature } from "./saved-compilations";
 import { type CanonicalWorkspaceRecipe, SavedCompilationWorkspaceSession } from "./saved-compilation-session";
 import type { SavedCompilationStalenessTracker } from "./saved-compilation-staleness";
 import { createCompileWorkspaceController } from "./workspace/compile-workspace-factory";
@@ -27,14 +25,6 @@ export type SavedCompilationWorkflowResult =
   | { status: "persistence-failed" }
   | { status: "invalid" }
   | { status: "unavailable" };
-export type SavedCompilationExportAuthorization =
-  | { status: "allowed" }
-  | { status: "no-prepared-session" }
-  | { status: "stale-prepared-session" }
-  | { status: "review-acknowledgement-required" }
-  | { status: "review-required" }
-  | { status: "blocked-reconciliation" };
-export type SavedCompilationExportFreshness = "NEVER_EXPORTED" | "CURRENT" | "OUT_OF_DATE" | "UNSAVED_CONFIGURATION" | "UNKNOWN";
 export type SavedCompilationOpenResult =
   | { status: "ready"; controller: CompileWorkspaceController; lastOpened: "updated" | "persistence-failed" }
   | { status: "root-unavailable"; controller: CompileWorkspaceController }
@@ -62,7 +52,6 @@ export class SavedCompilationOrchestrator {
   private session = new SavedCompilationWorkspaceSession();
   private activeController?: CompileWorkspaceController;
   private transitionGeneration = 0;
-  private exportBookkeepingUnknown = false;
 
   constructor(private readonly service: SavedCompilationService, private readonly staleness?: SavedCompilationStalenessTracker) {}
 
@@ -166,7 +155,7 @@ export class SavedCompilationOrchestrator {
     } catch { return { status: "preparation-failed" }; }
   }
 
-  /** Persists explicit intent and only evidence supplied after a caller verified source freshness. */
+  /** Persists explicit intent. */
   async saveChanges(sourceEvidenceCurrent: boolean): Promise<SavedCompilationWorkflowResult> {
     const compilation = this.session.compilation;
     const recipe = this.session.current;
@@ -176,7 +165,7 @@ export class SavedCompilationOrchestrator {
     return this.applyPersistResult(result);
   }
 
-  /** Creates a fresh Saved Compilation from current workspace intent; it never copies export facts. */
+  /** Creates a fresh Saved Compilation from current workspace intent. */
   async saveAsNew(name: string, sourceEvidenceCurrent: boolean): Promise<SavedCompilationWorkflowResult> {
     const recipe = this.session.current;
     if (!recipe) return { status: "invalid" };
@@ -205,41 +194,6 @@ export class SavedCompilationOrchestrator {
   acceptNewSource(reference: string): boolean { return this.session.acceptNewSource(reference); }
   isPotentiallyStale(): boolean { return this.session.compilation ? this.staleness?.isPotentiallyStale(this.session.compilation.id) === true : false; }
   clearPotentialStalenessAfterRefresh(): void { if (this.session.compilation) this.staleness?.clear(this.session.compilation.id); }
-
-  /** Session gating supplements, but never replaces, ExportCoordinator's validation and delivery checks. */
-  authorizeExport(hasPreparedSession: boolean, preparedSessionCurrent: boolean): SavedCompilationExportAuthorization {
-    if (!hasPreparedSession) return { status: "no-prepared-session" };
-    if (!preparedSessionCurrent) return { status: "stale-prepared-session" };
-    if (!this.session.isSaved) return { status: "allowed" };
-    if (this.session.reconciliationReadiness === "blocked") return { status: "blocked-reconciliation" };
-    if (this.session.reconciliationReadiness === "review-required") return { status: "review-required" };
-    if (this.session.reconciliationReadiness === "review-recommended" && !this.session.reviewAcknowledged) return { status: "review-acknowledgement-required" };
-    return { status: "allowed" };
-  }
-
-  /** Records a factual export only when the exported session still equals persisted Saved intent. */
-  async recordSuccessfulCleanExport(format: ExportFormat, sourceFingerprint: string, inputSignature: string, timestamp: number): Promise<"recorded" | "skipped" | "persistence-failed"> {
-    const compilation = this.session.compilation;
-    if (!compilation || this.session.dirty || !this.session.persistedRecipe) return "skipped";
-    const recipeSignature = savedCompilationRecipeSignature(this.session.persistedRecipe);
-    const result = await this.service.recordSuccessfulExport(compilation.id, { timestamp, format, sourceFingerprint, inputSignature, recipeSignature });
-    if (result.status === "ok") { this.exportBookkeepingUnknown = false; this.session.updateCompilationFacts(result.compilation); return "recorded"; }
-    if (result.status === "persistence-failed") this.exportBookkeepingUnknown = true;
-    return result.status === "persistence-failed" ? "persistence-failed" : "skipped";
-  }
-
-  /** Derives conservative Saved freshness from persisted facts, session intent, and the current prepared source. */
-  exportFreshness(prepared?: Pick<PreparedCompileSession, "sourceFingerprint" | "inputSignature">): SavedCompilationExportFreshness {
-    const compilation = this.session.compilation;
-    if (!compilation || !this.session.isSaved) return "UNKNOWN";
-    if (this.exportBookkeepingUnknown) return "UNKNOWN";
-    if (this.session.dirty) return "UNSAVED_CONFIGURATION";
-    const fact = compilation.lastSuccessfulExport;
-    if (!fact) return "NEVER_EXPORTED";
-    if (!prepared) return "UNKNOWN";
-    const signature = this.session.persistedSignature;
-    return signature === fact.recipeSignature && compilation.output.format === fact.format && fact.sourceFingerprint === prepared.sourceFingerprint && fact.inputSignature === prepared.inputSignature ? "CURRENT" : "OUT_OF_DATE";
-  }
 
   private applyPersistResult(result: SavedCompilationOperation): SavedCompilationWorkflowResult {
     if (result.status === "ok") {

@@ -31,6 +31,50 @@ export function cleanManuscriptContent(markdown: string, bodyAliases: string[] =
   return removeProjectMetadataRegions(withoutSections).replace(/^\s+|\s+$/g, "");
 }
 
+/**
+ * Separates a scene template's canonical leading title from its publishable body.
+ * The vault note is never changed. Called only while building a structural Scene:
+ * an explicit leading “Scene N” header is structural metadata even if its filename
+ * has drifted. Otherwise, a matching canonical title is removed. Later headings
+ * remain ordinary manuscript content.
+ */
+export function stripLeadingCanonicalSceneTitle(markdown: string, title: string): string {
+  const lines = markdown.replace(/\r\n?/g, "\n").split("\n"); const start = lines.findIndex((line) => line.trim().length > 0);
+  const leading = start < 0 ? undefined : leadingTitle(lines, start);
+  if (start < 0 || !isExplicitSceneHeader(leading) && !sameCanonicalTitle(title, leading)) return markdown;
+  const end = leadingTitleEnd(lines, start);
+  return [...lines.slice(0, start), ...lines.slice(end)].join("\n").replace(/^\s+/, "").replace(/\s+$/, "");
+}
+
+function leadingTitle(lines: string[], start: number): string | undefined {
+  const line = lines[start].trim(); const atx = /^#{1,6}[\t \u00a0]+(.+?)(?:[\t ]+#+)?$/.exec(line);
+  if (atx) return atx[1];
+  if (start + 1 < lines.length && /^\s*(?:=+|-+)\s*$/.test(lines[start + 1])) return line;
+  const bold = /^(?:\*\*|__)(.+?)(?:\*\*|__)$/.exec(line);
+  if (bold) return bold[1];
+  return start + 1 === lines.length || !lines[start + 1].trim() ? line : undefined;
+}
+
+function leadingTitleEnd(lines: string[], start: number): number {
+  return start + 1 < lines.length && /^\s*(?:=+|-+)\s*$/.test(lines[start + 1]) ? start + 2 : start + 1;
+}
+
+/** Explicit Scene numbering is structural metadata only when invoked for a Scene. */
+function isExplicitSceneHeader(value: string | undefined): boolean { return value !== undefined && /^scene[\s\u00a0]+\d+\b/i.test(value.trim()); }
+function sameCanonicalTitle(left: string, right: string | undefined): boolean { return right !== undefined && normalizeSceneTitleForComparison(left) === normalizeSceneTitleForComparison(right); }
+/**
+ * Compares structural Scene labels without making filename typography part of
+ * manuscript content. This is deliberately equality-based, not fuzzy: only
+ * non-semantic spacing, quote, dash, conjunction, and punctuation differences
+ * are discarded.
+ */
+export function normalizeSceneTitleForComparison(value: string): string {
+  return value.normalize("NFKC")
+    .replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/[‐‑‒–—−]/g, "-")
+    .replace(/…/g, "...").replace(/&/g, " and ").replace(/[*_`]/g, "")
+    .replace(/[^\p{L}\p{N}]+/gu, " ").replace(/\s+/g, " ").trim().toLocaleLowerCase();
+}
+
 /** Selects one configured body section through its next peer/ancestor heading. */
 export function extractBodySection(markdown: string, aliases: string[] = DEFAULT_BODY_ALIASES): { content: string; found: boolean } {
   const lines = markdown.replace(/\r\n?/g, "\n").split("\n"); const allowed = new Set(aliases.map(normalizeLabel)); let start = -1; let level = 0;

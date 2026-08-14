@@ -9,7 +9,7 @@
  * and cancellation stops queued reads rather than returning a partial Book.
  */
 import { parseYaml, TFile, Vault } from "obsidian";
-import { ContentCleaningPipeline } from "./filters";
+import { ContentCleaningPipeline, stripLeadingCanonicalSceneTitle } from "./filters";
 import { MetadataFilterEngine, normalizeKey } from "./metadata-filter";
 import type { Book, Chapter, DocumentMetadata, ManuscriptDocument, Part, Scene } from "./model";
 import { extractNumber, sortDocuments, sortParts, titleName } from "./ordering";
@@ -41,8 +41,12 @@ export class ManuscriptParser {
     const documents = (files: TFile[]): ManuscriptDocument[] => files.map((file) => cache.get(file.path)).filter((document): document is ManuscriptDocument => document !== undefined);
     const frontDocuments = documents(scan.frontMatter);
     const backDocuments = documents(scan.backMatter);
-    const rootDocuments = documents(scan.looseScenes);
-    const parts = settings.useParts ? scan.parts.map((part) => this.createPart(part, documents, settings)) : [this.createPartlessBook(scan, rootDocuments, documents, settings)];
+    // `ScannedChapter.scenes` / `ScannedPart.looseScenes` are the structural
+    // scene designation produced by the authoritative ContentPlan. Normalize
+    // source title blocks only while constructing those Scene collections.
+    const scenes = (files: TFile[]): Scene[] => documents(files).map((document) => this.sceneFromDocument(document));
+    const rootDocuments = scenes(scan.looseScenes);
+    const parts = settings.useParts ? scan.parts.map((part) => this.createPart(part, scenes, settings)) : [this.createPartlessBook(scan, rootDocuments, scenes, settings)];
     const orphanScenes = settings.useParts ? rootDocuments : [];
     sortDocuments(frontDocuments, settings.metadataOrdering);
     sortDocuments(backDocuments, settings.metadataOrdering);
@@ -83,6 +87,9 @@ export class ManuscriptParser {
     parts.forEach((part) => { documents(part.orphanScenes); part.chapters.sort((a, b) => rank(a.path) - rank(b.path)); part.chapters.forEach((chapter) => documents(chapter.scenes)); });
   }
 
+  /** A structural Scene owns a canonical title separate from its publishable body. */
+  private sceneFromDocument(document: ManuscriptDocument): Scene { return { ...document, content: stripLeadingCanonicalSceneTitle(document.content, document.title) }; }
+
   private async parseDocument(file: TFile, settings: CompileOptions): Promise<ManuscriptDocument> {
     const rawContent = await this.vault.cachedRead(file);
     const parsed = this.readMetadata(rawContent); const metadata = parsed.metadata;
@@ -107,35 +114,35 @@ export class ManuscriptParser {
     return { metadata: { part: scalar("part"), chapter: scalar("chapter"), scene: scalar("scene"), order, editingStatus: editingStatus === undefined ? undefined : String(editingStatus), values: normalizedValues } };
   }
 
-  private createPart(scanned: ScannedPart, documents: (files: TFile[]) => ManuscriptDocument[], settings: CompileOptions): Part {
-    const direct = documents(scanned.looseScenes);
+  private createPart(scanned: ScannedPart, scenes: (files: TFile[]) => Scene[], settings: CompileOptions): Part {
+    const direct = scenes(scanned.looseScenes);
     const noteChapters = settings.chapterSource === "notes" ? direct.map((scene) => this.chapterFromDocument(scene, settings)) : [];
     const orphanScenes = settings.chapterSource === "folders" ? direct : [];
-    const chapters = [...noteChapters, ...scanned.chapters.map((chapter) => this.createChapter(chapter, documents, settings))];
+    const chapters = [...noteChapters, ...scanned.chapters.map((chapter) => this.createChapter(chapter, scenes, settings))];
     const partScenes: Scene[] = [...orphanScenes];
     for (const chapter of chapters) partScenes.push(...chapter.scenes);
     const representative = partScenes.find((scene) => scene.metadata.part !== undefined);
     const metadataNumber = extractNumber(representative?.metadata.part);
     return { title: scanned.folder.name, name: titleName(scanned.folder.name), number: settings.metadataOrdering ? metadataNumber ?? extractNumber(scanned.folder.name) : extractNumber(scanned.folder.name), path: scanned.folder.path, order: metadataNumber, chapters, orphanScenes };
   }
-  private createPartlessBook(scan: ScannedBook, rootDocuments: Scene[], documents: (files: TFile[]) => ManuscriptDocument[], settings: CompileOptions): Part {
+  private createPartlessBook(scan: ScannedBook, rootDocuments: Scene[], scenes: (files: TFile[]) => Scene[], settings: CompileOptions): Part {
     const rootChapters = settings.chapterSource === "notes" ? rootDocuments.map((scene) => this.chapterFromDocument(scene, settings)) : [];
     const folderChapters: Chapter[] = [];
     for (const folder of scan.parts) {
-      const scenes: ManuscriptDocument[] = [...documents(folder.looseScenes)];
-      for (const chapter of folder.chapters) scenes.push(...documents(chapter.scenes));
-      const representative = scenes.find((scene) => scene.metadata.chapter !== undefined);
+      const chapterScenes: Scene[] = [...scenes(folder.looseScenes)];
+      for (const chapter of folder.chapters) chapterScenes.push(...scenes(chapter.scenes));
+      const representative = chapterScenes.find((scene) => scene.metadata.chapter !== undefined);
       const metadataNumber = extractNumber(representative?.metadata.chapter);
-      folderChapters.push({ title: folder.folder.name, name: titleName(folder.folder.name), number: settings.metadataOrdering ? metadataNumber ?? extractNumber(folder.folder.name) : extractNumber(folder.folder.name), path: folder.folder.path, order: metadataNumber, scenes, orphan: false });
+      folderChapters.push({ title: folder.folder.name, name: titleName(folder.folder.name), number: settings.metadataOrdering ? metadataNumber ?? extractNumber(folder.folder.name) : extractNumber(folder.folder.name), path: folder.folder.path, order: metadataNumber, scenes: chapterScenes, orphan: false });
     }
     return { title: scan.root.name, name: scan.root.name, path: scan.root.path, chapters: [...rootChapters, ...folderChapters], orphanScenes: settings.chapterSource === "folders" ? rootDocuments : [], synthetic: true };
   }
   private chapterFromDocument(scene: Scene, settings: CompileOptions): Chapter { const metadataNumber = extractNumber(scene.metadata.chapter); return { title: scene.title, name: titleName(scene.title), number: settings.metadataOrdering ? metadataNumber ?? scene.number : scene.number, path: scene.file.path, order: metadataNumber ?? scene.metadata.order, scenes: [scene], orphan: false }; }
-  private createChapter(scanned: ScannedChapter, documents: (files: TFile[]) => ManuscriptDocument[], settings: CompileOptions): Chapter {
-    const scenes = documents(scanned.scenes);
-    const representative = scenes.find((scene) => scene.metadata.chapter !== undefined);
+  private createChapter(scanned: ScannedChapter, scenes: (files: TFile[]) => Scene[], settings: CompileOptions): Chapter {
+    const chapterScenes = scenes(scanned.scenes);
+    const representative = chapterScenes.find((scene) => scene.metadata.chapter !== undefined);
     const metadataNumber = extractNumber(representative?.metadata.chapter);
-    return { title: scanned.folder.name, name: titleName(scanned.folder.name), number: settings.metadataOrdering ? metadataNumber ?? extractNumber(scanned.folder.name) : extractNumber(scanned.folder.name), path: scanned.folder.path, order: metadataNumber, scenes, orphan: false };
+    return { title: scanned.folder.name, name: titleName(scanned.folder.name), number: settings.metadataOrdering ? metadataNumber ?? extractNumber(scanned.folder.name) : extractNumber(scanned.folder.name), path: scanned.folder.path, order: metadataNumber, scenes: chapterScenes, orphan: false };
   }
 
   private addStructuralWarnings(parts: Part[], rootOrphans: Scene[], warnings: string[]): void {

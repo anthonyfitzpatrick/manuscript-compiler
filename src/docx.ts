@@ -136,11 +136,6 @@ function addScenes(blocks: string[], documents: ManuscriptDocument[], profile: C
       state.firstParagraph = true;
       state.atPageStart = false;
     }
-    if (profile.includeSceneTitles) {
-      blocks.push(paragraph(scene.title, "ChapterTitle", { keepNext: true }));
-      state.firstParagraph = true;
-      state.atPageStart = false;
-    }
     addMarkdownBody(blocks, scene.content, state);
   });
 }

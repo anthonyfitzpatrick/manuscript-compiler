@@ -29,7 +29,7 @@ export interface SavedCompilationOverride { reference: SavedCompilationFileRefer
 export interface SavedCompilationManualOrder { parentPath: string; childPaths: string[]; }
 export interface SavedCompilationRecipe {
   overrides: SavedCompilationOverride[]; manualOrders: SavedCompilationManualOrder[];
-  structurePreset: StructurePreset; includeFrontMatter: boolean; includeBackMatter: boolean; includeSceneTitles: boolean;
+  structurePreset: StructurePreset; includeFrontMatter: boolean; includeBackMatter: boolean;
   cleaning: CleaningSettings; metadataFilters: MetadataFilterRule[]; useParts: boolean; chapterSource: "folders" | "notes";
   orderingMethod: "filename" | "metadata"; metadataOrdering: boolean; partHeadingTemplate: string; chapterHeadingTemplate: string;
   blankLinesBetweenSections: number; blankLinesBetweenChapters: number;
@@ -39,12 +39,11 @@ export interface SavedCompilationOutputConfiguration {
   sceneSeparator: string; partDisplay: StructuralDisplay; chapterDisplay: StructuralDisplay; titlePage: boolean;
   typography?: DocxFormatting; profileOriginId?: string;
 }
-export interface SavedCompilationObservedSource { sourceFingerprint?: string; inputSignature?: string; references: SavedCompilationFileReference[]; }
-export interface SavedCompilationExportFacts { timestamp: number; format: ExportFormat; sourceFingerprint: string; inputSignature: string; recipeSignature: string; }
+export interface SavedCompilationObservedSource { references: SavedCompilationFileReference[]; }
 export interface SavedCompilation {
   id: string; name: string; description?: string; createdAt: number; modifiedAt: number; lastOpenedAt?: number;
   root: SavedCompilationRootReference; recipe: SavedCompilationRecipe; output: SavedCompilationOutputConfiguration;
-  observedSource: SavedCompilationObservedSource; lastSuccessfulExport?: SavedCompilationExportFacts;
+  observedSource: SavedCompilationObservedSource;
 }
 export interface SavedCompilationsStorage { schemaVersion: number; entries: SavedCompilation[]; }
 export interface SavedCompilationRepairResult { storage: SavedCompilationsStorage; repaired: number; dropped: number; unsupportedSchema: boolean; }
@@ -86,7 +85,7 @@ export function repairSavedCompilation(value: unknown, usedIds: ReadonlySet<stri
   return {
     id: repairedId(value.id, usedIds), name, description: optionalText(value.description, 2_000), createdAt, modifiedAt: timestamp(value.modifiedAt, createdAt),
     lastOpenedAt: optionalTimestamp(value.lastOpenedAt), root: { path: rootPath }, recipe: repairRecipe(value.recipe), output,
-    observedSource: repairObserved(value.observedSource), lastSuccessfulExport: repairExport(value.lastSuccessfulExport)
+    observedSource: repairObserved(value.observedSource)
   };
 }
 
@@ -106,7 +105,7 @@ function repairRecipe(value: unknown): SavedCompilationRecipe {
     overrides: unique(repairArray(item.overrides, MAX_SAVED_COMPILATION_REFERENCES, repairOverride), (entry) => entry.reference.path),
     manualOrders: unique(repairArray(item.manualOrders, MAX_SAVED_COMPILATION_ORDER_ENTRIES, repairOrder), (entry) => entry.parentPath),
     structurePreset: member(PRESETS, item.structurePreset) ? item.structurePreset : "novel-parts",
-    includeFrontMatter: item.includeFrontMatter !== false, includeBackMatter: item.includeBackMatter !== false, includeSceneTitles: item.includeSceneTitles === true,
+    includeFrontMatter: item.includeFrontMatter !== false, includeBackMatter: item.includeBackMatter !== false,
     cleaning: repairCleaning(item.cleaning), metadataFilters: repairFilters(item.metadataFilters), useParts: item.useParts !== false,
     chapterSource: item.chapterSource === "notes" ? "notes" : "folders", orderingMethod: item.orderingMethod === "metadata" ? "metadata" : "filename",
     metadataOrdering: item.metadataOrdering === true, partHeadingTemplate: text(item.partHeadingTemplate, 500) || "{title}",
@@ -163,13 +162,7 @@ function repairFilters(value: unknown): MetadataFilterRule[] {
 }
 function repairObserved(value: unknown): SavedCompilationObservedSource {
   const item = isUnknownRecord(value) ? value : {};
-  return { sourceFingerprint: fingerprint(item.sourceFingerprint), inputSignature: fingerprint(item.inputSignature),
-    references: unique(repairArray(item.references, MAX_SAVED_COMPILATION_REFERENCES, repairReference), (entry) => entry.path) };
-}
-function repairExport(value: unknown): SavedCompilationExportFacts | undefined {
-  if (!isUnknownRecord(value) || !member(FORMATS, value.format)) return undefined;
-  const sourceFingerprint = fingerprint(value.sourceFingerprint); const inputSignature = fingerprint(value.inputSignature); const recipeSignature = fingerprint(value.recipeSignature);
-  return sourceFingerprint && inputSignature && recipeSignature ? { timestamp: timestamp(value.timestamp, 0), format: value.format, sourceFingerprint, inputSignature, recipeSignature } : undefined;
+  return { references: unique(repairArray(item.references, MAX_SAVED_COMPILATION_REFERENCES, repairReference), (entry) => entry.path) };
 }
 function repairedId(value: unknown, used: ReadonlySet<string>): string {
   const preferred = identifier(value); if (preferred && !used.has(preferred)) return preferred;

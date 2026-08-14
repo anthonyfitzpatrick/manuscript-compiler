@@ -37,7 +37,6 @@ import type { SavedCompilationWorkflowResult } from "./saved-compilation-orchest
 import type { ActiveWorkspaceTransitionResult, SavedCompilationOpenDependencies } from "./saved-compilation-orchestrator";
 import type { CompileWorkspaceServices } from "./workspace/compile-workspace-controller";
 import type { SavedCompilationOperation } from "./saved-compilation-service";
-import type { SavedCompilationExportFreshness } from "./saved-compilation-orchestrator";
 
 /** Obsidian-owned plugin instance and composition root for one enabled lifecycle. */
 export default class ManuscriptCompilerPlugin extends Plugin {
@@ -109,11 +108,6 @@ export default class ManuscriptCompilerPlugin extends Plugin {
         prepareSaved: async (compilation, overlay, signal) => await this.prepareSavedCompilation(compilation, overlay, signal),
         sessionIsCurrent: async (session) => await this.preparedSessionIsCurrent(session),
         export: async (session, format, filename) => await this.commands.exportPreparedSession(session, format, filename),
-        authorizeSavedExport: () => this.savedCompilationOrchestrator.authorizeExport(true, true),
-        recordSavedExport: async (session, format) => {
-          const recorded = await this.savedCompilationOrchestrator.recordSuccessfulCleanExport(format, session.sourceFingerprint, session.inputSignature, Date.now());
-          if (recorded === "persistence-failed") throw new Error("Saved export bookkeeping could not be persisted.");
-        },
         isSavedCompilationPotentiallyStale: (compilationId) => this.savedCompilationStaleness.isPotentiallyStale(compilationId),
         onSavedCompilationRefreshCommitted: (compilationId) => this.savedCompilationStaleness.clear(compilationId)
       }
@@ -137,13 +131,12 @@ export default class ManuscriptCompilerPlugin extends Plugin {
   acceptActiveSavedNewSource(reference: string): boolean { return this.savedCompilationOrchestrator.acceptNewSource(reference); }
   acceptActiveSavedDeletedReference(reference: string): boolean { return this.savedCompilationOrchestrator.acceptDeletedReference(reference); }
   mapActiveSavedReference(reference: string, target: string): boolean { return this.savedCompilationOrchestrator.mapSavedReference(reference, target); }
-  savedCompilationExportFreshness(controller: CompileWorkspaceController): SavedCompilationExportFreshness | undefined { return controller.state.origin.kind === "saved" ? this.savedCompilationOrchestrator.exportFreshness(controller.state.preparedSession) : undefined; }
   /** Renames display metadata without rebuilding the active Saved workspace. */
   async renameSavedCompilation(controller: CompileWorkspaceController, id: string, name: string): Promise<SavedCompilationOperation | "unchanged"> {
     const existing = this.savedCompilations.getById(id); if (!existing) return { status: "not-found" };
     if (existing.name === name.trim()) return "unchanged";
     const result = await this.savedCompilations.rename(id, name.trim());
-    if (result.status === "ok" && controller.state.origin.kind === "saved" && controller.state.origin.compilationId === id) { controller.renameSavedCompilation(result.compilation.name); controller.workspaceSession()?.updateCompilationFacts(result.compilation); }
+    if (result.status === "ok" && controller.state.origin.kind === "saved" && controller.state.origin.compilationId === id) controller.renameSavedCompilation(result.compilation.name);
     return result;
   }
   /** Duplicates persisted Saved state only; it neither opens nor promotes the copy. */
@@ -188,7 +181,7 @@ export default class ManuscriptCompilerPlugin extends Plugin {
     this.commands = new CompileCommandService(this.app, () => this.settings, () => this.getActiveProfile(), this.operations, this.exporter, this.manifest.version);
   }
   private savedWorkspaceServices(): CompileWorkspaceServices {
-    return { prepare: async (request, plan, signal) => await this.prepareCompileRequest(request, plan, signal), prepareSaved: async (compilation, overlay, signal) => await this.prepareSavedCompilation(compilation, overlay, signal), sessionIsCurrent: async (session) => await this.preparedSessionIsCurrent(session), export: async (session, format, filename) => await this.commands.exportPreparedSession(session, format, filename), authorizeSavedExport: () => this.savedCompilationOrchestrator.authorizeExport(true, true), recordSavedExport: async (session, format) => { if (await this.savedCompilationOrchestrator.recordSuccessfulCleanExport(format, session.sourceFingerprint, session.inputSignature, Date.now()) === "persistence-failed") throw new Error("Saved export bookkeeping could not be persisted."); }, isSavedCompilationPotentiallyStale: (id) => this.savedCompilationStaleness.isPotentiallyStale(id), onSavedCompilationRefreshCommitted: (id) => this.savedCompilationStaleness.clear(id) };
+    return { prepare: async (request, plan, signal) => await this.prepareCompileRequest(request, plan, signal), prepareSaved: async (compilation, overlay, signal) => await this.prepareSavedCompilation(compilation, overlay, signal), sessionIsCurrent: async (session) => await this.preparedSessionIsCurrent(session), export: async (session, format, filename) => await this.commands.exportPreparedSession(session, format, filename), isSavedCompilationPotentiallyStale: (id) => this.savedCompilationStaleness.isPotentiallyStale(id), onSavedCompilationRefreshCommitted: (id) => this.savedCompilationStaleness.clear(id) };
   }
   private savedOpenDependencies(): SavedCompilationOpenDependencies { return { resolveRoot: (path) => this.app.vault.getAbstractFileByPath(path) instanceof TFolder, prepare: async (compilation, overlay) => await this.prepareSavedCompilation(compilation, overlay), workspaceServices: this.savedWorkspaceServices() }; }
 

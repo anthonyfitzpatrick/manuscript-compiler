@@ -137,12 +137,8 @@ export class CompilePreparationService {
       .map((item) => ({ severity: "warning", code: "content-plan-warning", message: `${item.name}: ${item.warning}`, path: item.path }));
     const warnings = [...result.issues, ...planWarnings];
     const exclusions = collectExclusions(plan, book, folder.path);
-    const sourcePaths = plan
-      .filter((item) => item.kind === "note" && isPlanItemIncluded(item, plan, folder.path))
-      .map((item) => item.path)
-      .sort();
+    const sourcePaths = relevantSourcePaths(requestSnapshot, plan);
     const sourceFingerprint = await calculateSourceFingerprint(this.vault, sourcePaths);
-    if (reconciliation) reconciliation.observedSource.sourceFingerprint = sourceFingerprint;
     return {
       request: requestSnapshot, contentPlan: requestSnapshot.contentPlan ?? [], profile, scannedBook, book,
       statistics: result.statistics, warnings, exclusions,
@@ -169,24 +165,29 @@ export async function calculateSourceFingerprint(vault: Vault, sourcePaths: stri
   return hash(entries.join("\n"));
 }
 
+/** Lists only notes that can contribute material to the current compiled manuscript. */
+export function relevantSourcePaths(request: Pick<SimpleCompileRequest, "manuscriptRoot" | "includeFrontMatter" | "includeBackMatter">, plan: readonly ContentPlanItem[]): string[] {
+  return plan.filter((item) => item.kind === "note" && isOutputRelevant(request, item, plan)).map((item) => item.path).sort();
+}
+
 /** Creates exporter input while retaining `session.book` by reference. */
 export function createPreparedExportRequest(session: PreparedCompileSession, outputPath: string, keepTemporaryMarkdown: boolean, signal?: AbortSignal, onCommit?: () => void, onProgress?: (stage: string) => void) {
   return { book: session.book, profile: session.profile, markdown: session.result.markdown, outputPath, variables: session.variables, keepTemporaryMarkdown, signal, onCommit, onProgress };
 }
 /** Fingerprints all author inputs that can change model or output preparation. */
 export function compileInputSignature(request: SimpleCompileRequest, plan: ContentPlanItem[]): string {
-  return hash(JSON.stringify({
+  return hash(stableJson({
     root: request.manuscriptRoot, preset: request.structurePreset, front: request.includeFrontMatter,
     back: request.includeBackMatter, docx: request.docxPreset,
     formatting: request.formatting, tableOfContents: request.tableOfContents, partDisplay: request.partDisplay, chapterDisplay: request.chapterDisplay,
     custom: request.custom,
-    plan: plan.map(({ path, role, included, order, userOverride }) => ({ path, role, included, order, userOverride }))
+    plan: relevantInputPlanItems(request, plan).sort((left, right) => left.path.localeCompare(right.path)).map(({ path, role, included, order, userOverride }) => ({ path, role, included, order, userOverride }))
   }));
 }
 /**
  * Tests whether current semantic inputs still match a prepared session.
  * @returns `true` only when the deterministic input signature is unchanged.
- * @remarks Pure; source-content freshness is checked separately and asynchronously.
+ * @remarks Pure; source content is checked separately and asynchronously.
  */
 export function preparedSessionMatchesInputs(session: PreparedCompileSession, request: SimpleCompileRequest, plan: ContentPlanItem[]): boolean { return session.inputSignature === compileInputSignature(request, plan); }
 
@@ -249,4 +250,41 @@ function hash(value: string): string {
   let result = 2166136261;
   for (let index = 0; index < value.length; index += 1) { result ^= value.charCodeAt(index); result = Math.imul(result, 16777619); }
   return (result >>> 0).toString(16).padStart(8, "0");
+}
+
+function relevantInputPlanItems(request: Pick<SimpleCompileRequest, "manuscriptRoot" | "includeFrontMatter" | "includeBackMatter">, plan: ContentPlanItem[]): ContentPlanItem[] {
+  const byPath = new Map(plan.map((item) => [item.path, item]));
+  return plan.filter((item) => {
+    if (!matterEnabled(request, item) || item.role === "ignore") return false;
+    if (isPlanItemIncluded(item, plan, request.manuscriptRoot)) return true;
+    return !item.included && firstExcludedAncestor(item, byPath, request.manuscriptRoot) === item;
+  });
+}
+
+function isOutputRelevant(request: Pick<SimpleCompileRequest, "manuscriptRoot" | "includeFrontMatter" | "includeBackMatter">, item: ContentPlanItem, plan: readonly ContentPlanItem[]): boolean {
+  return matterEnabled(request, item) && isPlanItemIncluded(item, plan as ContentPlanItem[], request.manuscriptRoot);
+}
+
+function matterEnabled(request: Pick<SimpleCompileRequest, "includeFrontMatter" | "includeBackMatter">, item: ContentPlanItem): boolean {
+  return (item.role !== "front-matter" || request.includeFrontMatter) && (item.role !== "back-matter" || request.includeBackMatter);
+}
+
+function firstExcludedAncestor(item: ContentPlanItem, byPath: ReadonlyMap<string, ContentPlanItem>, rootPath: string): ContentPlanItem | undefined {
+  let current: ContentPlanItem | undefined = item;
+  while (current) {
+    if (!current.included || current.role === "ignore") return current;
+    if (current.parentPath === rootPath) return undefined;
+    current = byPath.get(current.parentPath);
+  }
+  return undefined;
+}
+
+/** Serialises object fields in a stable order while retaining meaningful array order. */
+function stableJson(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map((item) => stableJson(item)).join(",")}]`;
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    return `{${Object.keys(record).sort().filter((key) => record[key] !== undefined).map((key) => `${JSON.stringify(key)}:${stableJson(record[key])}`).join(",")}}`;
+  }
+  return JSON.stringify(value);
 }

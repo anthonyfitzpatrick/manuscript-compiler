@@ -227,7 +227,7 @@ The current 1.13.1 typings also expose newer APIs that must not become unguarded
 1. What minimum non-prose recipe information is needed to restore author intent without serializing manuscript content?
 2. Which current paths, parent paths, titles, roles, order evidence, and file stats are necessary and proportionate for reconciliation?
 3. How should root rename/move, descendant rename/move, deletion, duplication, and newly discovered files be presented for author review?
-4. Should freshness be calculated on demand, tracked with events, or both; what batching and scope rules avoid startup and large-vault work?
+4. Should reconciliation be calculated on demand, tracked with events, or both; what batching and scope rules avoid startup and large-vault work?
 5. How should externally changed plugin data be reloaded or conflict-checked while a compiler workspace is open?
 6. Which mutation boundaries own save failures, repair, atomic UI updates, and a bounded saved-compilation list?
 7. How can selection/restore UI remain accessible, keyboard-safe, narrow-pane-safe, and mobile-safe within the current workspace?

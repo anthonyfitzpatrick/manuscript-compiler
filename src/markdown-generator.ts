@@ -42,7 +42,7 @@ export class MarkdownGenerator {
     const included = documents.filter((document) => !document.excluded && document.content.trim());
     included.forEach((document, index) => {
       if (scenes && index > 0 && profile.sceneSeparator.trim()) add(profile.sceneSeparator);
-      add(scenes && profile.includeSceneTitles ? `### ${document.title}\n\n${document.content}` : document.content);
+      add(document.content);
     });
   }
   private heading(template: string, item: Part | Chapter, variables: TemplateVariables): string {

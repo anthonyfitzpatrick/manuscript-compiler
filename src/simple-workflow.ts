@@ -45,11 +45,11 @@ export const STRUCTURE_PRESET_NAMES: Record<StructurePreset, string> = {
 };
 
 const STRUCTURES: Record<Exclude<StructurePreset, "custom">, Partial<CompileProfile>> = {
-  "novel-parts": { useParts: true, chapterSource: "folders", includeSceneTitles: false, partHeadingTemplate: "Part {number}: {name}", chapterHeadingTemplate: "Chapter {number}: {name}", sceneSeparator: "#" },
-  novel: { useParts: false, chapterSource: "folders", includeSceneTitles: false, chapterHeadingTemplate: "Chapter {number}: {name}", sceneSeparator: "#" },
-  "chapter-notes": { useParts: false, chapterSource: "notes", includeSceneTitles: false, chapterHeadingTemplate: "Chapter {number}: {name}", sceneSeparator: "" },
-  "short-story": { useParts: false, chapterSource: "notes", includeSceneTitles: false, partHeadingTemplate: "", chapterHeadingTemplate: "{name}", sceneSeparator: "" },
-  anthology: { useParts: true, chapterSource: "notes", includeSceneTitles: false, partHeadingTemplate: "{name}", chapterHeadingTemplate: "{name}", sceneSeparator: "#" }
+  "novel-parts": { useParts: true, chapterSource: "folders", partHeadingTemplate: "Part {number}: {name}", chapterHeadingTemplate: "Chapter {number}: {name}", sceneSeparator: "#" },
+  novel: { useParts: false, chapterSource: "folders", chapterHeadingTemplate: "Chapter {number}: {name}", sceneSeparator: "#" },
+  "chapter-notes": { useParts: false, chapterSource: "notes", chapterHeadingTemplate: "Chapter {number}: {name}", sceneSeparator: "" },
+  "short-story": { useParts: false, chapterSource: "notes", partHeadingTemplate: "", chapterHeadingTemplate: "{name}", sceneSeparator: "" },
+  anthology: { useParts: true, chapterSource: "notes", partHeadingTemplate: "{name}", chapterHeadingTemplate: "{name}", sceneSeparator: "#" }
 };
 
 const DOCX: Record<DocxStylePreset, Partial<CompileProfile>> = {

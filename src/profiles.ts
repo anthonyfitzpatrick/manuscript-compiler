@@ -28,7 +28,7 @@ export function migrateSettings(settings: ManuscriptCompilerSettings): Manuscrip
   const profiles = createDefaultProfiles(); const active = profiles[settings.defaultCompilePreset === "vellum" ? 1 : 0];
   Object.assign(active, {
     manuscriptRoot: settings.defaultManuscriptFolder, exportFolder: settings.defaultExportFolder,
-    includeFrontMatter: settings.includeFrontMatter, includeBackMatter: settings.includeBackMatter, includeSceneTitles: settings.includeSceneTitles,
+    includeFrontMatter: settings.includeFrontMatter, includeBackMatter: settings.includeBackMatter,
     metadataOrdering: settings.metadataOrdering, orderingMethod: settings.metadataOrdering ? "metadata" : "filename",
     partHeadingTemplate: settings.partHeadingTemplate, chapterHeadingTemplate: settings.chapterHeadingTemplate, sceneSeparator: settings.sceneSeparator,
     stripYamlFrontmatter: settings.stripYamlFrontmatter, removeObsidianComments: settings.removeObsidianComments,
@@ -78,7 +78,7 @@ export function repairSettings(settings: ManuscriptCompilerSettings): Manuscript
     if (!merged.id) { merged.id = profileId(); warnings.push(`Profile ${index + 1} was assigned a new identifier.`); }
     if (!merged.name?.trim()) { merged.name = `Recovered Profile ${index + 1}`; warnings.push(`Profile ${index + 1} was assigned a recovery name.`); }
     if (!["markdown", "docx", "markdown-docx", "odt", "epub", "html", "xml"].includes(merged.exportTarget)) { merged.exportTarget = "docx"; warnings.push(`Profile “${merged.name}” export target was repaired to DOCX.`); }
-    for (const key of ["includeFrontMatter", "includeBackMatter", "includeSceneTitles", "metadataOrdering", "stripYamlFrontmatter", "removeObsidianComments", "removeHtmlComments", "removeDataviewBlocks", "removeCallouts", "stripInternalLinks", "generateTableOfContents", "keepIntermediateMarkdown", "useParts"] as const) if (typeof merged[key] !== "boolean") { (merged[key] as boolean) = defaults[key]; warnings.push(`Profile “${merged.name}” setting ${key} was repaired.`); }
+    for (const key of ["includeFrontMatter", "includeBackMatter", "metadataOrdering", "stripYamlFrontmatter", "removeObsidianComments", "removeHtmlComments", "removeDataviewBlocks", "removeCallouts", "stripInternalLinks", "generateTableOfContents", "keepIntermediateMarkdown", "useParts"] as const) if (typeof merged[key] !== "boolean") { (merged[key] as boolean) = defaults[key]; warnings.push(`Profile “${merged.name}” setting ${key} was repaired.`); }
     if (merged.chapterSource !== "folders" && merged.chapterSource !== "notes") { merged.chapterSource = "folders"; warnings.push(`Profile “${merged.name}” chapter source was repaired to folders.`); }
     for (const key of ["manuscriptRoot", "exportFolder", "outputFilename", "partHeadingTemplate", "chapterHeadingTemplate", "sceneSeparator", "referenceDocx", "pandocMetadataFile", "additionalPandocArguments"] as const) if (typeof merged[key] !== "string") { (merged[key] as string) = defaults[key]; warnings.push(`Profile “${merged.name}” setting ${key} was repaired.`); }
     for (const key of ["BookTitle", "Series", "Author"] as const) if (typeof merged.variables[key] !== "string") { merged.variables[key] = defaults.variables[key]; warnings.push(`Profile “${merged.name}” variable ${key} was repaired.`); }
@@ -113,7 +113,7 @@ export function validateProfile(value: unknown): { profile?: CompileProfile; err
   for (const key of ["exportFolder", "outputFilename", "partHeadingTemplate", "chapterHeadingTemplate", "sceneSeparator"] as const) if (typeof item[key] !== "string") errors.push(`${key} must be a string.`);
   for (const key of ["manuscriptRoot", "exportFolder", "outputFilename", "partHeadingTemplate", "chapterHeadingTemplate", "sceneSeparator", "referenceDocx", "pandocMetadataFile", "additionalPandocArguments"] as const) if (typeof item[key] === "string" && item[key].length > 4096) errors.push(`${key} is too long.`);
   if (typeof item.outputFilename === "string" && !item.outputFilename.trim()) errors.push("outputFilename is required.");
-  for (const key of ["includeFrontMatter", "includeBackMatter", "includeSceneTitles", "metadataOrdering", "stripYamlFrontmatter", "removeObsidianComments", "removeHtmlComments", "removeDataviewBlocks", "removeCallouts", "stripInternalLinks", "useParts"] as const) if (item[key] !== undefined && typeof item[key] !== "boolean") errors.push(`${key} must be boolean.`);
+  for (const key of ["includeFrontMatter", "includeBackMatter", "metadataOrdering", "stripYamlFrontmatter", "removeObsidianComments", "removeHtmlComments", "removeDataviewBlocks", "removeCallouts", "stripInternalLinks", "useParts"] as const) if (item[key] !== undefined && typeof item[key] !== "boolean") errors.push(`${key} must be boolean.`);
   if (item.chapterSource !== undefined && item.chapterSource !== "folders" && item.chapterSource !== "notes") errors.push("chapterSource is invalid.");
   for (const key of ["blankLinesBetweenSections", "blankLinesBetweenChapters"] as const) if (item[key] !== undefined && (!Number.isInteger(item[key]) || (item[key] ?? -1) < 0)) errors.push(`${key} must be a non-negative integer.`);
   if (item.orderingMethod !== undefined && item.orderingMethod !== "filename" && item.orderingMethod !== "metadata") errors.push("orderingMethod is invalid.");

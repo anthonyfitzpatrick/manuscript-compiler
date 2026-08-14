@@ -17,7 +17,6 @@ import { validateSimpleCompileRequest } from "../simple-workflow";
 import type { StructuralDisplay, StructurePreset } from "../settings";
 import type { ExportFormat } from "../export-types";
 import type { ExportExecutionResult } from "../export-coordinator";
-import type { SavedCompilationExportAuthorization } from "../saved-compilation-orchestrator";
 import { buildWorkspaceRecipe, newWorkspaceRecipe, type SavedCompilationWorkspaceSession } from "../saved-compilation-session";
 import type { CanonicalWorkspaceRecipe } from "../saved-compilation-session";
 import type { SavedCompilation } from "../saved-compilations";
@@ -33,8 +32,6 @@ export interface CompileWorkspaceServices {
   onSavedCompilationRefreshCommitted?(id: string): void;
   sessionIsCurrent(session: PreparedCompileSession): Promise<boolean>;
   export(session: PreparedCompileSession, format: ExportFormat, filename: string): Promise<ExportExecutionResult | void>;
-  authorizeSavedExport?(): SavedCompilationExportAuthorization;
-  recordSavedExport?(session: PreparedCompileSession, format: ExportFormat): Promise<void>;
 }
 
 /**
@@ -123,8 +120,6 @@ export class CompileWorkspaceController {
   setTableOfContents(value: boolean): void { this.update(() => { this.state.request.tableOfContents = value; this.state.request.docxPreset = "custom"; }); }
   /** Replaces body-heading aliases used during note cleaning. */
   setBodyAliases(values: string[]): void { this.update(() => { if (this.state.request.custom) this.state.request.custom.bodySectionAliases = values; }); }
-  /** Includes note titles as body headings without changing note order or content. */
-  setIncludeSceneTitles(value: boolean): void { this.update(() => { if (this.state.request.custom) this.state.request.custom.includeSceneTitles = value; }); }
   /** Controls final matter-section inclusion without rewriting individual roles. */
   setMatter(kind: "front" | "back", included: boolean): void { this.update(() => { if (kind === "front") this.state.request.includeFrontMatter = included; else this.state.request.includeBackMatter = included; }); }
   /** Updates title-page variables that affect prepared DOCX output. */
@@ -202,7 +197,9 @@ export class CompileWorkspaceController {
     this.state.request.formatting = this.state.formatting;
     const saved = this.savedCompilationSession;
     const overlay = saved?.current;
-    const savedInput = saved?.compilation && overlay ? { ...saved.compilation, root: overlay.root } : saved?.compilation;
+    // The Saved adapter receives one complete canonical recipe. Passing only an
+    // overlaid root would leave recipe/output fields at an older baseline.
+    const savedInput = saved?.compilation && overlay ? { ...saved.compilation, root: overlay.root, recipe: overlay.recipe, output: overlay.output } : saved?.compilation;
     const prepared = savedInput && this.services.prepareSaved
       ? this.services.prepareSaved(savedInput, overlay, operation.signal)
       : this.services.prepare(this.state.request, this.state.contentPlan, operation.signal);
@@ -231,15 +228,13 @@ export class CompileWorkspaceController {
   }
 
   /**
-   * Verifies source freshness then delegates the exact prepared session. Duplicate
+   * Verifies the prepared source then delegates the exact prepared session. Duplicate
    * clicks share one promise. False means the modal should remain open.
    */
   export(): Promise<boolean> {
     if (this.exportPromise) return this.exportPromise;
     const session = this.state.preparedSession;
     if (!session) { this.state.error = workspaceError("Refresh the final preview before creating the DOCX."); return Promise.resolve(false); }
-    const authorization = this.savedCompilationSession ? this.services.authorizeSavedExport?.() : undefined;
-    if (authorization && authorization.status !== "allowed") { this.state.error = workspaceError("Review the Saved Compilation before creating the file."); return Promise.resolve(false); }
     const operation = this.operations.begin("exporting");
     if (!operation) return Promise.resolve(false);
     this.state.exportStatus = "exporting";
@@ -247,7 +242,6 @@ export class CompileWorkspaceController {
       if (!current) { this.invalidatePreparedSession("The manuscript changed after the preview was prepared. Refresh the preview before creating the DOCX."); operation.fail(); return false; }
       const result = await this.services.export(session, this.state.exportFormat, this.state.request.outputFilename);
       if (result?.status === "failed" || result?.status === "cancelled") { this.state.exportStatus = result.status; operation.fail(); return false; }
-      if (this.savedCompilationSession && result?.status === "success") { try { await this.services.recordSavedExport?.(session, this.state.exportFormat); } catch { /* A dispatched export remains successful if secondary Saved bookkeeping fails. */ } }
       this.state.exportStatus = "complete";
       operation.complete();
       return true;

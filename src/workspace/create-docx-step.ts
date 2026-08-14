@@ -28,11 +28,11 @@ export interface CreateDocxStepActions { refresh(): void; changed(): void; reren
  * @remarks DOM-only side effects; generation and delivery remain in services.
  */
 export function renderCreateDocxStep(container: HTMLElement, controller: CompileWorkspaceController, actions: CreateDocxStepActions): void {
-  const state = controller.state; const request = state.request; const prepared = state.preparedSession ? buildExportPreviewViewModel(state.preparedSession) : undefined; const title = request.custom?.variables?.BookTitle?.trim() || prepared?.title || request.manuscriptRoot.split("/").pop() || "Manuscript"; const counts = manuscriptPlanSummary(state.contentPlan, request.manuscriptRoot); const format = state.exportFormat;
+  const state = controller.state; const request = state.request; const prepared = previewForCreate(state.preparedSession); const title = request.custom?.variables?.BookTitle?.trim() || prepared?.title || request.manuscriptRoot.split("/").pop() || "Manuscript"; const counts = manuscriptPlanSummary(state.contentPlan, request.manuscriptRoot); const format = state.exportFormat;
   container.createEl("h2", { text: "Create file" }); container.createEl("p", { cls: "manuscript-compact-note", text: "Your Markdown notes will not be changed." });
   container.createEl("h3", { text: "Book summary" }); container.createEl("strong", { text: title, cls: "manuscript-resolved-title" }); container.createEl("p", { cls: "manuscript-compact-summary", text: prepared ? `${prepared.statistics.totalWordCount.toLocaleString()} words · ${prepared.statistics.chapterCount} chapters · ${counts.includedNotes} included notes` : `${counts.includedNotes} included notes · ${counts.chapters} chapters` });
   if (state.preparationStatus === "preparing") container.createEl("p", { cls: "manuscript-preparation-status", text: "Preparing final manuscript…", attr: { role: "status", "aria-live": "polite" } });
-  else if (!prepared) { const status = container.createDiv({ cls: "manuscript-ready-card" }); status.createEl("strong", { text: state.error ? "Preview needs attention" : "Final manuscript needs preparation" }); status.createEl("p", { text: state.error?.message || "Create will prepare and verify the selected manuscript." }); if (state.error?.suggestion) status.createEl("p", { text: state.error.suggestion }); status.createEl("button", { text: "Refresh preview" }).addEventListener("click", () => actions.refresh()); }
+  else if (!prepared) { const status = container.createDiv({ cls: "manuscript-ready-card" }); status.createEl("strong", { text: state.error ? "Preview could not be prepared" : "Final manuscript needs preparation" }); status.createEl("p", { text: state.error?.message || "Create will prepare and verify the selected manuscript." }); if (state.error?.suggestion) status.createEl("p", { text: state.error.suggestion }); status.createEl("button", { text: "Refresh preview" }).addEventListener("click", () => actions.refresh()); }
 
   renderFormatSelector(container, controller, actions, title);
 
@@ -40,6 +40,12 @@ export function renderCreateDocxStep(container: HTMLElement, controller: Compile
   renderAdvancedFormatting(container, controller, actions, format);
   renderWarnings(container, prepared?.warnings ?? [], counts.ignoredNotes);
   const filename = exportFilename(request.outputFilename, format, title); container.createEl("h3", { text: "Output filename" }); new Setting(container).setName("Filename").setDesc("The selected format extension is corrected when the file is created.").addText((text) => text.setValue(filename).onChange((value) => controller.setDownloadFilename(value)));
+}
+
+/** A malformed transient preview must never erase the Create file controls. */
+function previewForCreate(session: CompileWorkspaceController["state"]["preparedSession"]): ReturnType<typeof buildExportPreviewViewModel> | undefined {
+  if (!session) return undefined;
+  try { return buildExportPreviewViewModel(session); } catch { return undefined; }
 }
 
 function renderFormatSelector(container: HTMLElement, controller: CompileWorkspaceController, actions: CreateDocxStepActions, title: string): void {
@@ -113,7 +119,6 @@ function renderAdvancedFormatting(container: HTMLElement, controller: CompileWor
   if (["docx", "odt"].includes(format)) new Setting(details).setName("Page size").addDropdown((dropdown) => dropdown.addOption("a4", "A4").addOption("letter", "Letter").setValue(formatting.pageSize).onChange((value) => invalidate(controller, actions, () => controller.setFormatting({ pageSize: value === "letter" ? "letter" : "a4" }))));
   if (format !== "xml") { const separator = effectiveSeparator(controller); new Setting(details).setName("Custom scene break").addText((text) => text.setValue(sceneBreakValues.has(separator) ? "" : separator).onChange((value) => invalidate(controller, actions, () => controller.setSceneSeparator(value)))); }
   displayChoice(details, "Part heading style", request.partDisplay ?? "word-title", (value) => invalidate(controller, actions, () => controller.setDisplay("part", value))); displayChoice(details, "Chapter heading style", request.chapterDisplay ?? "word-title", (value) => invalidate(controller, actions, () => controller.setDisplay("chapter", value)));
-  new Setting(details).setName("Manuscript body headings").setDesc("Include each manuscript note title as a body heading.").addToggle((toggle) => toggle.setValue(request.custom?.includeSceneTitles === true).onChange((value) => invalidate(controller, actions, () => controller.setIncludeSceneTitles(value))));
   new Setting(details).setName("Filename template").setDesc("Use {BookTitle} if you want the resolved book title in the filename.").addText((text) => text.setValue(request.outputFilename).onChange((value) => controller.setDownloadFilename(value)));
 }
 

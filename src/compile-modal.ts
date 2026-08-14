@@ -24,7 +24,6 @@ import { resolveAuthor, resolveBookTitle } from "./workspace/workspace-view-mode
 import { EXPORT_FORMAT_DETAILS } from "./export-types";
 import { isUnknownRecord } from "./type-guards";
 import { SavedCompilationChooserState, savedCompilationChoices, type SavedCompilationChoiceViewModel } from "./saved-compilation-chooser";
-import { savedCompilationStatus } from "./saved-compilation-status";
 
 class FolderPicker extends FuzzySuggestModal<TFolder> {
   constructor(app: App, private readonly selected: (folder: TFolder) => void) { super(app); this.setPlaceholder("Choose a folder…"); }
@@ -177,7 +176,7 @@ export class SimpleCompileModal extends Modal {
     labels.forEach((label, index) => { const button = nav.createEl("button", { text: `${index + 1}  ${label}`, cls: index === current ? "is-active" : index < current ? "is-complete" : "" }); button.setAttribute("role", "tab"); button.setAttribute("aria-selected", String(index === current)); button.disabled = index > current + 1 || index > 0 && !state.contentPlan.length; button.addEventListener("click", () => this.enterStep(steps[index])); });
     const body = this.contentEl.createDiv({ cls: "manuscript-compile-body" });
     if (state.step === "manuscript" && state.origin.kind === "saved" && this.controller.workspaceSession()?.reconciliationReadiness === "blocked") this.renderRootRecovery(body);
-    else if (state.step === "manuscript") renderManuscriptStep(body, this.controller, this.folder(), { selectedFromFileExplorer: this.fileExplorerRoot?.path === state.request.manuscriptRoot, chooseFolder: () => new FolderPicker(this.app, (folder) => { void this.selectFolder(folder); }).open(), useCurrentFolder: () => { const folder = this.app.workspace.getActiveFile()?.parent; if (folder) void this.selectFolder(folder); else new Notice("Open a note inside the manuscript folder first."); }, changed: () => this.contentEl.querySelector(".manuscript-scan-summary")?.remove() });
+    else if (state.step === "manuscript") renderManuscriptStep(body, this.controller, this.folder(), { selectedFromFileExplorer: this.fileExplorerRoot?.path === state.request.manuscriptRoot, chooseFolder: () => new FolderPicker(this.app, (folder) => { void this.selectFolder(folder); }).open(), useCurrentFolder: () => { const folder = this.app.workspace.getActiveFile()?.parent; if (folder) void this.selectFolder(folder); else new Notice("Open a note inside the manuscript folder first."); }, changed: () => this.render() });
     else if (state.step === "contents") {
       if (state.origin.kind === "saved") renderContentsStep(body, this.controller, this.contentsViewState, { acknowledge: () => this.plugin.acknowledgeActiveSavedReview(), addDetected: (reference) => this.controller.includeSavedDetectedContent(reference) }, () => this.render());
       else renderContentsStep(body, this.controller, this.contentsViewState);
@@ -193,8 +192,6 @@ export class SimpleCompileModal extends Modal {
     if (origin.kind === "new") { identity.createSpan({ text: "New compilation", cls: "manuscript-saved-identity-kind" }); const saveAs = identity.createEl("button", { text: "Save as…" }); saveAs.addEventListener("click", () => this.openSaveAs()); const switcher = identity.createEl("button", { text: "Switch…" }); switcher.addEventListener("click", () => this.renderSwitchChooser()); const manage = identity.createEl("button", { text: "Manage…" }); manage.addEventListener("click", () => this.renderManagement()); return; }
     const text = identity.createDiv(); text.createEl("strong", { text: origin.name }); text.createSpan({ text: "Saved compilation", cls: "manuscript-saved-identity-kind" });
     if (this.controller.state.recipeDirty) identity.createSpan({ text: "Unsaved changes", cls: "manuscript-saved-dirty", attr: { role: "status" } });
-    const status = savedCompilationStatus({ saved: true, dirty: this.controller.state.recipeDirty, potentiallyStale: this.controller.isPotentiallyStale(), freshness: this.plugin.savedCompilationExportFreshness(this.controller) });
-    if (status.text) identity.createSpan({ text: status.text, cls: `manuscript-saved-status is-${status.tone}`, attr: { role: "status" } });
     const actions = identity.createDiv({ cls: "manuscript-saved-actions" }); const save = actions.createEl("button", { text: "Save changes" }); save.disabled = !this.controller.state.recipeDirty; save.addEventListener("click", () => { void this.saveChanges(); }); const saveAs = actions.createEl("button", { text: "Save as…" }); saveAs.addEventListener("click", () => this.openSaveAs()); const switcher = actions.createEl("button", { text: "Switch…" }); switcher.addEventListener("click", () => this.renderSwitchChooser()); const manage = actions.createEl("button", { text: "Manage…" }); manage.addEventListener("click", () => this.renderManagement());
   }
 

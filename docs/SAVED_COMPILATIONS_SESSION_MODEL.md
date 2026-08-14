@@ -10,7 +10,7 @@ Parts 1–6 implement this runtime state model for save, refresh, transitions, r
               ↓
     Canonical Workspace Recipe
 
-`CanonicalWorkspaceRecipe` is a deterministic, JSON-safe representation of current author intent: root association, explicit structural overrides, compact sibling-order facts, and resolved output choices. It excludes prose, parsed notes, Books, source fingerprints, findings, export facts, timestamps, DOM state, and download objects.
+`CanonicalWorkspaceRecipe` is a deterministic, JSON-safe representation of current author intent: root association, explicit structural overrides, compact sibling-order facts, and resolved output choices. It excludes prose, parsed notes, Books, findings, timestamps, DOM state, and download objects.
 
 The persisted recipe remains the compact, versioned schema-1 contract. The workspace recipe is a runtime projection with explicit conversions in `saved-compilation-session.ts`; controller/UI code must not construct persistence-shaped objects ad hoc.
 
@@ -24,7 +24,7 @@ Ownership is deliberately narrow:
 - `SavedCompilationReconciler` compares persisted intent with current source without writes.
 - `SavedCompilationWorkspaceSession` owns runtime baseline, overlay, canonical recipe, and derived dirty state.
 - `CompileWorkspaceController` owns visible workspace editing and synchronizes its edits into the session; it does not call persistence mutations.
-- `SavedCompilationOrchestrator` owns Saved lifecycle transitions, review resolution, export authorization, freshness derivation, and post-success bookkeeping.
+- `SavedCompilationOrchestrator` owns Saved lifecycle transitions, review resolution, and export authorization.
 - `ExportCoordinator` remains the sole owner of exporters and browser delivery.
 
-The four independent axes are recipe dirty state, prepared/source freshness, reconciliation readiness (`READY`, `REVIEW_RECOMMENDED`, `REVIEW_REQUIRED`, `BLOCKED`), and export freshness (`NEVER_EXPORTED`, `CURRENT`, `OUT_OF_DATE`, `UNSAVED_CONFIGURATION`, `UNKNOWN`). They must never be collapsed into one status.
+The independent axes are recipe dirty state, prepared-source safety, and reconciliation readiness (`READY`, `REVIEW_RECOMMENDED`, `REVIEW_REQUIRED`, `BLOCKED`).

@@ -24,7 +24,7 @@ export interface MetadataFilterRule { id: string; field: string; operator: Metad
 export interface CleaningSettings { stripYamlFrontmatter: boolean; removeObsidianComments: boolean; removeHtmlComments: boolean; removeDataviewBlocks: boolean; removeCallouts: boolean; stripInternalLinks: boolean; bodySectionAliases?: string[]; }
 /** Parser/generator options after request/profile resolution. */
 export interface CompileOptions extends CleaningSettings {
-  includeFrontMatter: boolean; includeBackMatter: boolean; includeSceneTitles: boolean; metadataOrdering: boolean;
+  includeFrontMatter: boolean; includeBackMatter: boolean; metadataOrdering: boolean;
   partHeadingTemplate: string; chapterHeadingTemplate: string; sceneSeparator: string;
   orderingMethod: OrderingMethod; metadataFilters: MetadataFilterRule[]; blankLinesBetweenSections: number; blankLinesBetweenChapters: number;
   useParts: boolean; chapterSource: ChapterSource;
@@ -76,7 +76,7 @@ export interface ManuscriptCompilerSettings extends CompileOptions {
 }
 
 export const DEFAULT_OPTIONS: CompileOptions = {
-  includeFrontMatter: true, includeBackMatter: true, includeSceneTitles: false, metadataOrdering: false, orderingMethod: "filename",
+  includeFrontMatter: true, includeBackMatter: true, metadataOrdering: false, orderingMethod: "filename",
   partHeadingTemplate: "{title}", chapterHeadingTemplate: "{title}", sceneSeparator: "#", metadataFilters: [],
   blankLinesBetweenSections: 1, blankLinesBetweenChapters: 1,
   useParts: true, chapterSource: "folders",

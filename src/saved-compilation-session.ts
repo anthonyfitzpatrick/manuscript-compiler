@@ -38,7 +38,7 @@ export function newWorkspaceRecipe(root: string, plan: readonly ContentPlanItem[
   const custom = request.custom;
   const recipe: SavedCompilationRecipe = {
     overrides: [], manualOrders: [], structurePreset: request.structurePreset, includeFrontMatter: request.includeFrontMatter, includeBackMatter: request.includeBackMatter,
-    includeSceneTitles: custom?.includeSceneTitles === true, cleaning: { stripYamlFrontmatter: custom?.stripYamlFrontmatter !== false, removeObsidianComments: custom?.removeObsidianComments !== false, removeHtmlComments: custom?.removeHtmlComments !== false, removeDataviewBlocks: custom?.removeDataviewBlocks !== false, removeCallouts: custom?.removeCallouts !== false, stripInternalLinks: custom?.stripInternalLinks !== false, bodySectionAliases: [...(custom?.bodySectionAliases ?? [])] },
+    cleaning: { stripYamlFrontmatter: custom?.stripYamlFrontmatter !== false, removeObsidianComments: custom?.removeObsidianComments !== false, removeHtmlComments: custom?.removeHtmlComments !== false, removeDataviewBlocks: custom?.removeDataviewBlocks !== false, removeCallouts: custom?.removeCallouts !== false, stripInternalLinks: custom?.stripInternalLinks !== false, bodySectionAliases: [...(custom?.bodySectionAliases ?? [])] },
     metadataFilters: [...(custom?.metadataFilters ?? [])], useParts: custom?.useParts !== false, chapterSource: custom?.chapterSource ?? "folders", orderingMethod: custom?.orderingMethod ?? "filename", metadataOrdering: custom?.metadataOrdering === true, partHeadingTemplate: custom?.partHeadingTemplate ?? "", chapterHeadingTemplate: custom?.chapterHeadingTemplate ?? "", blankLinesBetweenSections: custom?.blankLinesBetweenSections ?? 1, blankLinesBetweenChapters: custom?.blankLinesBetweenChapters ?? 1
   };
   const output: SavedCompilationOutputConfiguration = { format: savedFormat(request.outputFormat), filename: request.outputFilename, docxPreset: request.docxPreset, title: custom?.variables?.BookTitle ?? "", author: custom?.variables?.Author ?? "", tableOfContents: request.tableOfContents === true, sceneSeparator: custom?.sceneSeparator ?? "", partDisplay: request.partDisplay ?? "word-title", chapterDisplay: request.chapterDisplay ?? "word-title", titlePage: formatting.titlePage, typography: { ...formatting } };
@@ -93,7 +93,6 @@ export function buildWorkspaceRecipe(
       manualOrders,
       includeFrontMatter: request.includeFrontMatter,
       includeBackMatter: request.includeBackMatter,
-      includeSceneTitles: custom?.includeSceneTitles ?? baseRecipe.includeSceneTitles,
       cleaning,
       metadataFilters: (custom?.metadataFilters ?? baseRecipe.metadataFilters).map((filter) => ({ ...filter })),
       structurePreset: request.structurePreset,
@@ -272,9 +271,6 @@ export class SavedCompilationWorkspaceSession {
     this.overlay = undefined;
   }
 
-  /** Refreshes persisted export facts after a durable bookkeeping write without altering author intent. */
-  updateCompilationFacts(compilation: SavedCompilation): void { this.compilation = compilation; }
-
   /** Reapplies current unsaved author intent to newly reconciled source without I/O. */
   reapplyTo(plan: readonly ContentPlanItem[]): WorkspaceRecipeApplication | undefined {
     const recipe = this.overlay?.recipe ?? this.currentRecipe;
@@ -282,9 +278,7 @@ export class SavedCompilationWorkspaceSession {
   }
 }
 
-function cloneObservedSource(source: SavedCompilationObservedSource): SavedCompilationObservedSource {
-  return { sourceFingerprint: source.sourceFingerprint, inputSignature: source.inputSignature, references: source.references.map((reference) => ({ ...reference })) };
-}
+function cloneObservedSource(source: SavedCompilationObservedSource): SavedCompilationObservedSource { return { references: source.references.map((reference) => ({ ...reference })) }; }
 function cloneReconciliation(result: SavedCompilationReconciliationResult): SavedCompilationReconciliationResult {
   return { ...result, statuses: result.statuses.slice(), plan: result.plan.map((item) => ({ ...item })), findings: result.findings.map((finding) => ({ ...finding })), observedSource: cloneObservedSource(result.observedSource) };
 }

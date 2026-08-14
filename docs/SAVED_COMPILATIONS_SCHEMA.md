@@ -26,7 +26,7 @@ Each optional item reference stores only last known relative path, parent-relati
 
 ## Recipe and manual order
 
-The recipe persists only author-authoritative choices: explicit inclusion/exclusion and role overrides; compact manual sibling-order lists keyed by the parent whose order changed; and resolved structural/cleaning/filter choices required to reproduce a compilation.
+The recipe persists only author-authoritative choices: explicit inclusion/exclusion and role overrides; compact manual sibling-order lists keyed by the parent whose order changed; and resolved structural/cleaning/filter choices required to reproduce a compilation. Scene file names are structural metadata. A matching leading source-title block is separated from each structural Scene body and is never emitted into compiled manuscript content.
 
 Automatic scanner inference, warnings, excluded-file explanations, and derived physical trees are not saved. Missing override/order references are retained for later reconciliation, subject to bounds.
 
@@ -36,11 +36,11 @@ Schema 1 records the selected current exporter, filename, resolved DOCX preset, 
 
 Format is validated against the six current exporters. Typography is a compact current formatting snapshot, not an exporter-byte cache. Filename is portable only, never a destination path.
 
-## Observed source and export facts
+## Observed source
 
-Observed state can retain bounded source fingerprint, input signature, and compact item-reference evidence. Last successful export can retain timestamp, format, source fingerprint, input signature, and recipe signature. These support later stale/export-current displays; they do not contain prose or a destination.
+Observed state retains compact item-reference evidence for reconciliation. It does not contain prose or a destination.
 
-The deterministic recipe signature/equality helper compares root, normalized recipe, and output only. It excludes observed source data, export facts, and timestamps, so a source edit does not make a workspace recipe dirty.
+The deterministic recipe signature/equality helper compares root, normalized recipe, and output only. It excludes observed source data and timestamps, so a source edit does not make a workspace recipe dirty.
 
 ## Limits
 
@@ -100,7 +100,6 @@ Schema 1 must not retain manuscript prose, paragraphs, prepared Books, parsed do
           "structurePreset": "novel",
           "includeFrontMatter": true,
           "includeBackMatter": false,
-          "includeSceneTitles": false,
           "cleaning": { "stripYamlFrontmatter": true, "removeObsidianComments": true, "removeHtmlComments": false, "removeDataviewBlocks": false, "removeCallouts": false, "stripInternalLinks": false, "bodySectionAliases": ["Scene"] },
           "metadataFilters": [],
           "useParts": false,

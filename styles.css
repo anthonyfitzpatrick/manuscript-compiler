@@ -84,8 +84,6 @@
 .manuscript-saved-identity strong { display: block; overflow-wrap: anywhere; }
 .manuscript-saved-identity-kind { color: var(--text-muted); font-size: var(--font-ui-smaller); }
 .manuscript-saved-dirty { color: var(--text-warning); font-size: var(--font-ui-smaller); font-weight: var(--font-semibold); }
-.manuscript-saved-status { font-size: var(--font-ui-smaller); color: var(--text-muted); }
-.manuscript-saved-status.is-attention { color: var(--text-warning); }
 .manuscript-saved-actions { display: flex; flex-wrap: wrap; gap: var(--size-4-2); margin-inline-start: auto; }
 .manuscript-saved-review { margin: 0 0 var(--size-4-4); padding: var(--size-4-3); border: 1px solid var(--background-modifier-border); border-radius: var(--radius-m); background: var(--background-secondary); }
 .manuscript-saved-review h3 { margin: 0 0 var(--size-4-2); }

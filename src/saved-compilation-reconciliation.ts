@@ -15,7 +15,6 @@ export interface SavedCompilationReconciliationInput {
   plan: readonly ContentPlanItem[];
   /** Per-item compact fingerprints, keyed by root-relative current path. */
   fingerprints?: ReadonlyMap<string, string>;
-  sourceFingerprint?: string;
 }
 export interface SavedCompilationReconciliationResult {
   readiness: ReconciliationReadiness;
@@ -24,7 +23,6 @@ export interface SavedCompilationReconciliationResult {
   findings: ReconciliationFinding[];
   observedSource: SavedCompilationObservedSource;
   mayPrepare: boolean;
-  requiresReviewBeforeExport: boolean;
 }
 
 interface CurrentItem { item: ContentPlanItem; path: string; parentPath: string; fingerprint?: string; }
@@ -81,17 +79,16 @@ export function reconcileSavedCompilation(input: SavedCompilationReconciliationI
     if (item.item.role === "scene") { findings.push(finding("new-scene", item.path, true)); statuses.add("new-source-items"); }
     else { findings.push(finding("new-structure", item.path, true)); statuses.add("structure-changed"); }
   }
-  if (input.compilation.observedSource.sourceFingerprint && input.sourceFingerprint && input.compilation.observedSource.sourceFingerprint !== input.sourceFingerprint) statuses.add("source-content-changed");
   if (!statuses.size) statuses.add("ready");
   const readiness = chooseReadiness(statuses, findings);
   return {
-    readiness, statuses: [...statuses].sort(), plan: orderPlan(plan), findings: findings.sort(compareFinding), observedSource: observe(current, input.sourceFingerprint),
-    mayPrepare: readiness !== "blocked", requiresReviewBeforeExport: readiness === "review-required" || readiness === "blocked"
+    readiness, statuses: [...statuses].sort(), plan: orderPlan(plan), findings: findings.sort(compareFinding), observedSource: observe(current),
+    mayPrepare: readiness !== "blocked"
   };
 }
 
 function blockedResult(): SavedCompilationReconciliationResult {
-  return { readiness: "blocked", statuses: ["unassociated-root"], plan: [], findings: [finding("root-unavailable", "", false)], observedSource: { references: [] }, mayPrepare: false, requiresReviewBeforeExport: true };
+  return { readiness: "blocked", statuses: ["unassociated-root"], plan: [], findings: [finding("root-unavailable", "", false)], observedSource: { references: [] }, mayPrepare: false };
 }
 function currentItem(item: ContentPlanItem, root: string, fingerprints?: ReadonlyMap<string, string>): CurrentItem {
   const path = relative(item.path, root); return { item, path, parentPath: relative(item.parentPath, root), fingerprint: fingerprints?.get(path) };
@@ -110,8 +107,8 @@ function isSavedPathExcluded(path: string, excludedPaths: ReadonlySet<string>): 
   for (const excludedPath of excludedPaths) if (path === excludedPath || path.startsWith(`${excludedPath}/`)) return true;
   return false;
 }
-function observe(current: readonly CurrentItem[], sourceFingerprint?: string): SavedCompilationObservedSource {
-  return { sourceFingerprint, references: current.slice().sort((a, b) => a.path.localeCompare(b.path)).map((item) => ({ path: item.path, parentPath: item.parentPath || "_root", name: item.item.name, kind: item.item.kind, expectedRole: item.item.detectedRole ?? item.item.role, fingerprint: item.fingerprint })) };
+function observe(current: readonly CurrentItem[]): SavedCompilationObservedSource {
+  return { references: current.slice().sort((a, b) => a.path.localeCompare(b.path)).map((item) => ({ path: item.path, parentPath: item.parentPath || "_root", name: item.item.name, kind: item.item.kind, expectedRole: item.item.detectedRole ?? item.item.role, fingerprint: item.fingerprint })) };
 }
 function mergeManualOrders(compilation: SavedCompilation, plan: ContentPlanItem[], root: string, resolved: ReadonlyMap<string, CurrentItem>, excludedPaths: ReadonlySet<string>, findings: ReconciliationFinding[], statuses: Set<ReconciliationStatus>): void {
   const currentByRelative = new Map(plan.map((item) => [relative(item.path, root), item]));

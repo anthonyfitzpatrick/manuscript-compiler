@@ -43,7 +43,7 @@ export class CompileCommandService {
   async prepareSavedCompilation(compilation: SavedCompilation, overlay?: CanonicalWorkspaceRecipe, signal?: AbortSignal): Promise<PreparedCompileSession> {
     const current = overlay ? { ...compilation, root: overlay.root, recipe: overlay.recipe, output: overlay.output } : compilation;
     const root = this.roots.require(current.root.path, "saved manuscript folder"); const request = savedCompilationRequest(current); request.manuscriptRoot = root.path;
-    return this.prepare({ manuscriptRoot: root.path, profile: this.activeProfile(), structurePreset: request.structurePreset, simpleRequest: request, purpose: "preview", route: "guided", savedCompilation: compilation, savedWorkspaceRecipe: overlay }, signal);
+    return this.prepare({ manuscriptRoot: root.path, profile: this.activeProfile(), structurePreset: request.structurePreset, simpleRequest: request, purpose: "preview", route: "guided", savedCompilation: current, savedWorkspaceRecipe: overlay }, signal);
   }
   /** Rechecks source metadata so a preview cannot silently export stale files. */
   async preparedSessionIsCurrent(session: PreparedCompileSession): Promise<boolean> { return await calculateSourceFingerprint(this.app.vault, session.sourcePaths) === session.sourceFingerprint; }

@@ -9,10 +9,8 @@ import {
   repairSavedCompilation,
   repairSavedCompilationsStorage,
   savedCompilationId,
-  savedCompilationRecipeSignature,
   serialiseSavedCompilations,
   type SavedCompilation,
-  type SavedCompilationExportFacts,
   type SavedCompilationObservedSource,
   type SavedCompilationOutputConfiguration,
   type SavedCompilationRecipe,
@@ -24,9 +22,8 @@ import type { ManuscriptCompilerSettings } from "./settings";
 export type SavedCompilationOperation =
   | { status: "ok"; compilation: SavedCompilation }
   | { status: "not-found" }
-  | { status: "invalid"; reason: "name" | "root" | "recipe" | "export-facts" }
+  | { status: "invalid"; reason: "name" | "root" | "recipe" }
   | { status: "capacity" }
-  | { status: "recipe-mismatch" }
   | { status: "unavailable" }
   | { status: "persistence-failed" };
 
@@ -100,14 +97,14 @@ export class SavedCompilationService {
   async saveChanges(id: string, input: SavedCompilationSaveChangesInput): Promise<SavedCompilationOperation> {
     const existing = this.find(id); if (!existing) return this.notFoundOrUnavailable();
     const { root, ...changes } = input;
-    const candidate = this.candidate({ name: existing.name, description: existing.description, root: root ?? existing.root, ...changes }, existing.id, existing.createdAt, existing.lastOpenedAt, existing.lastSuccessfulExport);
+    const candidate = this.candidate({ name: existing.name, description: existing.description, root: root ?? existing.root, ...changes }, existing.id, existing.createdAt, existing.lastOpenedAt);
     if (!candidate) return { status: "invalid", reason: "recipe" };
     return this.replace(existing.id, candidate);
   }
 
   async rename(id: string, name: string): Promise<SavedCompilationOperation> {
     const existing = this.find(id); if (!existing) return this.notFoundOrUnavailable();
-    const candidate = this.candidate({ name, description: existing.description, root: existing.root, recipe: existing.recipe, output: existing.output, observedSource: existing.observedSource }, existing.id, existing.createdAt, existing.lastOpenedAt, existing.lastSuccessfulExport);
+    const candidate = this.candidate({ name, description: existing.description, root: existing.root, recipe: existing.recipe, output: existing.output, observedSource: existing.observedSource }, existing.id, existing.createdAt, existing.lastOpenedAt);
     if (!candidate) return { status: "invalid", reason: "name" };
     return this.replace(id, candidate);
   }
@@ -131,37 +128,29 @@ export class SavedCompilationService {
   async reassociateRoot(id: string, rootPath: string): Promise<SavedCompilationOperation> {
     const existing = this.find(id); if (!existing) return this.notFoundOrUnavailable();
     const root = normaliseSavedCompilationRootPath(rootPath); if (!root) return { status: "invalid", reason: "root" };
-    const candidate = this.candidate({ name: existing.name, description: existing.description, root: { path: root }, recipe: existing.recipe, output: existing.output, observedSource: existing.observedSource }, existing.id, existing.createdAt, existing.lastOpenedAt, existing.lastSuccessfulExport);
+    const candidate = this.candidate({ name: existing.name, description: existing.description, root: { path: root }, recipe: existing.recipe, output: existing.output, observedSource: existing.observedSource }, existing.id, existing.createdAt, existing.lastOpenedAt);
     return candidate ? this.replace(id, candidate) : { status: "invalid", reason: "root" };
   }
 
   /** Persists last-opened immediately through the queue; it is a small factual MRU update. */
   async markLastOpened(id: string): Promise<SavedCompilationOperation> {
     const existing = this.find(id); if (!existing) return this.notFoundOrUnavailable();
-    const candidate = this.candidate({ name: existing.name, description: existing.description, root: existing.root, recipe: existing.recipe, output: existing.output, observedSource: existing.observedSource }, existing.id, existing.createdAt, this.clock(), existing.lastSuccessfulExport);
+    const candidate = this.candidate({ name: existing.name, description: existing.description, root: existing.root, recipe: existing.recipe, output: existing.output, observedSource: existing.observedSource }, existing.id, existing.createdAt, this.clock());
     return candidate ? this.replace(id, candidate) : { status: "invalid", reason: "recipe" };
   }
 
   async updateObservedSource(id: string, observedSource: SavedCompilationObservedSource): Promise<SavedCompilationOperation> {
     const existing = this.find(id); if (!existing) return this.notFoundOrUnavailable();
-    const candidate = this.candidate({ name: existing.name, description: existing.description, root: existing.root, recipe: existing.recipe, output: existing.output, observedSource }, existing.id, existing.createdAt, existing.lastOpenedAt, existing.lastSuccessfulExport);
+    const candidate = this.candidate({ name: existing.name, description: existing.description, root: existing.root, recipe: existing.recipe, output: existing.output, observedSource }, existing.id, existing.createdAt, existing.lastOpenedAt);
     return candidate ? this.replace(id, candidate) : { status: "invalid", reason: "recipe" };
-  }
-
-  /** Records export facts only when the persisted recipe signature exactly matches the exported recipe. */
-  async recordSuccessfulExport(id: string, facts: SavedCompilationExportFacts): Promise<SavedCompilationOperation> {
-    const existing = this.find(id); if (!existing) return this.notFoundOrUnavailable();
-    if (facts.recipeSignature !== savedCompilationRecipeSignature(existing)) return { status: "recipe-mismatch" };
-    const candidate = this.candidate({ name: existing.name, description: existing.description, root: existing.root, recipe: existing.recipe, output: existing.output, observedSource: existing.observedSource }, existing.id, existing.createdAt, existing.lastOpenedAt, facts);
-    return candidate ? this.replace(id, candidate) : { status: "invalid", reason: "export-facts" };
   }
 
   /** No timers/events are owned. Pending writes are intentionally observable to callers, not abandoned on unload. */
   shutdown(): void {}
 
-  private candidate(input: SavedCompilationCreateInput, id: string, createdAt: number, lastOpenedAt?: number, exportFacts?: SavedCompilationExportFacts): SavedCompilation | undefined {
+  private candidate(input: SavedCompilationCreateInput, id: string, createdAt: number, lastOpenedAt?: number): SavedCompilation | undefined {
     const now = this.clock();
-    return repairSavedCompilation({ id, name: input.name, description: input.description, createdAt, modifiedAt: now, lastOpenedAt, root: input.root, recipe: input.recipe, output: input.output, observedSource: input.observedSource ?? { references: [] }, lastSuccessfulExport: exportFacts });
+    return repairSavedCompilation({ id, name: input.name, description: input.description, createdAt, modifiedAt: now, lastOpenedAt, root: input.root, recipe: input.recipe, output: input.output, observedSource: input.observedSource ?? { references: [] } });
   }
   private async replace(id: string, replacement: SavedCompilation): Promise<SavedCompilationOperation> { return this.commit(this.storage.entries.map((entry) => entry.id === id ? replacement : entry), replacement); }
   private async commit(entries: SavedCompilation[], result: SavedCompilation): Promise<SavedCompilationOperation> {

@@ -103,7 +103,7 @@ assert.match(escapedTitle, /A &amp; B/);
 assert.match(paragraphs(escapedTitle, "Author")[0], /w:br w:type="page"/);
 
 const hostileText = `Fish & <Stars> > \"quote\" 'apostrophe' Östersund 雪 🚀\u0000\u0001\u0008\u000b\u000c\u001f\ufffe\uffff`;
-const hostileProfile = { ...profile, includeSceneTitles: true };
+const hostileProfile = { ...profile };
 const hostileScene = { ...book.parts[0].chapters[0].scenes[0], title: hostileText, content: `${hostileText}\n\n# ${hostileText}` };
 const hostileBook = { ...book, parts: [{ ...book.parts[0], title: hostileText, name: hostileText, chapters: [{ ...book.parts[0].chapters[0], title: hostileText, name: hostileText, scenes: [hostileScene] }] }] };
 const hostileEntries = unzipSync(createManuscriptDocx(hostileBook, hostileProfile, { ...baseOptions, title: hostileText, author: hostileText, font: hostileText, sceneSeparator: hostileText }));
