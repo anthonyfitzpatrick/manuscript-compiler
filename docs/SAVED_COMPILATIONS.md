@@ -125,12 +125,12 @@ Automatic restoration is appropriate for exporter/formatting/filename choices, a
 | Existing file prose changed only | Preserve resolved structural recipe; mark source content changed. | Preparation/export can proceed from current text after refresh; old export becomes out of date. |
 | Existing file’s metadata changes but inference/override stays compatible | Preserve explicit recipe; mark source changed; show normal review only if it changes derived structure. | Current preparation required; export available after it. |
 | Content/metadata changes structure | Explicit choices still win where mapped; surface structural review for changed inference/conflicts. | Block until required reconciliation/review is resolved. |
-| New Scene under included Chapter | Include by current inference, inherit parent inclusion, and flag as **new publishable content** in Contents. | Export is available only after the author reviews/accepts the new structural item. |
+| New Scene under included Chapter | Include by current inference, inherit parent inclusion, and show a compact **Review changes** summary. | Export is available after the session-local review acknowledgement; no per-Scene acceptance is required. |
 | New Chapter / new Part | Infer and include when parent/root policy makes it publishable; flag prominent structural addition. | Review required before export. |
 | New front/back-matter note | Infer by current matter location; flag as new matter. | Review required before export. |
 | New project/development/unknown note | Apply current conservative inference. Ignored items remain ignored; unknown items remain reviewable rather than silently published. | No block if clearly ignored; review if publishability is ambiguous. |
-| New item beneath excluded folder | Remain excluded through parent inclusion; show it in collapsed ignored/review detail. | No block unless user changes parent policy. |
-| Deleted Scene | Keep a missing-reference warning. If its former content was explicitly included or structurally significant, require review; otherwise permit author acknowledgement. | Blocks only while unresolved structural/missing-content review remains. Never recreate it. |
+| New item beneath excluded folder | Remain effectively excluded through the saved parent intent and appear as optional detected content. | No block; the author may leave it out or use **Add** to create unsaved intent. |
+| Deleted Scene | Keep a missing-reference warning only when saved included/structural intent needs it. A safely irrelevant saved exclusion is quiet. | Blocks only while unresolved structural/missing-content review remains. Never recreate it. |
 | Deleted Chapter/Part/folder | Mark structural reconciliation required; do not silently collapse/reparent old manual order. | Block until review. |
 | Scene rename/move | Restore only through exact/safe evidence; otherwise missing + review. | No block after safe confirmation; otherwise block. |
 | Chapter/Part/folder rename/move | Same, plus re-evaluate descendant ancestry/order. | Structural review when any mapping is uncertain. |
@@ -147,7 +147,7 @@ Staleness is a set of independently reportable conditions, not one boolean.
 | Ready | Recipe is resolved; no unresolved structural changes; a current preparation may still be required. | Prepare/export normally. |
 | Source content changed | Current resolved files differ from observed source state without unresolved recipe mapping. | Refresh/prepare current Book; preserve recipe. |
 | Structure changed | Current inference/ancestry conflicts with saved context or changes publishable structure. | Contents review required. |
-| New publishable items | Current scan found new inferred content under the root. | Review/accept before export. |
+| New publishable items | Current scan found new inferred content under an included branch. | Compact advisory review acknowledgement before export; source-derived items do not become recipe overrides. |
 | Missing references | Saved explicit intent points to absent items. | Review; may acknowledge expected evolution where non-blocking. |
 | Reconciliation required | A rename/move/root association or ordering mapping is ambiguous/unsafe. | Resolve explicitly before export. |
 | Recipe modified | Workspace choices differ from persisted saved recipe. | Save, discard, or export unsaved choices. |

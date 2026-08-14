@@ -27,6 +27,9 @@ All items are intentionally unchecked. Record date, tester, Obsidian version, op
 ## Universal delivery
 
 - [ ] Confirm each successful action starts exactly one download/share flow.
+- [ ] After each successful export, confirm **Create file** stays open with the prepared Book and current compilation choices intact; adjust a setting, create another file, then use **Save changes** or **Save as…** where applicable.
+- [ ] From a New compilation, select **Create file** and verify **Save compilation?** offers Cancel, **Create without saving**, and **Save and create**. Verify Save and create exports after naming without another Create click; Cancel creates nothing.
+- [ ] From a dirty Saved Compilation, verify **Save changes?** offers the same safe choices. Verify Save changes and create exports once and clears dirty state; Create without saving exports while the compilation remains dirty. Verify clean Saved Compilations export without a prompt.
 - [ ] Cancel or block the host download and confirm the UI remains retryable and truthful.
 - [ ] Repeat downloads and confirm no Blob URL or temporary anchor is retained.
 - [ ] Confirm no completed export, hidden copy, temporary output, or recovery file appears in the vault.

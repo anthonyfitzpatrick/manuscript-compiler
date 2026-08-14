@@ -21,9 +21,13 @@ Statuses may coexist: `ready`, `source-content-changed`, `structure-changed`, `n
 - **Review required:** new Chapter/Part/matter-like structure, unresolved/missing references, incompatible roles, moved structure, or incomplete manual order.
 - **Blocked:** no explicitly supplied current root. The engine never searches the vault for one.
 
+An explicit saved exclusion is valid author intent, not a reconciliation problem. When an excluded item or excluded container resolves safely, reconciliation restores that state quietly. Its descendants remain effectively excluded without child overrides, and alternative print/eBook/audiobook matter may coexist below one root without becoming findings for the other compilations. Review is reserved for uncertainty that can affect reproduction of the saved output.
+
+Safely identified items beneath a saved exclusion are projected as optional detected content, not faults. The Contents UI keeps that list collapsed; an author may ignore it or choose **Add**. Add uses the normal unsaved Content Plan intent, so **Save changes** is still the only persistence point. Optional detected content never blocks export.
+
 ## Order and new items
 
-Saved known siblings keep their saved relative order. Missing saved siblings generate a finding while surviving known siblings remain ordered. New siblings retain their current inferred order after known saved siblings; this is deterministic and does not rewrite stored intent. A new ignored item produces no review noise. Unknown unclassified items require review; a new descendant under an explicitly excluded ancestor remains effectively excluded.
+Saved known included siblings keep their saved relative order. Missing included saved siblings generate a finding while surviving known siblings remain ordered. Excluded siblings do not create ordering conflicts. New siblings retain their current inferred order after known saved siblings; this is deterministic and does not rewrite stored intent. A new ignored item produces no review noise. Unknown unclassified items require review; a new descendant under an explicitly excluded ancestor remains effectively excluded.
 
 ## Events and privacy
 

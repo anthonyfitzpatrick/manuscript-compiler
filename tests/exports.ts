@@ -77,6 +77,19 @@ test("browser download cleans up synchronously when dispatch fails", "common", a
   assert.equal(result.started, false); assert.equal(removed, true); assert.equal(revoked, true);
 });
 
+test("repeated downloads release every temporary anchor and Blob URL", "common", async () => {
+  let appended = 0; let removed = 0; const revoked: string[] = [];
+  const environment: DownloadEnvironment = {
+    createObjectURL: (_blob, _anchor) => `blob:repeat-${appended + 1}`,
+    revokeObjectURL: (url, _anchor) => { revoked.push(url); },
+    createAnchor: () => ({ href: "", download: "", addClass: () => undefined, click: () => undefined, remove: () => { removed += 1; } }) as unknown as HTMLAnchorElement,
+    append: () => { appended += 1; }, defer: (action, _anchor) => action()
+  };
+  const downloads = new BrowserDownloadService(environment);
+  for (let index = 0; index < 10; index += 1) assert.equal((await downloads.download({ filename: `book-${index}.md`, bytes: new Uint8Array([index]), mimeType: "text/markdown;charset=utf-8" })).started, true);
+  assert.equal(appended, 10); assert.equal(removed, 10); assert.deepEqual(revoked, Array.from({ length: 10 }, (_, index) => `blob:repeat-${index + 1}`));
+});
+
 test("coordinator blocks invalid bytes before download dispatch", "common", async () => {
   const original = EXPORTERS.html; let downloads = 0; EXPORTERS.html = { format: "html", generate: async (context) => ({ format: "html", filename: context.filename, mimeType: "text/html;charset=utf-8", bytes: new Uint8Array([1, 2, 3]), warnings: [] }) };
   const settings = { ...DEFAULT_SETTINGS, profiles: [profile], exportHistory: [], compileLogs: [], defaultDownloadFormat: "html" as const }; const history = new CompileHistoryService(() => settings, async () => undefined, "0.9.2"); const coordinator = new ExportCoordinator({ vault: loaded.vault } as never, () => settings, async () => undefined, new OperationStateController(), history, { download: async () => { downloads += 1; return { started: true, filename: "Warden.html" }; } } as never);

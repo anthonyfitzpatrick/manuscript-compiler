@@ -24,6 +24,8 @@ export class ContentsTreeViewState {
   focus?: ContentsFocus;
   correctionMode = false;
   reviewFilter: ContentsReviewFilter = "outline";
+  private detectedExpanded = false;
+  private detectedFocus?: string;
   private root = "";
   private readonly expanded = new Set<string>();
   private readonly manuallyCollapsed = new Set<string>();
@@ -35,6 +37,8 @@ export class ContentsTreeViewState {
       this.focus = undefined;
       this.correctionMode = false;
       this.reviewFilter = "outline";
+      this.detectedExpanded = false;
+      this.detectedFocus = undefined;
       this.expanded.clear();
       this.manuallyCollapsed.clear();
     }
@@ -53,6 +57,12 @@ export class ContentsTreeViewState {
   setFocus(path: string, control: ContentsControl): void { this.focus = { path, control }; }
   setCorrectionMode(value: boolean): void { this.correctionMode = value; this.reviewFilter = "outline"; }
   setReviewFilter(value: ContentsReviewFilter): void { this.reviewFilter = value; }
+  isDetectedExpanded(): boolean { return this.detectedExpanded; }
+  toggleDetected(): boolean { this.detectedExpanded = !this.detectedExpanded; return this.detectedExpanded; }
+  /** A workspace reopen begins with optional detected content hidden. */
+  resetDetectedDisclosure(): void { this.detectedExpanded = false; this.detectedFocus = undefined; }
+  setDetectedFocus(reference?: string): void { this.detectedFocus = reference; }
+  takeDetectedFocus(): string | undefined { const focus = this.detectedFocus; this.detectedFocus = undefined; return focus; }
   isExpanded(path: string): boolean { return this.expanded.has(path); }
   collapse(path: string): void { this.expanded.delete(path); this.manuallyCollapsed.add(path); }
   toggle(path: string): void {

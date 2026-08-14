@@ -39,12 +39,12 @@ export function setItemIncluded(plan: ContentPlanItem[], root: string, path: str
   if (!item) return;
   item.included = included;
   item.userOverride = true;
-  if (included && item.role === "ignore") item.role = item.kind === "folder" ? "transparent" : "scene";
+  if (included && item.role === "ignore") item.role = item.detectedRole && item.detectedRole !== "ignore" ? item.detectedRole : item.kind === "folder" ? "transparent" : "scene";
   if (item.kind === "folder") {
     plan.filter((candidate) => candidate.path.startsWith(`${item.path}/`)).forEach((child) => {
       child.included = included;
       child.userOverride = true;
-      if (included && child.role === "ignore") child.role = child.kind === "folder" ? "transparent" : "scene";
+      if (included && child.role === "ignore") child.role = child.detectedRole && child.detectedRole !== "ignore" ? child.detectedRole : child.kind === "folder" ? "transparent" : "scene";
     });
   }
   if (included) enableAncestors(plan, root, item.parentPath);

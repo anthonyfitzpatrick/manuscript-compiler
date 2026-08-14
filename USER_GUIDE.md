@@ -302,6 +302,8 @@ If a correction produces an unexpected result, remain on Contents and adjust it 
 
 Create file shows the prepared Book summary, six format cards, relevant formatting controls, warnings, resolved filename, and the primary create/download action. Switching only the format or filename reuses the same prepared Book. A source-note or semantic-choice change requires **Refresh preview**.
 
+When you select **Create and download** from a **New compilation**, choose **Save and create** to save the setup first, or **Create without saving** to export without creating a Saved Compilation. If a Saved Compilation has unsaved changes, choose **Save changes and create** or **Create without saving**. A clean Saved Compilation creates the file directly. Cancelling either prompt makes no change and does not create a file.
+
 Complete this screen in the following order:
 
 1. Confirm the prepared title, author, counts, and word count.
@@ -311,7 +313,7 @@ Complete this screen in the following order:
 5. Check the resolved filename and extension.
 6. Read any remaining warning before choosing the create/download action.
 
-Generate one format at a time and open it in the application that will actually consume it. Returning to Create file and selecting another format reuses the reviewed Book, provided no source or semantic setting has changed.
+Generate one format at a time and open it in the application that will actually consume it. The compiler remains open on Create file after each successful export, so you can adjust settings, create another format, use **Save changes** or **Save as…**, or close it when finished. Selecting another format reuses the reviewed Book, provided no source or semantic setting has changed.
 
 <!-- SCREENSHOT:12 -->
 

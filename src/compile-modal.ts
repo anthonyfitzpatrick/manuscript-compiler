@@ -37,7 +37,8 @@ class SaveCompilationModal extends Modal {
   private input?: HTMLInputElement;
   private error?: HTMLElement;
   private saving = false;
-  constructor(app: App, private readonly initialName: string, private readonly save: (name: string) => Promise<boolean>) { super(app); }
+  private saved = false;
+  constructor(app: App, private readonly initialName: string, private readonly save: (name: string) => Promise<boolean>, private readonly afterSaved?: () => void, private readonly closed?: (saved: boolean) => void) { super(app); }
   onOpen(): void {
     this.titleEl.setText("Save compilation");
     const field = this.contentEl.createDiv({ cls: "manuscript-save-compilation-field" }); field.createEl("label", { text: "Name", attr: { for: "manuscript-save-compilation-name" } });
@@ -50,8 +51,24 @@ class SaveCompilationModal extends Modal {
     const name = this.input?.value.trim() ?? "";
     if (!name) { if (this.error) this.error.setText("Enter a compilation name."); return; }
     if (this.saving) return; this.saving = true; submit.disabled = true; cancel.disabled = true;
-    if (await this.save(name)) this.close(); else { this.saving = false; submit.disabled = false; cancel.disabled = false; }
+    if (await this.save(name)) { this.saved = true; this.close(); this.afterSaved?.(); } else { this.saving = false; submit.disabled = false; cancel.disabled = false; }
   }
+  onClose(): void { this.closed?.(this.saved); this.contentEl.empty(); }
+}
+
+/** An explicit save decision keeps Create file from silently persisting author intent. */
+class CreateFileSaveDecisionModal extends Modal {
+  private busy = false;
+  constructor(app: App, private readonly saved: boolean, private readonly createWithoutSaving: () => void, private readonly saveAndCreate: () => void, private readonly dismissed: () => void) { super(app); }
+  onOpen(): void {
+    this.titleEl.setText(this.saved ? "Save changes?" : "Save compilation?");
+    this.contentEl.createEl("p", { text: this.saved ? "This saved compilation has unsaved changes. Save them before creating the file?" : "Save this compilation setup so you can use it again later." });
+    const actions = this.contentEl.createDiv({ cls: "manuscript-save-compilation-actions" });
+    const cancel = actions.createEl("button", { text: "Cancel" }); const without = actions.createEl("button", { text: "Create without saving" }); const save = actions.createEl("button", { text: this.saved ? "Save changes and create" : "Save and create", cls: "mod-cta" });
+    cancel.addEventListener("click", () => this.close()); without.addEventListener("click", () => this.choose([cancel, without, save], this.createWithoutSaving)); save.addEventListener("click", () => this.choose([cancel, without, save], this.saveAndCreate));
+  }
+  onClose(): void { this.dismissed(); this.contentEl.empty(); }
+  private choose(buttons: readonly HTMLButtonElement[], action: () => void): void { if (this.busy) return; this.busy = true; buttons.forEach((button) => { button.disabled = true; }); this.close(); action(); }
 }
 
 class RenameCompilationModal extends Modal {
@@ -68,7 +85,7 @@ class DuplicateCompilationModal extends Modal {
   private async submit(submit: HTMLButtonElement, cancel: HTMLButtonElement): Promise<void> { const name = this.input?.value.trim() ?? ""; if (!name) { this.error?.setText("Enter a compilation name."); return; } if (this.busy) return; this.busy = true; submit.disabled = true; cancel.disabled = true; if (await this.duplicate(name)) this.close(); else { this.busy = false; submit.disabled = false; cancel.disabled = false; } }
 }
 
-class DeleteCompilationModal extends Modal {
+export class DeleteCompilationModal extends Modal {
   private busy = false;
   constructor(app: App, private readonly name: string, private readonly remove: () => Promise<boolean>) { super(app); }
   onOpen(): void { this.titleEl.setText("Delete saved compilation?"); this.contentEl.createEl("p", { text: `Delete “${this.name}”?` }); this.contentEl.createEl("p", { text: "This removes the saved compilation setup only. It does not delete manuscript files or exported files." }); const actions = this.contentEl.createDiv({ cls: "manuscript-save-compilation-actions" }); const cancel = actions.createEl("button", { text: "Cancel" }); const submit = actions.createEl("button", { text: "Delete", cls: "mod-warning" }); cancel.addEventListener("click", () => this.close()); submit.addEventListener("click", () => { void this.submit(submit, cancel); }); }
@@ -85,9 +102,12 @@ export class SimpleCompileModal extends Modal {
   private readonly fileExplorerRoot?: TFolder;
   private readonly chooser = new SavedCompilationChooserState();
   private readonly managementActionTargets = new Map<string, HTMLButtonElement>();
-  constructor(app: App, private readonly plugin: ManuscriptCompilerPlugin, selectedFolder?: TFolder) {
+  private createDecisionOpen = false;
+  private createOperationPending = false;
+  constructor(app: App, private readonly plugin: ManuscriptCompilerPlugin, selectedFolder?: TFolder, private readonly openedController?: CompileWorkspaceController) {
     super(app);
     this.fileExplorerRoot = selectedFolder;
+    if (openedController) { this.controller = openedController; return; }
     const settings = plugin.settings; const profile = plugin.getActiveProfile();
     const formatting: DocxFormatting = docxFormattingForPreset(settings.defaultDocxStyle, settings.includeTitlePageByDefault);
     formatting.pageSize = settings.defaultDocxPageSize;
@@ -100,6 +120,8 @@ export class SimpleCompileModal extends Modal {
 
   onOpen(): void {
     this.modalEl.addClass("manuscript-compile-workspace");
+    this.contentsViewState.resetDetectedDisclosure();
+    if (this.openedController) { this.render(); return; }
     if (this.fileExplorerRoot) {
       const choices = savedCompilationChoices(this.plugin.savedCompilations.listForRoot(this.fileExplorerRoot.path));
       if (choices.length) { this.renderChooser(choices); return; }
@@ -157,7 +179,7 @@ export class SimpleCompileModal extends Modal {
     if (state.step === "manuscript" && state.origin.kind === "saved" && this.controller.workspaceSession()?.reconciliationReadiness === "blocked") this.renderRootRecovery(body);
     else if (state.step === "manuscript") renderManuscriptStep(body, this.controller, this.folder(), { selectedFromFileExplorer: this.fileExplorerRoot?.path === state.request.manuscriptRoot, chooseFolder: () => new FolderPicker(this.app, (folder) => { void this.selectFolder(folder); }).open(), useCurrentFolder: () => { const folder = this.app.workspace.getActiveFile()?.parent; if (folder) void this.selectFolder(folder); else new Notice("Open a note inside the manuscript folder first."); }, changed: () => this.contentEl.querySelector(".manuscript-scan-summary")?.remove() });
     else if (state.step === "contents") {
-      if (state.origin.kind === "saved") renderContentsStep(body, this.controller, this.contentsViewState, { acknowledge: () => this.plugin.acknowledgeActiveSavedReview(), acceptNew: (reference) => this.plugin.acceptActiveSavedNewSource(reference), acceptDeleted: (reference) => this.plugin.acceptActiveSavedDeletedReference(reference), map: (reference, target) => this.plugin.mapActiveSavedReference(reference, target) });
+      if (state.origin.kind === "saved") renderContentsStep(body, this.controller, this.contentsViewState, { acknowledge: () => this.plugin.acknowledgeActiveSavedReview(), addDetected: (reference) => this.controller.includeSavedDetectedContent(reference) }, () => this.render());
       else renderContentsStep(body, this.controller, this.contentsViewState);
     }
     else renderCreateDocxStep(body, this.controller, { refresh: () => { void this.prepare(true); }, changed: () => this.markPreviewInvalidated(), rerender: () => this.render() });
@@ -217,18 +239,19 @@ export class SimpleCompileModal extends Modal {
   private async switchToNew(discard: boolean): Promise<void> { const result = await this.plugin.switchActiveToNewCompilation(this.controller, discard); if (result.status === "unsaved-changes") { this.renderSwitchChooser(undefined, { newWorkspace: true }); return; } if (result.status === "ready") { this.controller.close(); this.controller = result.controller; this.render(); return; } this.renderSwitchChooser("Couldn’t start a new compilation. Your current workspace is unchanged."); }
 
   /** Save Changes updates this identity; Save As preserves the same controller and current stage. */
-  private async saveChanges(): Promise<void> {
+  private async saveChanges(): Promise<boolean> {
     const result = await this.plugin.saveActiveSavedCompilation(this.controller);
-    if (result.status === "ok") { this.controller.markSavedRecipePersisted(); this.render(); return; }
+    if (result.status === "ok") { this.controller.markSavedRecipePersisted(); this.render(); return true; }
     new Notice("Couldn’t save compilation changes. Your current changes are still available.", 7000); this.render();
+    return false;
   }
-  private openSaveAs(): void {
+  private openSaveAs(afterSaved?: () => void, closed?: (saved: boolean) => void): void {
     const initialName = this.controller.state.origin.kind === "saved" ? this.controller.state.origin.name : this.controller.state.request.custom?.variables?.BookTitle ?? "";
     new SaveCompilationModal(this.app, initialName, async (name) => {
       const result = await this.plugin.saveActiveCompilationAs(this.controller, name);
       if (result.status === "ok") { this.render(); return true; }
       new Notice(result.status === "invalid" ? "Enter a valid compilation name." : "Couldn’t save this compilation. Your current changes are still available.", 7000); return false;
-    }).open();
+    }, afterSaved, closed).open();
   }
 
   private renderFooter(): void {
@@ -245,8 +268,31 @@ export class SimpleCompileModal extends Modal {
   private async scanAndContinue(): Promise<void> { const folder = this.folder(); if (!folder) { new Notice("Choose a manuscript folder that exists in this vault.", 7000); return; } const state = this.controller.state; if (state.scannedRoot !== folder.path || !state.contentPlan.length) { const plan = createContentPlan(folder, state.request.structurePreset); await classifyContentPlan(this.app.vault, plan); this.controller.setDetectedPlan(folder.path, plan); } if (!this.controller.state.contentPlan.some((item) => item.kind === "note")) { new Notice("No Markdown notes were found in that folder.", 7000); this.render(); return; } this.enterStep("contents"); }
   private enterStep(step: CompileWorkspaceStep): void { this.controller.setStep(step); this.render(); if (step === "create") void this.prepare(); }
   private async prepare(force = false): Promise<void> { const promise = this.controller.prepare(force); this.render(); await promise; this.render(); }
-  private async export(): Promise<void> { const promise = this.controller.export(); this.controller.detachExport(); const success = await promise; if (success) this.close(); else { this.render(); if (this.controller.state.error) new Notice(this.controller.state.error.message, 8000); } }
-  private async createFinalDocument(): Promise<void> { if (!this.controller.state.preparedSession) { const session = await this.controller.prepare(); this.render(); if (!session) { if (this.controller.state.error) new Notice(this.controller.state.error.message, 8000); return; } } await this.export(); }
+  /** Export is an in-workspace operation: successful delivery leaves Create file available for the next author action. */
+  private async export(): Promise<void> {
+    const success = await this.controller.export();
+    if (!this.contentEl.isConnected) return;
+    this.render();
+    if (!success && this.controller.state.error) new Notice(this.controller.state.error.message, 8000);
+  }
+  private async createFinalDocument(): Promise<void> {
+    if (this.createDecisionOpen || this.createOperationPending) return;
+    const state = this.controller.state;
+    if (state.origin.kind === "new" || state.recipeDirty) { this.openCreateSaveDecision(state.origin.kind === "saved"); return; }
+    this.continueCreateAfterDecision();
+  }
+  /** Uses the already-current workspace after an explicit save decision; no second preparation route exists. */
+  private async createAfterSaveDecision(): Promise<void> { if (!this.controller.state.preparedSession) { const session = await this.controller.prepare(); this.render(); if (!session) { if (this.controller.state.error) new Notice(this.controller.state.error.message, 8000); return; } } await this.export(); }
+  private continueCreateAfterDecision(): void { if (this.createOperationPending) return; this.createOperationPending = true; void this.createAfterSaveDecision().finally(() => { this.createOperationPending = false; }); }
+  private openCreateSaveDecision(saved: boolean): void {
+    if (this.createDecisionOpen) return;
+    this.createDecisionOpen = true;
+    new CreateFileSaveDecisionModal(this.app, saved, () => { this.continueCreateAfterDecision(); }, () => {
+      if (!saved) { this.createOperationPending = true; this.openSaveAs(() => { void this.createAfterSaveDecision().finally(() => { this.createOperationPending = false; }); }, (wasSaved) => { if (!wasSaved) this.createOperationPending = false; }); return; }
+      void this.saveChangesAndCreate();
+    }, () => { this.createDecisionOpen = false; }).open();
+  }
+  private async saveChangesAndCreate(): Promise<void> { if (this.createOperationPending) return; this.createOperationPending = true; try { if (await this.saveChanges()) await this.createAfterSaveDecision(); } finally { this.createOperationPending = false; } }
   private folder(): TFolder | null { const path = this.controller.state.request.manuscriptRoot; if (!path.trim()) return null; const item = this.app.vault.getAbstractFileByPath(normalizePath(path)); return item instanceof TFolder ? item : null; }
   private filename(value: string): string { return `${value.replace(/\.(?:docx|odt|epub|html?|markdown|xml|md)$/i, "") || "Manuscript"}.docx`; }
   private updateCreateButton(): void { const button = this.contentEl.querySelector<HTMLButtonElement>(".manuscript-create-button"); if (button) button.disabled = this.controller.state.preparationStatus === "preparing" || this.controller.state.exportStatus === "exporting"; }

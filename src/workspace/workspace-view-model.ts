@@ -21,11 +21,10 @@ export interface ManuscriptPlanSummary {
   scenes: number;
   frontMatter: number;
   backMatter: number;
-  warnings: number;
   ambiguous: number;
 }
 
-export type ContentsReviewFilter = "outline" | "ignored" | "warnings";
+export type ContentsReviewFilter = "outline" | "ignored";
 
 /** Returns deterministic structural counts without exposing note content. */
 export function manuscriptPlanSummary(plan: ContentPlanItem[], root: string): ManuscriptPlanSummary {
@@ -42,7 +41,6 @@ export function manuscriptPlanSummary(plan: ContentPlanItem[], root: string): Ma
     scenes: structuralCount("scene"),
     frontMatter: structuralCount("front-matter"),
     backMatter: structuralCount("back-matter"),
-    warnings: plan.filter((item) => item.warning).length,
     ambiguous: plan.filter((item) => !item.detectedRole).length
   };
 }
@@ -51,7 +49,6 @@ export function manuscriptPlanSummary(plan: ContentPlanItem[], root: string): Ma
 export function reviewItems(plan: ContentPlanItem[], root: string, filter: ContentsReviewFilter): ContentPlanItem[] {
   const included = new Set(visibleRows(plan, root).filter((row) => row.included).map((row) => row.item.path));
   if (filter === "ignored") return plan.filter((item) => item.kind === "note" && !included.has(item.path));
-  if (filter === "warnings") return plan.filter((item) => item.warning);
   return plan.filter((item) => item.role !== "ignore" && included.has(item.path));
 }
 

@@ -39,15 +39,13 @@ export interface CompileWorkspaceServices {
 
 /**
  * Modal-scoped state owner. One controller serves one workspace lifetime and one
- * active operation. Closing cancels cancellable work unless export was detached
- * for safe finalisation.
+ * active operation. Closing cancels cancellable work.
  */
 export class CompileWorkspaceController {
   readonly state: CompileWorkspaceState;
   private readonly operations = new OperationStateController();
   private preparationPromise?: Promise<PreparedCompileSession | undefined>;
   private exportPromise?: Promise<boolean>;
-  private detachedExport = false;
   private savedCompilationSession?: SavedCompilationWorkspaceSession;
   private readonly childSnapshots = new Map<string, Map<string, { included: boolean; role: ContentRole; userOverride?: boolean }>>();
 
@@ -83,6 +81,14 @@ export class CompileWorkspaceController {
       setItemIncluded(this.state.contentPlan, this.state.request.manuscriptRoot, path, included);
       if (item?.kind === "folder") this.restoreChildren(path);
     });
+  }
+  /** Includes one neutral Saved-detected item through normal unsaved Content Plan intent. */
+  includeSavedDetectedContent(reference: string): boolean {
+    const saved = this.savedCompilationSession;
+    const path = this.state.request.manuscriptRoot ? `${this.state.request.manuscriptRoot}/${reference}` : reference;
+    if (!saved?.acceptDetectedContent(reference) || !this.state.contentPlan.some((item) => item.path === path)) return false;
+    this.setIncluded(path, true);
+    return true;
   }
   /** Moves one sibling; the resulting order is authoritative for compilation. */
   moveItem(path: string, direction: -1 | 1): void { this.update(() => { this.state.contentPlan = moveSibling(this.state.contentPlan, this.state.request.manuscriptRoot, path, direction); }); }
@@ -240,7 +246,7 @@ export class CompileWorkspaceController {
     this.exportPromise = this.services.sessionIsCurrent(session).then(async (current) => {
       if (!current) { this.invalidatePreparedSession("The manuscript changed after the preview was prepared. Refresh the preview before creating the DOCX."); operation.fail(); return false; }
       const result = await this.services.export(session, this.state.exportFormat, this.state.request.outputFilename);
-      if (result?.status === "failed" || result?.status === "cancelled") { operation.fail(); return false; }
+      if (result?.status === "failed" || result?.status === "cancelled") { this.state.exportStatus = result.status; operation.fail(); return false; }
       if (this.savedCompilationSession && result?.status === "success") { try { await this.services.recordSavedExport?.(session, this.state.exportFormat); } catch { /* A dispatched export remains successful if secondary Saved bookkeeping fails. */ } }
       this.state.exportStatus = "complete";
       operation.complete();
@@ -263,10 +269,8 @@ export class CompileWorkspaceController {
   }
   /** Requests cancellation if the active operation has not begun finalisation. */
   cancelActiveOperation(): boolean { return this.operations.cancel(); }
-  /** Transfers finalising export ownership beyond modal close. */
-  detachExport(): void { this.detachedExport = true; }
   /** Releases modal ownership and cancels work that remains safely cancellable. */
-  close(): void { if (!this.detachedExport) this.cancelActiveOperation(); }
+  close(): void { this.cancelActiveOperation(); }
   private snapshotChildren(path: string): void { this.childSnapshots.set(path, new Map(this.state.contentPlan.filter((candidate) => candidate.path.startsWith(`${path}/`)).map((child) => [child.path, { included: child.included, role: child.role, userOverride: child.userOverride }]))); }
   private restoreChildren(path: string): void { this.childSnapshots.get(path)?.forEach((snapshot, childPath) => { const child = this.state.contentPlan.find((candidate) => candidate.path === childPath); if (child) { child.included = snapshot.included; child.role = snapshot.role; child.userOverride = snapshot.userOverride; } }); }
   /** Future Save Changes callers reset this only after service persistence succeeds. */

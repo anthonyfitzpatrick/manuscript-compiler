@@ -6,7 +6,7 @@
  * workspace. It calls plugin/service callbacks and must not implement scanning,
  * parsing, safe-write transactions, or platform filesystem bridges.
  */
-import { App, ButtonComponent, FuzzySuggestModal, Modal, Notice, PluginSettingTab, Setting, TextAreaComponent, TFolder, type SettingDefinitionItem } from "obsidian";
+import { App, ButtonComponent, FuzzySuggestModal, Modal, Notice, PluginSettingTab, Setting, TextAreaComponent, TFolder, setIcon, type SettingDefinitionItem } from "obsidian";
 import type ManuscriptCompilerPlugin from "./main";
 import type { Chapter, CompilePreview, CompileWarning, ManuscriptDocument, Part } from "./model";
 import { duplicateProfile, validateProfile } from "./profiles";
@@ -17,12 +17,11 @@ import type { ValidationResult } from "./validation";
 import { ProfileWizardModal } from "./wizards";
 import { redactTechnicalMessage } from "./diagnostics";
 import { EXPORT_FORMAT_DETAILS, EXPORT_FORMATS, type ExportFormat } from "./export-types";
-import buyMeACoffeeArtwork from "./assets/bmc-button.svg";
 import pluginLogo from "../logo.svg";
 import { optionalNoArgMethod } from "./type-guards";
+import { SavedCompilationGlobalBrowserModal } from "./saved-compilation-global-browser";
 
 const svgDataUrl = (svg: string): string => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
-const buyMeACoffeeArtworkUrl = svgDataUrl(buyMeACoffeeArtwork);
 const pluginLogoUrl = svgDataUrl(pluginLogo);
 
 /** Reusable vault-folder picker for compatibility commands/settings. */
@@ -97,6 +96,7 @@ class CompileLogsModal extends Modal { constructor(app: App, private readonly pl
 const SUPPORT_ACTIONS = [
   { label: "Report a bug", icon: "bug", url: "https://github.com/anthonyfitzpatrick/manuscript-compiler/issues/new?template=bug_report.yml" },
   { label: "Feature request", icon: "lightbulb", url: "https://github.com/anthonyfitzpatrick/manuscript-compiler/issues/new?template=feature_request.yml" },
+  { label: "Anthony Fitzpatrick", icon: "user", url: "https://anthonyfitzpatrick.me" },
   { label: "wolf359.app", icon: "globe", url: "https://wolf359.app" },
   { label: "Wolf 359 Press", icon: "book-open", url: "https://wolf359.press" },
   { label: "Buy me a coffee", icon: "coffee", url: "https://buymeacoffee.com/wolf359pressab" }
@@ -107,12 +107,15 @@ const SUPPORT_SECTION_TITLE = "Support & Links";
 
 /** Defaults/advanced compatibility settings; not the primary compile workspace. */
 export class ManuscriptCompilerSettingTab extends PluginSettingTab {
-  constructor(app: App, private readonly plugin: ManuscriptCompilerPlugin) { super(app, plugin); }
+  constructor(app: App, private readonly plugin: ManuscriptCompilerPlugin) { super(app, plugin); this.containerEl.addClass("manuscript-compiler-settings"); }
   /** Provides searchable settings on Obsidian 1.13+ while display() remains the pre-1.13 fallback. */
   getSettingDefinitions(): SettingDefinitionItem[] {
     const settings = this.plugin.settings; const profile = this.plugin.getActiveProfile();
     return [
       { name: "Compiler", desc: "Open the guided manuscript compiler.", render: (setting) => { setting.addButton((button) => button.setButtonText("Open compiler").setCta().onClick(() => this.plugin.openCompiler())); } },
+      { type: "group", heading: "Saved compilations", items: [
+        { name: "Saved compilations", desc: "View, search, open, or delete saved compilation setups.", render: (setting) => { setting.addButton((button) => button.setButtonText("Manage saved compilations…").onClick(() => new SavedCompilationGlobalBrowserModal(this.app, this.plugin).open())); } }
+      ] },
       { type: "group", heading: "Defaults", items: [
         { name: "Default manuscript folder", aliases: ["Manuscript root", "Book folder"], render: (setting) => { setting.addText((text) => text.setValue(settings.defaultManuscriptFolder).onChange(async (value) => { settings.defaultManuscriptFolder = value.trim(); await this.plugin.saveSettings(); })); } },
         { name: "Default structure", render: (setting) => { setting.addDropdown((dropdown) => { Object.entries(STRUCTURE_PRESET_NAMES).forEach(([value, label]) => { dropdown.addOption(value, label); }); dropdown.setValue(settings.defaultStructurePreset).onChange(async (value) => { settings.defaultStructurePreset = value as StructurePreset; await this.plugin.saveSettings(); }); }); } },
@@ -128,7 +131,7 @@ export class ManuscriptCompilerSettingTab extends PluginSettingTab {
         { name: "Export records", aliases: ["History", "Logs"], render: (setting) => { setting.addButton((button) => button.setButtonText(`History (${settings.exportHistory.length})`).onClick(() => new ExportHistoryModal(this.app, this.plugin).open())).addButton((button) => button.setButtonText(`Logs (${settings.compileLogs.length})`).onClick(() => new CompileLogsModal(this.app, this.plugin).open())); } }
       ] },
       { type: "group", heading: SUPPORT_SECTION_TITLE, items: [
-        { name: "About and support", desc: "Version, creator, support, website, and optional funding links.", render: (setting) => { setting.settingEl.addClass("manuscript-support-panel"); this.renderSupportContent(setting.settingEl); } }
+        { name: SUPPORT_SECTION_TITLE, searchable: false, render: (setting) => { setting.settingEl.empty(); setting.settingEl.addClass("manuscript-compiler-support-host"); this.renderSupportCard(setting.settingEl); } }
       ] }
     ];
   }
@@ -136,6 +139,7 @@ export class ManuscriptCompilerSettingTab extends PluginSettingTab {
   private renderSettings(): void {
     const container = this.containerEl; const settings = this.plugin.settings; const profile = this.plugin.getActiveProfile(); container.empty(); container.addClass("manuscript-compiler-settings");
     new Setting(container).setName("Compiler").addButton((button) => button.setButtonText("Open compiler").setCta().onClick(() => this.plugin.openCompiler()));
+    new Setting(container).setName("Saved compilations").setHeading(); new Setting(container).setName("Saved compilations").setDesc("View, search, open, or delete saved compilation setups.").addButton((button) => button.setButtonText("Manage saved compilations…").onClick(() => new SavedCompilationGlobalBrowserModal(this.app, this.plugin).open()));
     new Setting(container).setName("Defaults").setHeading(); this.text(container, "Default manuscript folder", settings.defaultManuscriptFolder, (value) => { settings.defaultManuscriptFolder = value; });
     new Setting(container).setName("Default structure").addDropdown((dropdown) => { Object.entries(STRUCTURE_PRESET_NAMES).forEach(([value, label]) => { dropdown.addOption(value, label); }); dropdown.setValue(settings.defaultStructurePreset).onChange((value) => { settings.defaultStructurePreset = value as StructurePreset; void this.plugin.saveSettings(); }); });
     new Setting(container).setName("Default format").addDropdown((dropdown) => { EXPORT_FORMATS.forEach((format) => { dropdown.addOption(format, EXPORT_FORMAT_DETAILS[format].label); }); dropdown.setValue(settings.defaultDownloadFormat).onChange((value) => { settings.defaultDownloadFormat = value as ExportFormat; void this.plugin.saveSettings(); }); });
@@ -150,31 +154,29 @@ export class ManuscriptCompilerSettingTab extends PluginSettingTab {
   }
   /** Renders the non-configuring support footer after every persisted setting. */
   private renderSupportPanel(parent: HTMLElement): void {
-    const panel = parent.createDiv({ cls: "manuscript-support-panel" });
-    new Setting(panel).setName(SUPPORT_SECTION_TITLE).setHeading();
-    this.renderSupportContent(panel);
+    new Setting(parent).setName(SUPPORT_SECTION_TITLE).setHeading();
+    this.renderSupportCard(parent);
   }
-  private renderSupportContent(panel: HTMLElement): void {
-    const identity = panel.createDiv({ cls: "manuscript-support-identity" });
-    identity.createEl("img", { cls: "manuscript-support-logo", attr: { src: pluginLogoUrl, alt: "", "aria-hidden": "true" } });
-    const identityText = identity.createDiv({ cls: "manuscript-support-identity-text" });
-    identityText.createEl("strong", { cls: "manuscript-support-name", text: "Manuscript Compiler" });
+  /** The settings host contains one card so Obsidian's setting-row layout cannot split it into columns. */
+  private renderSupportCard(parent: HTMLElement): void {
+    const panel = parent.createDiv({ cls: "manuscript-compiler-support-card" });
+    const identity = panel.createDiv({ cls: "manuscript-compiler-support-identity" });
+    identity.createEl("img", { cls: "manuscript-compiler-support-logo", attr: { src: pluginLogoUrl, alt: "", "aria-hidden": "true" } });
+    const identityText = identity.createDiv({ cls: "manuscript-compiler-support-meta" });
+    identityText.createDiv({ cls: "manuscript-compiler-support-title", text: "Manuscript Compiler" });
     identityText.createEl("p", { text: `Version ${this.plugin.manifest.version}` });
     identityText.createEl("p", { text: `Created by ${SUPPORT_CREATOR}` });
     identityText.createEl("p", { text: SUPPORT_COMPANY });
-    const actions = panel.createDiv({ cls: "manuscript-support-actions" });
+    const actions = panel.createDiv({ cls: "manuscript-compiler-support-actions" });
     for (const action of SUPPORT_ACTIONS) {
-      const button = new ButtonComponent(actions).setTooltip(action.label).setClass("manuscript-support-button");
-      if (action.label === "Buy me a coffee") {
-        const icon = button.buttonEl.createSpan({ cls: "manuscript-support-bmc-icon", attr: { "aria-hidden": "true" } });
-        icon.createEl("img", { attr: { src: buyMeACoffeeArtworkUrl, alt: "" } });
-      } else {
-        button.setIcon(action.icon);
-      }
-      button.buttonEl.createSpan({ cls: "manuscript-support-button-label", text: action.label });
-      button.buttonEl.setAttribute("aria-label", action.label);
-      button.onClick(() => {
-        button.buttonEl.win.open(action.url, "_blank", "noopener,noreferrer");
+      const button = actions.createEl("button", { cls: "manuscript-compiler-support-action", attr: { type: "button", "aria-label": action.label } });
+      if (action.label === "Buy me a coffee") button.addClass("manuscript-compiler-support-action-coffee");
+      const icon = button.createSpan({ cls: "manuscript-compiler-support-action-icon", attr: { "aria-hidden": "true" } });
+      if (action.label === "Buy me a coffee") icon.addClass("manuscript-compiler-support-action-coffee-icon");
+      else setIcon(icon, action.icon);
+      button.createSpan({ cls: "manuscript-compiler-support-action-text", text: action.label });
+      button.addEventListener("click", () => {
+        button.win.open(action.url, "_blank", "noopener,noreferrer");
       });
     }
   }

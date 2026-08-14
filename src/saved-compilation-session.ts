@@ -237,6 +237,13 @@ export class SavedCompilationWorkspaceSession {
     this.acceptedNewSource.add(reference); this.updateReadiness(this.reconciliation.findings.filter((finding) => !this.acceptedNewSource.has(finding.path))); return true;
   }
 
+  /** Promotes one neutral detected item into current unsaved author intent. */
+  acceptDetectedContent(reference: string): boolean {
+    if (!this.reconciliation?.findings.some((finding) => finding.path === reference && finding.presentation === "detected-not-in-compilation")) return false;
+    this.resolveFindings((finding) => finding.path === reference && finding.presentation === "detected-not-in-compilation");
+    return true;
+  }
+
   private referenceFor(path: string): SavedCompilationFileReference | undefined { return this.currentRecipe?.recipe.overrides.find((override) => override.reference.path === path)?.reference ?? this.compilation?.observedSource.references.find((reference) => reference.path === path); }
   private hasUnresolved(path: string): boolean { return this.reconciliation?.findings.some((finding) => finding.path === path && !finding.resolved) === true || this.overlay?.unresolvedPaths.includes(path) === true; }
   private resolveFindings(matches: (finding: ReconciliationFinding) => boolean): void {

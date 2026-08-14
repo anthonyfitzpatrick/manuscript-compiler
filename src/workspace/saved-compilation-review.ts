@@ -1,44 +1,78 @@
+import { setIcon } from "obsidian";
 import type { ContentPlanItem } from "../content-plan";
+import type { ReconciliationFinding } from "../saved-compilation-reconciliation";
 import type { SavedCompilationWorkspaceSession } from "../saved-compilation-session";
 
 export interface SavedReviewActions {
   acknowledge(): boolean;
-  acceptNew(reference: string): boolean;
-  acceptDeleted(reference: string): boolean;
-  map(reference: string, target: string): boolean;
+  addDetected(reference: string): boolean;
+}
+export interface SavedReviewPresentationState {
+  detectedExpanded(): boolean;
+  toggleDetected(): boolean;
+  setDetectedFocus(reference?: string): void;
+  takeDetectedFocus(): string | undefined;
 }
 
 /** Renders backend findings only; all resolution semantics remain in the Saved session. */
-export function renderSavedCompilationReview(container: HTMLElement, session: SavedCompilationWorkspaceSession, plan: readonly ContentPlanItem[], actions: SavedReviewActions, changed: () => void): void {
+export function renderSavedCompilationReview(container: HTMLElement, session: SavedCompilationWorkspaceSession, plan: readonly ContentPlanItem[], actions: SavedReviewActions, changed: () => void, presentation: SavedReviewPresentationState): void {
   const result = session.currentReconciliation; const readiness = session.reconciliationReadiness;
-  if (!result || readiness === "ready") return;
-  const panel = container.createDiv({ cls: `manuscript-saved-review manuscript-saved-review-${readiness}` });
-  const required = readiness === "review-required" || readiness === "blocked";
-  panel.createEl("h3", { text: required ? "Changes need attention" : "Review changes" });
-  panel.createEl("p", { text: readiness === "blocked" ? "This saved compilation cannot be reviewed until its manuscript folder is available." : required ? "Some saved compilation choices no longer match the current manuscript. Resolve them before creating a file." : "The manuscript has changed since this compilation was saved. Review the changes before creating a file." });
-  const groups = new Map<string, typeof result.findings>();
-  for (const finding of result.findings.filter((item) => !item.resolved || item.code === "new-scene")) {
-    const key = finding.code === "new-scene" ? "New content" : finding.code === "missing-reference" || finding.code === "manual-order-incomplete" ? "Missing content" : finding.code === "unresolved-reference" ? "Needs matching" : "Unresolved session changes";
-    groups.set(key, [...(groups.get(key) ?? []), finding]);
-  }
-  if (groups.size) panel.createEl("p", { text: [...groups.values()].map((items) => `${items.length} ${items.length === 1 ? "item" : "items"}`).join(" · "), cls: "manuscript-saved-review-summary" });
-  for (const [title, findings] of groups) {
-    const section = panel.createDiv({ cls: "manuscript-saved-review-group" }); section.createEl("h4", { text: title });
-    findings.forEach((finding) => renderFinding(section, finding.path, finding.code, plan, actions, changed));
-  }
-  if (readiness === "review-recommended" && !session.reviewAcknowledged) {
-    const acknowledge = panel.createEl("button", { text: "I’ve reviewed these changes" });
-    acknowledge.addEventListener("click", () => { if (actions.acknowledge()) changed(); });
-  } else if (readiness === "review-recommended") panel.createEl("p", { text: "Changes reviewed.", cls: "manuscript-saved-review-acknowledged", attr: { role: "status" } });
+  if (!result) return;
+  const automatic = result.findings.filter((finding) => finding.presentation === "auto-handled");
+  const detected = result.findings.filter((finding) => finding.presentation === "detected-not-in-compilation");
+  if (readiness === "review-recommended") renderRecommendedChanges(container, session, automatic, actions, changed);
+  else if (automatic.length) renderAutomaticChanges(container, automatic);
+  renderDetectedContent(container, detected, plan, actions, changed, presentation);
 }
 
-function renderFinding(parent: HTMLElement, path: string, code: string, plan: readonly ContentPlanItem[], actions: SavedReviewActions, changed: () => void): void {
-  const row = parent.createDiv({ cls: "manuscript-saved-review-row" }); const pathParts = path.split("/").filter(Boolean); const name = pathParts[pathParts.length - 1] || "This item";
-  row.createEl("strong", { text: name });
-  if (code === "new-scene") { row.createSpan({ text: "New since this compilation was saved." }); const accept = row.createEl("button", { text: "Accept" }); accept.addEventListener("click", () => { if (actions.acceptNew(path)) changed(); }); return; }
-  if (code === "missing-reference" || code === "manual-order-incomplete") { row.createSpan({ text: "This saved choice no longer matches the manuscript." }); const accept = row.createEl("button", { text: "Remove saved reference" }); accept.addEventListener("click", () => { if (actions.acceptDeleted(path)) changed(); }); return; }
-  if (code === "unresolved-reference") {
-    row.createSpan({ text: "This saved item could not be matched automatically." }); const label = row.createEl("label", { text: "Use current item" }); const select = row.createEl("select", { attr: { id: `manuscript-saved-review-${path.replace(/[^a-z0-9]+/gi, "-")}` } }); select.setAttribute("aria-label", `Choose current item for ${name}`); label.htmlFor = select.id; plan.filter((item) => item.kind === "note").forEach((item) => select.createEl("option", { value: item.path, text: item.name })); const use = row.createEl("button", { text: "Use this item" }); use.addEventListener("click", () => { if (actions.map(path, select.value)) changed(); else row.createSpan({ text: "That item cannot be used.", cls: "manuscript-saved-review-error", attr: { role: "alert" } }); }); return;
+/** Safe inferred additions are source facts, not per-item author decisions. */
+function renderAutomaticSummary(parent: HTMLElement, findings: readonly ReconciliationFinding[]): void {
+  const scenes = findings.filter((finding) => finding.code === "new-scene").length;
+  if (scenes) parent.createEl("p", { text: `${scenes} new scene${scenes === 1 ? "" : "s"} included automatically.`, cls: "manuscript-saved-review-auto-summary" });
+}
+
+/** Keep harmless inferred additions distinct from decisions that still block export. */
+function renderAutomaticChanges(container: HTMLElement, findings: readonly ReconciliationFinding[]): void {
+  const panel = container.createDiv({ cls: "manuscript-saved-review manuscript-saved-review-review-recommended" });
+  panel.createEl("h3", { text: "Review changes" });
+  panel.createEl("p", { text: "The manuscript has changed since this compilation was saved." });
+  renderAutomaticSummary(panel, findings);
+}
+
+/** Advisory source changes retain their single acknowledgement without showing action-required rows. */
+function renderRecommendedChanges(container: HTMLElement, session: SavedCompilationWorkspaceSession, findings: readonly ReconciliationFinding[], actions: SavedReviewActions, changed: () => void): void {
+  const panel = container.createDiv({ cls: "manuscript-saved-review manuscript-saved-review-review-recommended" });
+  panel.createEl("h3", { text: "Review changes" });
+  panel.createEl("p", { text: "The manuscript has changed since this compilation was saved." });
+  renderAutomaticSummary(panel, findings);
+  if (!session.reviewAcknowledged) {
+    const acknowledge = panel.createEl("button", { text: "I’ve reviewed these changes" });
+    acknowledge.addEventListener("click", () => { if (actions.acknowledge()) changed(); });
+  } else panel.createEl("p", { text: "Changes reviewed.", cls: "manuscript-saved-review-acknowledged", attr: { role: "status" } });
+}
+
+/** Neutral current-source choices: the author may add them, but may also leave them out. */
+function renderDetectedContent(container: HTMLElement, findings: readonly ReconciliationFinding[], plan: readonly ContentPlanItem[], actions: SavedReviewActions, changed: () => void, presentation: SavedReviewPresentationState): void {
+  if (!findings.length) return;
+  const section = container.createDiv({ cls: "manuscript-saved-detected" }); const expanded = presentation.detectedExpanded(); const id = "manuscript-saved-detected-content";
+  const toggle = section.createEl("button", { cls: "manuscript-saved-detected-toggle", attr: { type: "button", "aria-expanded": String(expanded), "aria-controls": id } });
+  const icon = toggle.createSpan({ cls: "manuscript-saved-detected-icon", attr: { "aria-hidden": "true" } }); setIcon(icon, expanded ? "chevron-down" : "chevron-right");
+  toggle.createSpan({ text: `Files detected in this folder that are not part of this compilation (${findings.length})` });
+  const list = section.createDiv({ cls: "manuscript-saved-detected-list", attr: { id } }); list.hidden = !expanded;
+  const addButtons = new Map<string, HTMLButtonElement>();
+  findings.forEach((finding, index) => {
+    const row = list.createDiv({ cls: "manuscript-saved-detected-row" }); const item = plan.find((candidate) => candidate.path.endsWith(`/${finding.path}`));
+    row.createSpan({ text: item?.name ?? finding.path.split("/").pop() ?? "Detected item" }); const add = row.createEl("button", { text: "Add", attr: { type: "button", "aria-label": `Add ${item?.name ?? finding.path} to this compilation` } });
+    addButtons.set(finding.path, add);
+    add.addEventListener("click", () => {
+      const next = findings[index + 1]?.path ?? findings[index - 1]?.path;
+      presentation.setDetectedFocus(next);
+      if (actions.addDetected(finding.path)) changed();
+    });
+  });
+  toggle.addEventListener("click", () => { const open = presentation.toggleDetected(); toggle.setAttribute("aria-expanded", String(open)); list.hidden = !open; icon.empty(); setIcon(icon, open ? "chevron-down" : "chevron-right"); });
+  if (expanded) {
+    const focusReference = presentation.takeDetectedFocus();
+    if (focusReference) addButtons.get(focusReference)?.focus();
   }
-  row.createSpan({ text: "This unsaved change needs attention." });
 }

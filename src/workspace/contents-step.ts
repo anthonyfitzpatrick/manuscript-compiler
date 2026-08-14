@@ -26,14 +26,14 @@ interface RowSnapshot { role: ContentRole; included: boolean; effective: boolean
  * Renders the current Contents state and wires controls to controller mutations.
  * @remarks Mutates only the supplied DOM/view state; compilation remains upstream.
  */
-export function renderContentsStep(container: HTMLElement, controller: CompileWorkspaceController, viewState: ContentsTreeViewState, savedReview?: SavedReviewActions): void {
+export function renderContentsStep(container: HTMLElement, controller: CompileWorkspaceController, viewState: ContentsTreeViewState, savedReview?: SavedReviewActions, savedReviewChanged?: () => void): void {
   const { contentPlan: plan, request } = controller.state;
   viewState.prepare(request.manuscriptRoot, plan);
   const counts = manuscriptPlanSummary(plan, request.manuscriptRoot);
   container.createEl("h2", { text: "Review contents" });
   container.createEl("p", { text: "Review the detected structure. Correct anything that is not right." });
   const session = controller.workspaceSession();
-  if (session && savedReview) renderSavedCompilationReview(container, session, plan, savedReview, () => renderAgain(container, controller, viewState));
+  if (session && savedReview) renderSavedCompilationReview(container, session, plan, savedReview, savedReviewChanged ?? (() => renderAgain(container, controller, viewState)), { detectedExpanded: () => viewState.isDetectedExpanded(), toggleDetected: () => viewState.toggleDetected(), setDetectedFocus: (reference) => viewState.setDetectedFocus(reference), takeDetectedFocus: () => viewState.takeDetectedFocus() });
   const summary = container.createDiv({ cls: "manuscript-contents-summary", attr: { "aria-label": "Manuscript contents summary" } });
   [[`${counts.includedNotes} of ${counts.totalNotes}`, "notes included"], [String(counts.parts), "Parts"], [String(counts.chapters), "Chapters"], [String(counts.scenes), "Scenes"], [String(counts.frontMatter), "Front Matter"], [String(counts.backMatter), "Back Matter"], [String(counts.ignoredNotes), "Ignored"]].forEach(([value, label]) => { const item = summary.createDiv(); item.createEl("strong", { text: value }); item.createSpan({ text: label }); });
   const toolbar = container.createDiv({ cls: `manuscript-contents-toolbar${viewState.correctionMode ? " is-active" : ""}` });
@@ -44,7 +44,7 @@ export function renderContentsStep(container: HTMLElement, controller: CompileWo
   correction.addEventListener("click", () => { viewState.setCorrectionMode(!viewState.correctionMode); renderAgain(container, controller, viewState, undefined, true); });
   toolbar.createEl("p", { text: "Change folder and note types, inclusion, and order." });
   if (viewState.correctionMode) renderCorrectionMode(container, controller, viewState);
-  else renderReviewMode(container, controller, viewState, counts.ignoredNotes, counts.warnings, counts.ambiguous);
+  else renderReviewMode(container, controller, viewState, counts.ignoredNotes, counts.ambiguous);
 }
 
 function renderAgain(container: HTMLElement, controller: CompileWorkspaceController, viewState: ContentsTreeViewState, focusPath?: string, focusToolbar = false, focusReview?: string): void {
@@ -53,17 +53,15 @@ function renderAgain(container: HTMLElement, controller: CompileWorkspaceControl
   target?.focus({ preventScroll: true });
 }
 
-function renderReviewMode(container: HTMLElement, controller: CompileWorkspaceController, viewState: ContentsTreeViewState, ignored: number, warnings: number, ambiguous: number): void {
+function renderReviewMode(container: HTMLElement, controller: CompileWorkspaceController, viewState: ContentsTreeViewState, ignored: number, ambiguous: number): void {
   const { contentPlan: plan, request } = controller.state;
   const reviews = container.createDiv({ cls: "manuscript-review-sections" });
   reviewRow(reviews, "ignored", "Ignored project notes", ignored, viewState.reviewFilter === "ignored", () => { viewState.setReviewFilter(viewState.reviewFilter === "ignored" ? "outline" : "ignored"); renderAgain(container, controller, viewState, undefined, false, "ignored"); });
-  reviewRow(reviews, "warnings", "Warnings", warnings, viewState.reviewFilter === "warnings", () => { viewState.setReviewFilter(viewState.reviewFilter === "warnings" ? "outline" : "warnings"); renderAgain(container, controller, viewState, undefined, false, "warnings"); });
   if (ambiguous) reviews.createEl("p", { text: `Ambiguous items · ${ambiguous}` });
   if (viewState.reviewFilter !== "outline") {
     const items = reviewItems(plan, request.manuscriptRoot, viewState.reviewFilter);
-    const list = container.createEl("ul", { cls: "manuscript-focused-review", attr: { "aria-label": viewState.reviewFilter === "ignored" ? "Ignored notes" : "Warnings" } });
-    if (viewState.reviewFilter === "ignored") ignoredGroups(plan, request.manuscriptRoot).forEach((group) => list.createEl("li", { text: `${group.name} — ${group.reason} — ${group.itemCount} item${group.itemCount === 1 ? "" : "s"}` }));
-    else items.forEach((item) => list.createEl("li", { text: `${item.name} — ${item.warning ?? item.exclusionReason ?? roleLabels[item.role]}` }));
+    const list = container.createEl("ul", { cls: "manuscript-focused-review", attr: { "aria-label": "Ignored notes" } });
+    ignoredGroups(plan, request.manuscriptRoot).forEach((group) => list.createEl("li", { text: `${group.name} — ${group.reason} — ${group.itemCount} item${group.itemCount === 1 ? "" : "s"}` }));
     if (!items.length) list.createEl("li", { text: "None" });
     return;
   }

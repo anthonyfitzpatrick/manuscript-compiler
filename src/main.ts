@@ -119,6 +119,8 @@ export default class ManuscriptCompilerPlugin extends Plugin {
       }
     });
   }
+  /** Presents a controller returned by the authoritative Saved-open transaction. */
+  presentSavedCompilation(controller: CompileWorkspaceController): void { new SimpleCompileModal(this.app, this, undefined, controller).open(); }
   /** UI facade: persistence stays with the Saved Compilation orchestrator. */
   async saveActiveSavedCompilation(controller: CompileWorkspaceController): Promise<SavedCompilationWorkflowResult> {
     if (controller.state.origin.kind !== "saved") return { status: "not-saved" };
@@ -152,6 +154,13 @@ export default class ManuscriptCompilerPlugin extends Plugin {
   async deleteSavedCompilation(controller: CompileWorkspaceController, id: string): Promise<SavedCompilationOperation> {
     const result = await this.savedCompilations.delete(id);
     if (result.status === "ok" && controller.state.origin.kind === "saved" && controller.state.origin.compilationId === id) controller.detachSavedCompilation();
+    return result;
+  }
+  /** Settings discovery deletes through the same persistence owner without touching vault files. */
+  async deleteSavedCompilationGlobally(id: string): Promise<SavedCompilationOperation> {
+    const result = await this.savedCompilations.delete(id);
+    const active = this.savedCompilationOrchestrator.activeWorkspace();
+    if (result.status === "ok" && active?.state.origin.kind === "saved" && active.state.origin.compilationId === id) active.detachSavedCompilation();
     return result;
   }
   async reassociateActiveSavedCompilation(root: TFolder): Promise<ActiveWorkspaceTransitionResult> { return await this.savedCompilationOrchestrator.reassociateRoot(root, this.savedOpenDependencies()); }
