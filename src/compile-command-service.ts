@@ -23,6 +23,9 @@ import type { OperationStateController } from "./operation-state";
 import type { ExportFormat } from "./export-types";
 import { CompilationProgressModal, CompilePreviewModal, DiagnosticsReportModal, ValidationReportModal, showError } from "./ui";
 import { ManuscriptValidationService } from "./validation";
+import type { SavedCompilation } from "./saved-compilations";
+import { savedCompilationRequest } from "./saved-compilation-integration";
+import type { CanonicalWorkspaceRecipe } from "./saved-compilation-session";
 
 /** Application-scoped command owner; global operation state prevents overlap. */
 export class CompileCommandService {
@@ -35,6 +38,12 @@ export class CompileCommandService {
     const normalizedRequest = { ...request, manuscriptRoot: root.path };
     const base = { ...this.activeProfile(), generateTableOfContents: request.outputFormat !== "markdown" && this.settings().includeTableOfContentsByDefault };
     return this.prepare({ manuscriptRoot: root.path, profile: base, structurePreset: normalizedRequest.structurePreset, contentPlan, simpleRequest: normalizedRequest, purpose: "preview", route: "guided" }, signal);
+  }
+  /** Internal Saved Compilation entry: one authoritative preparation route with restored input only. */
+  async prepareSavedCompilation(compilation: SavedCompilation, overlay?: CanonicalWorkspaceRecipe, signal?: AbortSignal): Promise<PreparedCompileSession> {
+    const current = overlay ? { ...compilation, root: overlay.root, recipe: overlay.recipe, output: overlay.output } : compilation;
+    const root = this.roots.require(current.root.path, "saved manuscript folder"); const request = savedCompilationRequest(current); request.manuscriptRoot = root.path;
+    return this.prepare({ manuscriptRoot: root.path, profile: this.activeProfile(), structurePreset: request.structurePreset, simpleRequest: request, purpose: "preview", route: "guided", savedCompilation: compilation, savedWorkspaceRecipe: overlay }, signal);
   }
   /** Rechecks source metadata so a preview cannot silently export stale files. */
   async preparedSessionIsCurrent(session: PreparedCompileSession): Promise<boolean> { return await calculateSourceFingerprint(this.app.vault, session.sourcePaths) === session.sourceFingerprint; }

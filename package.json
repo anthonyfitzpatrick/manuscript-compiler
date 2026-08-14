@@ -43,5 +43,53 @@
   },
   "dependencies": {
     "fflate": "^0.8.3"
+  },
+  "overrides": {
+    "ajv": {
+      "fast-uri": "3.1.5"
+    },
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": {
+        "brace-expansion": "5.0.9"
+      }
+    },
+    "eslint-plugin-json-schema-validator": {
+      "minimatch": {
+        "brace-expansion": "2.1.4"
+      }
+    },
+    "@microsoft/eslint-plugin-sdl": {
+      "eslint-plugin-n": {
+        "minimatch": {
+          "brace-expansion": "2.1.4"
+        }
+      },
+      "eslint-plugin-react": {
+        "minimatch": {
+          "brace-expansion": "1.1.18"
+        }
+      }
+    },
+    "eslint-plugin-import": {
+      "minimatch": {
+        "brace-expansion": "1.1.18"
+      }
+    },
+    "eslint": {
+      "minimatch": {
+        "brace-expansion": "1.1.18"
+      },
+      "@eslint/config-array": {
+        "minimatch": {
+          "brace-expansion": "1.1.18"
+        }
+      },
+      "@eslint/eslintrc": {
+        "js-yaml": "4.3.1",
+        "minimatch": {
+          "brace-expansion": "1.1.18"
+        }
+      }
+    }
   }
 }

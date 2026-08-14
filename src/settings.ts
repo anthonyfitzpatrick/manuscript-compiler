@@ -9,6 +9,7 @@
  * Persisted values are untrusted until repair. Never reuse legacy executable or
  * vault-export fields as active behavior.
  */
+
 export type OrderingMethod = "filename" | "metadata";
 export type WarningLevel = "information" | "warning" | "error";
 export type MetadataOperator = "equals" | "not-equals";
@@ -55,6 +56,9 @@ export interface ExportHistoryEntry { id: string; timestamp: string; profile: st
 export interface CompileLogEntry extends ExportHistoryEntry { exportFormats: ExportTarget; compilerVersion: string; pandocVersion?: string; durationMs: number; scanDurationMs: number; parseDurationMs: number; filterDurationMs: number; generationDurationMs: number; exportDurationMs: number; warnings: string[]; diagnostics?: string; }
 /** Plugin-owned persisted state loaded and saved only through the plugin lifecycle. */
 export interface ManuscriptCompilerSettings extends CompileOptions {
+  /** Versioned, recipe-only Saved Compilation storage. Dormant until later feature stages. */
+  /** Unknown until schema repair; future schemas must survive unrelated saves intact. */
+  savedCompilations: unknown;
   profiles: CompileProfile[]; activeProfileId: string; defaultProfileId: string;
   showPreview: boolean; expandPreviewTree: boolean; showStatistics: boolean; readingWordsPerMinute: number; minimumWarningLevel: WarningLevel;
   pandocExecutablePath: string; automaticallyDetectPandoc: boolean; defaultExportFormat: ExportTarget; defaultReferenceDocx: string;
@@ -80,7 +84,7 @@ export const DEFAULT_OPTIONS: CompileOptions = {
   , bodySectionAliases: ["Scene", "Manuscript", "Text", "Draft", "Body"]
 };
 export const DEFAULT_SETTINGS: ManuscriptCompilerSettings = {
-  ...DEFAULT_OPTIONS, profiles: [], activeProfileId: "", defaultProfileId: "", showPreview: true, expandPreviewTree: false,
+  ...DEFAULT_OPTIONS, savedCompilations: { schemaVersion: 1, entries: [] }, profiles: [], activeProfileId: "", defaultProfileId: "", showPreview: true, expandPreviewTree: false,
   showStatistics: true, readingWordsPerMinute: 250, minimumWarningLevel: "information",
   pandocExecutablePath: "", automaticallyDetectPandoc: false, defaultExportFormat: "docx", defaultReferenceDocx: "",
   keepTemporaryMarkdown: false, enableCompileLogs: true, maximumExportHistoryEntries: 50, exportHistory: [], compileLogs: [], configurationWarnings: [], onboardingCompleted: false,

@@ -16,6 +16,7 @@ import type { CompileWorkspaceController } from "./compile-workspace-controller"
 import { orderedPlan, visibleRows } from "./content-tree";
 import { ContentsTreeViewState, type ContentsControl } from "./contents-tree-view-state";
 import { ignoredGroups, manuscriptPlanSummary, reviewItems } from "./workspace-view-model";
+import { renderSavedCompilationReview, type SavedReviewActions } from "./saved-compilation-review";
 
 const roleLabels: Record<ContentRole, string> = { "front-matter": "Front matter", transparent: "Transparent container", part: "Part", chapter: "Chapter", scene: "Scene", "back-matter": "Back matter", ignore: "Exclude" };
 interface RowRecord { element: HTMLElement; include: HTMLInputElement; description: HTMLElement; select: HTMLSelectElement; toggle?: HTMLButtonElement; up: HTMLButtonElement; down: HTMLButtonElement; }
@@ -25,12 +26,14 @@ interface RowSnapshot { role: ContentRole; included: boolean; effective: boolean
  * Renders the current Contents state and wires controls to controller mutations.
  * @remarks Mutates only the supplied DOM/view state; compilation remains upstream.
  */
-export function renderContentsStep(container: HTMLElement, controller: CompileWorkspaceController, viewState: ContentsTreeViewState): void {
+export function renderContentsStep(container: HTMLElement, controller: CompileWorkspaceController, viewState: ContentsTreeViewState, savedReview?: SavedReviewActions): void {
   const { contentPlan: plan, request } = controller.state;
   viewState.prepare(request.manuscriptRoot, plan);
   const counts = manuscriptPlanSummary(plan, request.manuscriptRoot);
   container.createEl("h2", { text: "Review contents" });
   container.createEl("p", { text: "Review the detected structure. Correct anything that is not right." });
+  const session = controller.workspaceSession();
+  if (session && savedReview) renderSavedCompilationReview(container, session, plan, savedReview, () => renderAgain(container, controller, viewState));
   const summary = container.createDiv({ cls: "manuscript-contents-summary", attr: { "aria-label": "Manuscript contents summary" } });
   [[`${counts.includedNotes} of ${counts.totalNotes}`, "notes included"], [String(counts.parts), "Parts"], [String(counts.chapters), "Chapters"], [String(counts.scenes), "Scenes"], [String(counts.frontMatter), "Front Matter"], [String(counts.backMatter), "Back Matter"], [String(counts.ignoredNotes), "Ignored"]].forEach(([value, label]) => { const item = summary.createDiv(); item.createEl("strong", { text: value }); item.createSpan({ text: label }); });
   const toolbar = container.createDiv({ cls: `manuscript-contents-toolbar${viewState.correctionMode ? " is-active" : ""}` });

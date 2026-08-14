@@ -14,6 +14,8 @@ import type { OperationStatus } from "../operation-state";
 import type { DocxFormatting, SimpleCompileRequest } from "../simple-workflow";
 import type { ExportFormat } from "../export-types";
 
+export type CompileWorkspaceOrigin = { kind: "new" } | { kind: "saved"; compilationId: string; name: string; persistedRecipeSignature: string; };
+
 export const WORKSPACE_STEPS = ["manuscript", "contents", "create"] as const;
 export type CompileWorkspaceStep = typeof WORKSPACE_STEPS[number];
 /** Separates concise author guidance from log-only technical detail. */
@@ -36,4 +38,6 @@ export interface CompileWorkspaceState {
   exportStatus: OperationStatus;
   error?: WorkspaceError;
   exportFormat: ExportFormat;
+  origin: CompileWorkspaceOrigin;
+  recipeDirty: boolean;
 }

@@ -48,6 +48,8 @@ Official release assets are exactly:
 
 The optional release ZIP contains only those three files. The repository's `logo.svg` is validated as branding source and compiled into `main.js`; it is not read from disk at runtime or included in the release package. Use assets from one release tag and verify that the tag exactly matches the version in `manifest.json`. Dependency changes require lockfile review, licence review, audit, updated third-party notices, and explicit approval. Runtime dependencies must not be introduced as convenience wrappers around platform, export, or network behavior.
 
+The development graph uses narrowly scoped npm overrides for patched `brace-expansion`, `fast-uri`, and `js-yaml` releases. They remediate the 2026 development-tooling advisories without adding or changing a production dependency; retain them unless the upstream tooling graph is updated and re-audited.
+
 ## Supported versions
 
 Security fixes are provided for the current prerelease line while it is actively maintained. The repository does not promise security updates for older builds. Reproduce issues against the latest available release before reporting when practical.

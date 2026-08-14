@@ -13,6 +13,7 @@ import type { CompileProfile, ManuscriptCompilerSettings } from "./settings";
 import { DEFAULT_OPTIONS } from "./settings";
 import { clampCentimetres, inchesToCentimetres } from "./measurements";
 import { repairCompileLogs, repairExportHistory } from "./history-storage";
+import { repairSavedCompilationsStorage } from "./saved-compilations";
 
 const VELLUM_OPTIONS = { ...DEFAULT_OPTIONS, orderingMethod: "metadata" as const, metadataOrdering: true, partHeadingTemplate: "Part {number}: {name}", chapterHeadingTemplate: "Chapter {number}: {name}", removeHtmlComments: true, removeDataviewBlocks: true, removeCallouts: true, stripInternalLinks: true };
 export function profileId(): string { return `profile-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`; }
@@ -39,6 +40,12 @@ export function migrateSettings(settings: ManuscriptCompilerSettings): Manuscrip
 /** Repairs malformed/current fields after migration and records configuration warnings. */
 export function repairSettings(settings: ManuscriptCompilerSettings): ManuscriptCompilerSettings {
   const warnings: string[] = [];
+  const savedCompilations = repairSavedCompilationsStorage(settings.savedCompilations);
+  if (savedCompilations.unsupportedSchema) warnings.push("Saved Compilations from a newer schema were isolated safely.");
+  else {
+    settings.savedCompilations = savedCompilations.storage;
+    if (savedCompilations.repaired || savedCompilations.dropped) warnings.push("Saved Compilation storage was repaired safely.");
+  }
   if (!Array.isArray(settings.profiles)) { settings.profiles = []; warnings.push("Invalid profile storage was recovered with default profiles."); }
   else settings.profiles = settings.profiles.map((candidate, index) => {
     if (candidate && typeof candidate === "object" && !Array.isArray(candidate)) return candidate;

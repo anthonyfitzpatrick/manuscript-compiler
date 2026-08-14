@@ -92,3 +92,18 @@ All items are intentionally unchecked. Record date, tester, Obsidian version, op
 - Formats passed:
 - Issues and reproduction steps:
 - Screenshots or evidence:
+# Saved compilation UI checks
+
+- In light and dark themes, launch a root with zero saved entries and confirm the normal New workflow opens immediately.
+- With one, many, and 50 saved entries, verify the chooser is scrollable, keyboard usable, and New compilation remains reachable.
+- Open a saved setup; verify Save changes, Save as…, Switch…, review panels, and textual statuses wrap at narrow widths.
+- Test Save As, Save changes, clean reversion, dirty-switch Cancel and Discard, and root recovery through Locate manuscript….
+- Test new content acceptance, missing-reference removal, explicit mapping, 50 findings, and keyboard focus after a resolved row disappears.
+- Verify Not exported yet, Export up to date, Export out of date, Export not current, and Export status unknown without implying an external file exists.
+- Repeat the chooser, Save As, switch confirmation, mapping select, and root picker with keyboard only.
+- Open **Manage…** from New and Saved workspaces. Verify root-scoped zero, one, many, and 50-entry lists remain scrollable and that duplicate display names retain exactly one textual **Current** indicator.
+- Verify management row order is **Rename**, **Duplicate**, **Delete**. Check keyboard focus after Rename, Duplicate, inactive Delete, Cancel, and Escape; do not allow Escape to confirm Delete.
+- Rename active and inactive entries, including long names and duplicate names. Verify rename changes only the display name and does not affect unsaved recipe state or export status.
+- Duplicate active and inactive entries. Verify Duplicate copies persisted state, does not switch to the copy, does not capture an active unsaved overlay, and has no inherited export status.
+- Delete inactive, current clean, current dirty, missing-root current, and final entries. Confirm the warning says manuscript/exported files are unaffected; verify current deletion becomes New, preserves usable choices, and offers Save as… without a stale Saved status.
+- At narrow/mobile widths, verify Rename, Duplicate, and Delete wrap without horizontal scrolling and remain practical touch targets. Confirm light, dark, and high-contrast themes retain visible focus and destructive distinction.

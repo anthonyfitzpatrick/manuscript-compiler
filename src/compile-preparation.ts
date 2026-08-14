@@ -20,6 +20,9 @@ import { applyContentPlanAuthority, applyWorkspacePlanAuthority, inferStructureP
 import type { ScannedBook } from "./types";
 import { VaultScanner } from "./vault-scanner";
 import { exportFilename } from "./export-filename";
+import type { SavedCompilation } from "./saved-compilations";
+import { reconcileSavedCompilation, type SavedCompilationReconciliationResult } from "./saved-compilation-reconciliation";
+import { applyWorkspaceRecipe, type CanonicalWorkspaceRecipe } from "./saved-compilation-session";
 
 /** Prose-free explanation of an item absent from the final Book. */
 export interface PreparedExclusion { path: string; name: string; reason: string; }
@@ -37,6 +40,10 @@ export interface CompilePreparationRequest {
   simpleRequest?: SimpleCompileRequest;
   purpose: CompilePurpose;
   route: CompileRoute;
+  /** Optional input restoration only; preparation still follows this one route. */
+  savedCompilation?: SavedCompilation;
+  /** Runtime-only author overlay applied after reconciliation and before Book construction. */
+  savedWorkspaceRecipe?: CanonicalWorkspaceRecipe;
 }
 /**
  * Immutable-in-practice snapshot owned by its requesting command/workspace.
@@ -61,6 +68,7 @@ export interface PreparedCompileSession {
   inputSignature: string;
   purpose: CompilePurpose;
   route: CompileRoute;
+  savedCompilation?: { id: string; reconciliation: SavedCompilationReconciliationResult };
 }
 
 /**
@@ -86,9 +94,14 @@ export class CompilePreparationService {
     const folder = this.vault.getAbstractFileByPath(normalizePath(request.manuscriptRoot));
     if (!(folder instanceof TFolder)) throw new Error("The manuscript folder does not exist.");
     const suppliedPlan = request.contentPlan;
-    const plan = suppliedPlan === undefined
+    let plan = suppliedPlan === undefined
       ? await classifyContentPlan(this.vault, createContentPlan(folder, request.structurePreset ?? inferStructurePreset(request.profile)))
       : suppliedPlan.map((item) => ({ ...item }));
+    const reconciliation = request.savedCompilation
+      ? reconcileSavedCompilation({ compilation: request.savedCompilation, rootPath: folder.path, plan })
+      : undefined;
+    if (reconciliation) plan = reconciliation.plan;
+    if (request.savedWorkspaceRecipe) plan = applyWorkspaceRecipe(request.savedWorkspaceRecipe, folder.path, plan).plan;
     const simple = request.simpleRequest ?? simpleRequestFromProfile(request, plan);
     const requestSnapshot = cloneRequest({ ...simple, manuscriptRoot: folder.path }, plan);
     const resolved = resolveSimpleCompileRequest(requestSnapshot, request.profile);
@@ -129,12 +142,14 @@ export class CompilePreparationService {
       .map((item) => item.path)
       .sort();
     const sourceFingerprint = await calculateSourceFingerprint(this.vault, sourcePaths);
+    if (reconciliation) reconciliation.observedSource.sourceFingerprint = sourceFingerprint;
     return {
       request: requestSnapshot, contentPlan: requestSnapshot.contentPlan ?? [], profile, scannedBook, book,
       statistics: result.statistics, warnings, exclusions,
       result: { ...result, issues: warnings, warnings: warnings.map((item) => item.message) },
       variables, outputPaths: paths, sourcePaths, sourceFingerprint,
-      inputSignature: compileInputSignature(requestSnapshot, plan), purpose: request.purpose, route: request.route
+      inputSignature: compileInputSignature(requestSnapshot, plan), purpose: request.purpose, route: request.route,
+      savedCompilation: reconciliation ? { id: request.savedCompilation!.id, reconciliation } : undefined
     };
   }
 }

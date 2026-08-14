@@ -68,6 +68,14 @@ TFolder manuscript root
 
 No route may skip stages. Command-palette, current-book, selected-folder, guided, validation, and sample entry points all converge on `CompilePreparationService.prepareAuthoritative`.
 
+## Saved Compilation internal lifecycle
+
+Saved Compilations add persisted intent, reconciliation, and a session overlay to the same route; they do not add a scanner, parser, Book, or exporter route. `SavedCompilationService` owns persistence; `SavedCompilationReconciler` compares persisted intent to current source; `SavedCompilationStalenessTracker` is only a cheap stale signal; `SavedCompilationWorkspaceSession` owns baseline/reconciliation/overlay; and `SavedCompilationOrchestrator` owns transitions, review resolution, authorization, freshness, and bookkeeping. `CompileWorkspaceController` owns active prepared state. Export authorization gates the existing `ExportCoordinator`; a successful dispatch then records only timestamp, format, source/input signatures, and recipe signature.
+
+### Saved Compilation visible workflow and management (Parts 7–8 complete)
+
+The UI is a projection of these owners, never a second lifecycle implementation: root-scoped entry, switch, and management views delegate to existing lifecycle/service operations; the active header delegates Save changes and Save as; Contents renders reconciliation findings and delegates explicit resolutions; and compact status text projects dirty, source, and export freshness independently. Management renders without persistence, preparation, reconciliation, last-opened, or export-bookkeeping side effects. Rename targets immutable ID and changes display metadata only. Duplicate copies persisted state with a fresh ID and no export facts, without activating the copy. Delete removes only the Saved record; deleting the active record detaches Saved session/identity and retains the current controller as New without rebuilding the Book.
+
 ## Physical discovery and folder detection
 
 `VaultScanner` performs mechanical discovery inside one exact `TFolder`. It identifies Markdown files and broad physical Part/Chapter containers but does not decide what should be published. Its output, `ScannedBook`, contains Obsidian file/folder objects and is intentionally unsuitable for export.
@@ -288,6 +296,10 @@ The workspace controller deduplicates preparation/export promises, cancels prepa
 
 Historical fields may remain for backward-compatible loading. They are storage-only if their feature was removed. In particular, legacy vault-output or external-converter fields cannot activate production behavior.
 
+### Saved Compilations persistence and workflow
+
+The settings object includes a versioned, bounded Saved Compilations schema. `saved-compilations.ts` validates unknown storage, isolates malformed entries, repairs schema-1 values into JSON-safe domain objects, and supplies deterministic recipe comparison. `SavedCompilationService` owns mutations; the workspace/orchestrator layers restore and reconcile current source through the existing preparation route; the visible workflow and management browser delegate without new persistence or preparation paths. See [Saved Compilations](docs/SAVED_COMPILATIONS.md) and [Schema](docs/SAVED_COMPILATIONS_SCHEMA.md).
+
 ## Migration and repair
 
 `migrateSettings` translates known historical shapes. `repairSettings` validates and bounds untrusted persisted data, nested profiles, history, and logs. Both are idempotent and preserve explicit user choices, including false/zero values and custom formatting.
@@ -455,9 +467,19 @@ New formats, semantic Book fields, workflow stages, dependencies, delivery route
 13. Command IDs, manifest identity, and mobile compatibility remain stable.
 14. Release packages contain exactly the three Obsidian runtime assets; the editable logo remains repository-only branding source.
 
+## Saved Compilations persistence service
+
+Schema-1 Saved Compilation data is repaired with settings and then owned at runtime by `SavedCompilationService`. The service provides bounded immutable CRUD/state APIs and serialized full-settings persistence. It does not scan the vault or create a second preparation/export route. Source reconciliation, UI, workspace restoration, and export integration remain planned; see [Saved Compilations](docs/SAVED_COMPILATIONS.md) and its [schema](docs/SAVED_COMPILATIONS_SCHEMA.md).
+
+`reconcileSavedCompilation` now sits beside, not inside, the authoritative preparation path: it consumes the existing current Content Plan and returns a restored copy plus readiness/findings. It owns no vault scan or persistence. The event-fed staleness tracker only marks relevant saved roots potentially stale; later stages will decide when to reconcile and prepare.
+
+Part 6C adds `SavedCompilationWorkspaceSession` and `SavedCompilationOrchestrator`. The session separates persisted recipe baseline, source-derived reconciliation state, and unsaved author overlay; dirty state is derived only from canonical author intent. The orchestrator is the future lifecycle boundary between workspace state and the persistence service. It does not scan, parse, reconcile, persist, or export independently. The single preparation and ExportCoordinator paths remain authoritative.
+
 ## Future roadmap
 
-The product is feature complete. The roadmap is maintenance rather than expansion:
+Saved Compilations are a user-facing workflow through Part 8. Future maintenance must preserve its explicit roots, immutable-ID management actions, single preparation/export route, and privacy boundaries.
+
+The remaining roadmap is maintenance-led:
 
 - keep pace with documented Obsidian APIs and official lint requirements;
 - record manual interoperability across current Word, Vellum, LibreOffice, EPUB readers, browsers, Markdown renderers, and XML tools;

@@ -12,6 +12,14 @@ No exporter may scan the vault, reread notes, rerun cleaning, infer structure, o
 
 Start with [ARCHITECTURE.md](ARCHITECTURE.md), then read `src/compile-preparation.ts`, `src/semantic-document.ts`, `src/export-coordinator.ts`, and `src/workspace/compile-workspace-controller.ts`.
 
+For Saved Compilations work, read the [Obsidian API feasibility reference](docs/SAVED_COMPILATIONS_OBSIDIAN_API.md), [feature specification](docs/SAVED_COMPILATIONS.md), and [schema contract](docs/SAVED_COMPILATIONS_SCHEMA.md). `SavedCompilationService` is the sole runtime persistence owner; do not mutate `settings.savedCompilations` outside settings repair/service initialization.
+
+Reconciliation is in `src/saved-compilation-reconciliation.ts`; it consumes the existing inferred Content Plan and is pure. Do not add a Saved Compilation scanner or persist reconciliation results from this module. See [the reconciliation contract](docs/SAVED_COMPILATIONS_RECONCILIATION.md).
+
+Saved preparation context is optional on `CompilePreparationService.prepareAuthoritative`; it is not a second preparation route. See [the integration contract](docs/SAVED_COMPILATIONS_INTEGRATION.md).
+
+Parts 1–8 are complete. Saved roots are explicit, reconciliation is exact-path/strong-fingerprint only, unresolved intent is never fuzzily rebound, transitions prepare before commit, and export facts follow only successful validated dispatch. Parts 7–8 provide the visible root-scoped workflow and management browser without adding another lifecycle path.
+
 ## Prerequisites
 
 - Node.js 24, matching CI.
@@ -260,6 +268,14 @@ The ZIP is optional; attach `main.js`, `manifest.json`, and `styles.css` individ
 - Persisting absolute paths, warning details, or manuscript text.
 - Adding an inert control to a format where it has no meaning.
 
+## Saved Compilation session boundary
+
+When changing Saved Compilation workspace behaviour, use `CanonicalWorkspaceRecipe` and `SavedCompilationWorkspaceSession`; do not compare mutable view state or call `SavedCompilationService` from `CompileWorkspaceController`. Source reconciliation changes are not author-dirty changes. The orchestrator coordinates lifecycle work, the service owns persistence, and `ExportCoordinator` owns delivery. See [Saved Compilation Workspace Session Model](docs/SAVED_COMPILATIONS_SESSION_MODEL.md).
+
+### Parts 7–8 visible workflow and management
+
+Parts 7–8 are complete. UI modules translate state and delegate lifecycle calls, but must not reproduce dirty calculation, reconciliation, reassociation, switching, persistence, export authorization, freshness comparison, or management mutations. The root-scoped management browser uses immutable IDs, service ordering, and the existing service operations. Duplicate copies persisted state rather than an active unsaved overlay; Delete never touches vault files and detaches an active Saved identity to a usable New workspace without preparation. Rendering management is side-effect free. Keep user wording free of IDs, signatures, fingerprints, prose, and destinations.
+
 ## Extension points
 
 Safe extension points are intentionally narrow:
@@ -275,7 +291,9 @@ Any new semantic structure belongs in the Book model only through an explicit pr
 
 ## Future roadmap
 
-The plugin is feature complete. Appropriate future work is maintenance-led:
+Parts 1–8 are complete, including the visible Saved Compilation workflow and root-scoped management browser. Its design and Obsidian API constraints remain in [docs/SAVED_COMPILATIONS.md](docs/SAVED_COMPILATIONS.md) and [docs/SAVED_COMPILATIONS_OBSIDIAN_API.md](docs/SAVED_COMPILATIONS_OBSIDIAN_API.md). Future maintenance must preserve the single preparation/export route.
+
+Other appropriate future work is maintenance-led:
 
 - track Obsidian API and lint changes;
 - expand real-application interoperability records;
