@@ -1,135 +1,66 @@
-# Manuscript Compiler 0.10.0 <img src="logo.svg" alt="Manuscript Compiler logo" width="48" align="right">
+# Manuscript Compiler 0.2.0 <img src="logo.svg" alt="Manuscript Compiler logo" width="48" align="right">
 
-Manuscript Compiler is an Obsidian plugin for turning structured, long-form writing projects into publication-ready documents. It exists because a book is more than a folder of Markdown files: it contains Parts, Chapters, Scenes, Front Matter, Back Matter, deliberate ordering, and material that should never appear in the finished manuscript. Manuscript Compiler gives authors a guided way to review that structure and compile only the approved book into formats suited to editing, publishing, interchange, and archival workflows.
+Manuscript Compiler 0.2.0 is a substantial workflow and reliability update focused on making book compilation clearer, safer, and more repeatable.
+
+The release refines the full **Manuscript → Contents → Create file** workflow, expands Saved Compilation management, separates configuration saving from output-file saving, improves structure review, removes structural Scene headings from manuscript output, and strengthens consistency across all supported export formats.
 
 ## Highlights
 
-- **Semantic manuscript compilation** understands the publishing role of each included note instead of treating the project as undifferentiated Markdown.
-- **Right-click manuscript workflow** starts directly from the book folder in Obsidian's File Explorer.
-- **Review and correction before export** lets you confirm inclusion, structure, publishing roles, and order before creating a file.
-- **Fully offline operation** keeps manuscript processing on your device.
-- **No Pandoc required.**
-- **No external executables required.**
-- **No other Obsidian plugins required.**
-- **Source notes remain unchanged** throughout scanning, review, and compilation.
+- Refined three-stage manuscript workflow
+- Reusable Saved Compilations with search, switching, management, and safe deletion
+- Clear save-before-create choices for new and changed setups
+- Host save, download, or share flow for generated output destinations
+- Reliable removal of leading structural Scene headings from manuscript body text
+- Better Contents review and correction of inclusion, role, and order
+- Repeatable DOCX, ODT, EPUB, HTML, Markdown, and XML output creation
+- Format-specific Formatting and Advanced formatting controls
+- Updated README and User Guide with a complete visual walkthrough
 
-The workflow is deliberately straightforward: choose the manuscript folder, review its contents, correct anything that was detected incorrectly, select a format, and create the finished file.
+## Saved Compilations
 
-## Supported export formats
+Saved Compilations store a reusable manuscript setup: the selected root, reviewed Contents choices, output choices, and formatting. They do not store a copy of manuscript prose.
 
-Manuscript Compiler generates six native export formats:
+Use **Save changes** to update the current setup or **Save as…** to create another setup from the current choices. Saved Compilations can be opened from Settings, switched from the compiler, and managed through rename, duplicate, delete, and moved-folder recovery actions. Deleting a setup never deletes manuscript notes or generated files.
 
-- **DOCX** — for Microsoft Word, editing, submission, and publishing workflows. DOCX output is designed with Vellum workflows in mind, including meaningful manuscript structure and named document styles.
-- **ODT** — for LibreOffice Writer and other OpenDocument-compatible applications.
-- **EPUB** — a reflowable EPUB 3 package for ebook proofing and reader workflows.
-- **HTML** — a self-contained offline HTML5 document with embedded styling and no remote assets.
-- **Markdown** — a portable, readable plain-text manuscript with clear semantic headings.
-- **XML** — a deterministic, presentation-neutral interchange format for archival use, automation, and custom publishing pipelines.
+## Safer output creation
 
-Every format is created from the same reviewed manuscript, helping Parts, Chapters, Scenes, matter, ordering, emphasis, and readable links remain consistent across outputs.
+Saving a Saved Compilation is separate from creating a manuscript file. From a New compilation, **Create and download _format_** lets you choose **Create without saving** or **Save and create**. A Saved Compilation with unsaved edits offers the corresponding choice to save changes before creating. A clean Saved Compilation creates output directly.
 
-DOCX is the recommended format when the next step is importing the manuscript into Vellum.
+Generated files use Obsidian’s host save, download, or share flow, so the operating system or host controls the filename and destination. The Create file workspace remains available afterwards, allowing another copy or another output format without rebuilding the manuscript structure.
 
-## Key Features
+## Structure and Scene handling
 
-- Semantic support for **Parts, Chapters, and Scenes**
-- Dedicated **Front Matter and Back Matter** roles
-- Automatic detection of common long-form manuscript structures
-- Manual correction of inclusion, publishing roles, and order
-- Transparent organisational folders that do not become unwanted headings
-- Deterministic structural exports
-- Native document generation without conversion utilities
-- Multiple formatting presets, including Vellum and Standard Manuscript options
-- Configurable paragraph indentation and scene separators
-- Title-page and table-of-contents options where supported
-- Browser and operating-system download delivery
-- No manuscript exports written back into the vault
-- Protection against exporting a stale, unreviewed preview
-- Privacy-first data handling
-- Offline compilation and validation
-- Source Markdown remains untouched
-- Support for Unicode, accented characters, punctuation, emphasis, and readable Markdown link text
+Manuscript Compiler recognises Front matter, Transparent container, Part, Chapter, Scene, Back matter, and Exclude roles. Structure presets guide initial detection, while the choices made in **Contents** are authoritative for the compilation.
 
-Manuscript Compiler has been extensively tested throughout development with representative novels, large manuscript structures, and every supported export format.
+Structural Scene titles remain available for organisation and navigation, but a leading structural Scene heading is not emitted as manuscript body text. Later authored headings within a Scene remain intact. Source notes are never renamed, moved, or rewritten by structural review.
 
-## Built for Authors
+## Export formats and formatting
 
-Many export tools begin with a simple assumption: gather Markdown files and concatenate them. Manuscript Compiler begins with a different assumption—a writing project is a book.
+Version 0.2.0 supports:
 
-The plugin recognises the difference between a Part, a Chapter, a Scene, Front Matter, Back Matter, and a folder that exists only to organise the vault. Before export, the complete detected manuscript is presented for review. You can include or exclude material, correct publishing roles, and adjust order without renaming, moving, or rewriting the original notes.
+- **DOCX** — Microsoft Word document
+- **ODT** — OpenDocument Text
+- **EPUB** — Ebook
+- **HTML** — Standalone webpage
+- **Markdown** — Portable plain-text manuscript
+- **XML** — Structured manuscript
 
-Only the reviewed manuscript content is compiled.
+Depending on the selected format, Formatting includes document styles, paragraph indentation, Scene breaks, title pages, tables of contents, and chapter page breaks. Advanced formatting provides title and author overrides, typography, page size, custom Scene breaks, Part and Chapter heading styles, and filename templates where supported.
 
-Recognised project material such as dashboards, structured metadata, author notes, planning material, research, development folders, and excluded drafts is kept out of the finished book. Ignored and excluded content remains reviewable so that automatic detection never replaces the author's final decision.
+## Compatibility and reliability
 
-This approach is intended for authors who keep an entire writing project in Obsidian—not only polished prose, but also the supporting material required to develop and manage a book.
-
-## Privacy
-
-Manuscripts are private creative work, so Manuscript Compiler is designed to operate without sending them anywhere.
-
-- **No telemetry or analytics**
-- **No cloud services**
-- **No network activity during compilation, validation, or export**
-- **No user accounts**
-- **No advertising**
-- **No manuscript uploads**
-- **No background network requests**
-- **No external processing service**
-
-Compilation happens locally. Generated files are created in memory, validated, and handed to the browser or operating system's download or share mechanism. Manuscript exports are not written into the selected vault.
-
-Support and project links open an external website only when explicitly selected by the user.
-
-## Open Source
-
-Manuscript Compiler is open-source software released under the **MIT Licence**.
-
-The complete source code is available in the [Manuscript Compiler repository](https://github.com/anthonyfitzpatrick/manuscript-compiler). Contributions are welcome, including focused bug fixes, documentation improvements, interoperability findings, accessibility improvements, and carefully scoped feature proposals.
-
-Before contributing, please read the project's contribution guidance and respect its privacy, portability, and manuscript-safety guarantees.
+Existing Saved Compilations continue to load through the current repair and compatibility logic. The release expands regression coverage for Scene handling, Saved Compilation persistence, DOCX generation, six-format exports, and multi-part and multi-chapter manuscripts.
 
 ## Documentation
 
-- [User Guide](https://github.com/anthonyfitzpatrick/manuscript-compiler/blob/main/USER_GUIDE.md)
-- [Developer Guide](https://github.com/anthonyfitzpatrick/manuscript-compiler/blob/main/DEVELOPER_GUIDE.md)
-- [Architecture Guide](https://github.com/anthonyfitzpatrick/manuscript-compiler/blob/main/ARCHITECTURE.md)
-
-The User Guide covers installation, manuscript organisation, the complete three-stage workflow, formatting controls, export formats, troubleshooting, and known limitations.
+The README and User Guide now match the current interface and workflow, covering manuscript detection, Contents review, Saved Compilations, output creation, saving, formatting, advanced formatting, troubleshooting, and known limitations.
 
 ## Installation
 
-Until Manuscript Compiler is accepted into the Obsidian Community Plugins directory, install it manually from this GitHub Release.
-
-Download all three runtime release assets:
-
-- `main.js`
-- `manifest.json`
-- `styles.css`
-
-Create the following folder inside the vault if it does not already exist:
+Install Manuscript Compiler through Obsidian Community Plugins, or manually place the matching `main.js`, `manifest.json`, and `styles.css` release files in:
 
 ```text
 <vault>/.obsidian/plugins/manuscript-compiler/
 ```
 
-Place the three files directly inside that folder. Do not mix files from different releases. The settings logo is already bundled into `main.js`; the repository's `logo.svg` is branding source artwork and is not required for installation.
-
-Restart Obsidian or reload Community Plugins, then open **Settings → Community plugins** and enable **Manuscript Compiler**.
-
-After installation, right-click a test manuscript folder in File Explorer and confirm that **Compile manuscript from this folder** appears.
-
-## Known limitations
-
-- Live interoperability testing across different EPUB readers is ongoing. EPUB output is structurally validated, but readers may apply their own typography and accessibility preferences.
-- DOCX has been tested with Vellum workflows. Authors should still perform a representative Vellum import before relying on a particular manuscript structure or formatting choice for production.
-- XML is intended for semantic interchange, archival inspection, and automation rather than visual presentation. A receiving application or stylesheet determines how it is displayed.
-- Browser download behaviour depends on Obsidian, the host operating system, and platform permissions. Desktop systems may show a save prompt or use the Downloads folder; mobile systems may use a share sheet.
-- Complex tables, embedded media, and advanced Markdown layouts are outside the current restrained manuscript model.
-- Manuscript Compiler is not a fixed-page desktop-publishing application. Final typography and platform-specific rendering should be checked in the intended destination application.
-
-## Thank you
-
-Thank you to the early testers and authors who helped shape Manuscript Compiler's first public release. Your real-world manuscripts, publishing workflows, and careful feedback have been invaluable.
-
-If you encounter a problem or have a focused improvement to suggest, please open a bug report or feature request in the [GitHub issue tracker](https://github.com/anthonyfitzpatrick/manuscript-compiler/issues).
+Reload Obsidian and enable the plugin. For the full author workflow, see the [User Guide](USER_GUIDE.md).

@@ -2,9 +2,9 @@
 
 ## Current status
 
-The current manifest version remains a prerelease candidate until every applicable gate is complete. Automated gates cover the shared prepared Book, six native generators, format validators, browser-download cleanup, privacy, migration, and release allowlist. Live interoperability and platform download testing remain release blockers; this document does not claim they were performed.
+Release preparation requires every applicable gate to be complete. Automated gates cover the shared prepared Book, six native generators, format validators, browser-download cleanup, privacy, migration, and release allowlist. Live interoperability and platform download testing remain release blockers; this document does not claim they were performed.
 
-Maintainer and author documentation is provided in `ARCHITECTURE.md`, `DEVELOPER_GUIDE.md`, `USER_GUIDE.md`, `SECURITY.md`, and `CONTRIBUTING.md`. Screenshot placeholders in the user guide remain publication work and are not claims of completed manual testing.
+Maintainer and author documentation is provided in `ARCHITECTURE.md`, `DEVELOPER_GUIDE.md`, `USER_GUIDE.md`, `SECURITY.md`, and `CONTRIBUTING.md`. User Guide screenshots illustrate the workflow but do not replace manual testing.
 
 ## Supported workflow
 
@@ -40,7 +40,7 @@ Run and record current output before publishing:
 
 The release archive must be `release/manuscript-compiler-<version>.zip` and contain exactly `main.js`, `manifest.json`, and `styles.css`.
 
-The three runtime assets are `main.js`, `manifest.json`, and `styles.css`. GitHub Artifact Attestations cover those files. The release tag must exactly match `manifest.json`, without a `v` prefix; the ZIP is optional and is not an installation dependency.
+The three runtime assets are `main.js`, `manifest.json`, and `styles.css`. GitHub Artifact Attestations cover those files. The release tag must be `v<manifest version>`; the ZIP is optional and is not an installation dependency.
 
 `logo.svg` remains the master editable artwork in the repository for branding and documentation. The build bundles its SVG text into `main.js`, so neither the release package nor an installed plugin needs a separate logo file.
 

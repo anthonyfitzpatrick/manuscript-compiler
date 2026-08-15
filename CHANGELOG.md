@@ -1,5 +1,31 @@
 # Changelog <img src="logo.svg" alt="Manuscript Compiler logo" width="48" align="right">
 
+## 0.2.0
+
+### Added
+
+- Added Saved Compilations for reusable manuscript roots, reviewed Contents choices, output settings, and formatting without storing manuscript prose.
+- Added a clearer save-before-create decision for new and changed Saved Compilations, plus reusable Create file output preparation.
+- Added Saved Compilation browsing, search, opening, switching, management, duplication, renaming, deletion, and moved-folder recovery.
+- Added format-specific formatting and advanced formatting controls, including title/author overrides, typography, heading styles, and filename templates where supported.
+
+### Changed
+
+- Refined the compiler into the **Manuscript → Contents → Create file** workflow.
+- Made Contents the authoritative place to review and correct inclusion, roles, and order without modifying source notes.
+- Standardised output delivery through the host download, save, or share flow rather than vault output paths.
+- Expanded README and User Guide coverage for the current workflow, saving, formatting, and supported export formats.
+
+### Fixed
+
+- Removed leading structural Scene headings from compiled body text while retaining later authored headings.
+- Applied the same prepared manuscript structure across DOCX, ODT, EPUB, HTML, Markdown, and XML exports.
+- Strengthened Saved Compilation repair, compatibility, and export regression coverage.
+
+### Removed
+
+- Removed obsolete export-status and Scene-title controls from the current workflow.
+
 ## 0.10.2 Type-Safety Maintenance
 
 - Strengthened external-data, collection, parser, and exporter type boundaries so the complete unsafe TypeScript lint family remains clean without suppressions or unsafe casts.
@@ -142,7 +168,9 @@ Central export rule: **Only explicitly included publishable content is exported.
 
 - Added compile profiles, metadata filters, statistics, template variables, and interactive preview.
 
-## 0.2.0
+## Early development history
+
+### 0.2.0
 
 - Added the manuscript model, parser, ordering, cleaning pipeline, presets, and preview.
 
