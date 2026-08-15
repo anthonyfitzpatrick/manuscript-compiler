@@ -4,7 +4,7 @@
 
 A **Saved Compilation** stores a reusable compilation setup for a manuscript, not a copy of its prose. Choose **New compilation** to start fresh, or select a Saved Compilation to continue a setup for the selected manuscript folder.
 
-Use **Save changes** to update the current saved setup. Use **Save as…** to create another saved setup from the current choices. When the manuscript changes, review Contents: files detected in the folder but not already in the Saved Compilation are optional until you select **Add**. If a manuscript folder moves, use **Locate manuscript…** and then Save changes to keep the new association.
+Use **Save changes** to update the current saved setup. Use **Save as…** to create another saved setup from the current choices. When the manuscript changes, use **Contents** and **Correct structure** to review each item’s role, inclusion, and order. If a manuscript folder moves, use **Locate manuscript…** and then Save changes to keep the new association.
 
 The workspace shows **Unsaved changes** for saved setup edits.
 

@@ -173,17 +173,32 @@ Use **Manage…** to work with Saved Compilations for the current manuscript fol
 
 If a Saved Compilation’s folder has moved, use **Locate manuscript…** to select its new folder, then choose **Save changes** to retain that association.
 
-### Files detected but not currently included
+### Include or exclude a new Scene
 
-When an existing Saved Compilation is reopened, the manuscript may contain files that were not part of its saved setup. Contents can show a collapsed **Files detected in this folder that are not part of this compilation** section. Expand it to inspect the names, then select **Add** only for files you want to include. Use **Save changes** afterwards if you want that addition retained in the Saved Compilation. Leaving a detected file out does not delete it or add it to the compilation.
+When a new Scene appears in **Contents**, use its inclusion checkbox to decide whether it participates in the compilation. The Scene remains structurally identified as **Scene** either way.
 
-> **Screenshot 8 — Detected files**
+1. Open the Saved Compilation and go to **Contents**.
+2. Select **Correct structure**.
+3. Locate the Scene in the hierarchy.
+4. Select its inclusion checkbox to include it; clear the checkbox to exclude it.
+5. Select **Finish correcting structure** when you are done.
+6. Select **Save changes** to retain the revised inclusion choice in the Saved Compilation.
+
+Excluding a Scene affects only the compilation setup. It does not delete, rename, move, or rewrite the Scene note, and it remains in the vault.
+
+> **Screenshot 8 — Include or exclude a new Scene**
 >
-> **Where:** Open **Contents** for a Saved Compilation whose folder contains one neutral new note not already included.
+> **Where:** Open a Saved Compilation in **Contents**, then select **Correct structure**.
 >
-> **Show:** The collapsed **Files detected in this folder that are not part of this compilation** section expanded with one **Add** button, its title and count, and a neutral filename.
+> **Show:** A Transparent container, Part, and Chapter with Scene rows. Keep the additional Scene visible with its role set to **Scene**, its inclusion checkbox cleared, and the role and ordering controls, **Back**, and **Continue** in view.
 >
-> **Purpose:** Shows that newly detected files are optional, start collapsed, and must be explicitly added before they become part of the Saved Compilation.
+> **Purpose:** Shows that a Scene can remain structurally identified while being excluded from the compiled manuscript through its inclusion checkbox.
+
+<p align="center">
+  <img src="docs/images/08-include-or-exclude-new-scene.png" alt="Contents correction mode showing a Scene with its inclusion checkbox cleared while its role remains Scene" width="100%">
+</p>
+
+In this example, the additional Scene remains a Scene in the structure, but its cleared checkbox keeps it out of the compiled manuscript.
 
 ## Create file and download output
 
