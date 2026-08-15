@@ -43,9 +43,9 @@ The compiler recognises **Front matter**, **Part**, **Chapter**, **Scene**, and 
 Choose the structure preset that most closely matches the manuscript. Presets guide initial detection; the choices you make on Contents are authoritative.
 
 - **Novel with Parts** — Parts contain Chapters, which contain Scenes.
-- **Novel** — Chapters contain Scenes; no Parts are required.
-- **Chapter notes** — each Chapter is a note.
-- **Short story** — manuscript notes without a Part/Chapter hierarchy.
+- **Novel without Parts** — Chapters contain Scenes; no Parts are required.
+- **Chapter Notes** — each Chapter is a note.
+- **Short Story** — manuscript notes without a Part/Chapter hierarchy.
 - **Anthology** — a multi-work collection.
 - **Custom** — an established non-standard layout.
 
@@ -53,7 +53,11 @@ For files structurally designated as **Scene**, the Scene title is structural in
 
 > **Screenshot 2 — Manuscript stage**
 >
-> Open a sample book in the **Manuscript** stage after detection. Show the selected folder, structure preset, scan summary, and **Review Structure** button. Use a neutral sample title. This teaches the reader what to check before moving to Contents.
+> **Where:** Open a neutral sample book in the **Manuscript** stage immediately after detection.
+>
+> **Show:** The **Manuscript** stage selected, the book title and selected book folder, the **Detected structure** control with its active preset, the note/ignored-note scan summary, and **Review Structure**. Include enough of the workspace to identify Manuscript Compiler, but avoid private paths or manuscript prose.
+>
+> **Purpose:** Shows what Manuscript Compiler detected and what the user should verify before proceeding to **Contents**.
 
 ## Review Contents
 
