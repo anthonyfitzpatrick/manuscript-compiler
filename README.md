@@ -1,15 +1,5 @@
 # Manuscript Compiler <img src="logo.svg" alt="Manuscript Compiler logo" width="48" align="right">
 
-## Saved Compilations
-
-A **Saved Compilation** stores a reusable compilation setup for a manuscript, not a copy of its prose. Choose **New compilation** to start fresh, or select a Saved Compilation to continue a setup for the selected manuscript folder.
-
-Use **Save changes** to update the current saved setup. Use **Save as…** to create another saved setup from the current choices. When the manuscript changes, use **Contents** and **Correct structure** to review each item’s role, inclusion, and order. If a manuscript folder moves, use **Locate manuscript…** and then Save changes to keep the new association.
-
-The workspace shows **Unsaved changes** for saved setup edits.
-
-Use **Manage…** to browse saved compilations for the current manuscript. **Rename** changes only a saved compilation’s display name. **Duplicate** copies its persisted setup without switching to the copy. **Delete** removes only the saved setup—it never deletes manuscript or exported files. Deleting the current saved compilation keeps the usable workspace as a **New compilation**; use **Save as…** if you want to save it again.
-
 [![Latest release](https://img.shields.io/github/v/release/anthonyfitzpatrick/manuscript-compiler?label=release)](https://github.com/anthonyfitzpatrick/manuscript-compiler/releases/latest)
 [![MIT licence](https://img.shields.io/github/license/anthonyfitzpatrick/manuscript-compiler)](LICENSE)
 [![Obsidian 1.5.0+](https://img.shields.io/badge/Obsidian-1.5.0%2B-7C3AED?logo=obsidian&logoColor=white)](https://obsidian.md/)
@@ -20,13 +10,7 @@ Use **Manage…** to browse saved compilations for the current manuscript. **Ren
 
 Compile structured Obsidian manuscripts into publication-ready DOCX, ODT, EPUB, HTML, Markdown, and XML files for Vellum and other publishing workflows.
 
-<p align="center">
-  <img src="docs/images/12-create-file-overview.png" alt="Manuscript Compiler Create file screen with a prepared book summary and six export formats" width="75%">
-</p>
-
-*The final Create file stage: a reviewed 129,576-word novel, ready to compile into any of six native publishing formats.*
-
-Manuscript Compiler guides the book through **Manuscript → Contents → Create file**. By the time this screen appears, the selected notes have been scanned, their publishing roles and order have been reviewed, and one semantic Book has been prepared for every format. Choose the output and formatting you need, then create the file locally—without rewriting the Markdown manuscript. The workspace stays open after each file so you can inspect it, adjust settings, create another format from the current preparation, or save the compilation when ready.
+Manuscript Compiler guides a book through **Manuscript → Contents → Create file**. Review the detected publishing roles and order, choose an output format and formatting options, then create the file locally without rewriting the Markdown manuscript. The workspace remains open so you can create another format from the same reviewed manuscript.
 
 When you create a file from a **New compilation**, choose **Save and create** to name and retain the setup, or **Create without saving** to export it only. A dirty Saved Compilation similarly offers **Save changes and create** or **Create without saving**. Clean Saved Compilations create files directly.
 
@@ -34,7 +18,7 @@ When you create a file from a **New compilation**, choose **Save and create** to
 
 **Save changes** and **Save as…** save a Saved Compilation configuration: the selected manuscript, reviewed Contents choices, and output settings. They do not create a manuscript file.
 
-On **Create file**, confirm the book summary, choose a format and formatting options, then select **Create and download _format_**. Manuscript Compiler generates and validates the file in memory, then starts Obsidian’s/browser host download or share flow. When the host presents a system save dialog, choose the output filename and destination there; other hosts may save to Downloads or offer sharing. Manuscript Compiler does not present its own destination picker and never writes output into the vault. Cancelling the setup-save prompt creates nothing; dismissing a host save/share flow leaves no confirmed output file.
+On **Create file**, confirm the book summary, choose a format and formatting options, then select **Create and download _format_**. Manuscript Compiler creates the file and starts Obsidian’s/browser host download or share flow. When the host presents a system save dialog, choose the output filename and destination there; other hosts may save to Downloads or offer sharing. Manuscript Compiler does not present its own destination picker and never writes output into the vault. Cancelling the setup-save prompt creates nothing; dismissing a host save/share flow leaves no confirmed output file.
 
 ## Why Manuscript Compiler?
 
@@ -48,10 +32,10 @@ For a file designated as a **Scene**, its structural title is used for organisat
 
 ### Author Workflow
 
-- Right-click any manuscript folder
+- Right-click the complete book folder
 - Automatic structure detection
 - Manual correction before export
-- Semantic review of the complete book
+- Review the complete book before export
 - One-click compilation and download
 
 ### Publishing
@@ -61,7 +45,7 @@ For a file designated as a **Scene**, its structural title is used for organisat
 - Native EPUB 3
 - Native offline HTML
 - Native Markdown
-- Native semantic XML
+- Native structured XML
 - DOCX designed for Vellum workflows
 
 ### Privacy
@@ -76,8 +60,8 @@ For a file designated as a **Scene**, its structural title is used for organisat
 
 ### Reliability
 
-- One shared semantic `Book` model for every format
-- Format-specific structural validation before download
+- One reviewed manuscript structure for every format
+- Format-specific checks before download
 - Deterministic structural output
 - Stale-preview protection
 - Comprehensive automated tests
@@ -92,6 +76,10 @@ For a file designated as a **Scene**, its structural title is used for organisat
 
 See the [User Guide](USER_GUIDE.md) for the complete author workflow.
 
+## Saved Compilations
+
+A **Saved Compilation** stores a reusable setup for a manuscript, not a copy of its prose. **Save changes** updates the current setup; **Save as…** creates another setup from the current choices. Use **Manage…** to browse, rename, duplicate, or delete saved setups for the current manuscript. Deleting a Saved Compilation never deletes manuscript notes or generated files.
+
 ## Export Formats
 
 | Format | Purpose |
@@ -101,7 +89,7 @@ See the [User Guide](USER_GUIDE.md) for the complete author workflow.
 | **EPUB** | Reflowable EPUB 3 proofing and ebook workflows |
 | **HTML** | A self-contained offline browser proof with embedded CSS |
 | **Markdown** | Portable, readable plain-text manuscripts |
-| **XML** | Presentation-neutral semantic interchange and automation |
+| **XML** | Structured manuscript interchange and automation |
 
 ## Capability Comparison
 
@@ -115,88 +103,6 @@ See the [User Guide](USER_GUIDE.md) for the complete author workflow.
 | No companion plugin | ✅ |
 | No telemetry | ✅ |
 | Open source | ✅ |
-
-## Screenshots
-
-### Plugin Settings
-
-<p align="center">
-  <img src="docs/images/03-plugin-settings.png" alt="Manuscript Compiler settings with defaults, advanced options, support links, and the Open compiler button" width="75%">
-</p>
-
-*Set author defaults once, then open the compiler directly from Obsidian settings.*
-
-### Right-click Menu
-
-<p align="center">
-  <img src="docs/images/02-folder-context-menu.png" alt="Compile manuscript from this folder in the Obsidian File Explorer context menu" width="75%">
-</p>
-
-*Start from the exact folder that contains the complete book.*
-
-### Manuscript Screen
-
-<p align="center">
-  <img src="docs/images/04-manuscript-screen.png" alt="The Manuscript stage showing the selected book folder, detected structure, scan summary, and Review Structure action" width="75%">
-</p>
-
-*Confirm the manuscript root and automatically detected book structure.*
-
-### Contents Review
-
-<p align="center">
-  <img src="docs/images/07-contents-review.png" alt="The Contents stage showing detected counts, review controls, and the collapsed manuscript outline" width="75%">
-</p>
-
-*Review Parts, Chapters, Scenes, matter, warnings, and ignored notes before export.*
-
-### Correct Structure
-
-<p align="center">
-  <img src="docs/images/08-correct-structure.png" alt="Correction mode showing inclusion checkboxes, folder disclosure, role selectors, and ordering controls" width="75%">
-</p>
-
-*Correct inclusion, publishing roles, and order without moving or rewriting source notes.*
-
-### Create file
-
-<p align="center">
-  <img src="docs/images/13-docx-format.png" alt="DOCX selected with document style, indentation, scene break, title page, table of contents, and chapter controls" width="75%">
-</p>
-
-*Choose the output format and meaningful publishing controls, then create the file.*
-
-### DOCX in Microsoft Word
-
-<p align="center">
-  <img src="docs/images/26-docx-in-word.png" alt="A compiled manuscript chapter open in Microsoft Word with named manuscript styles visible" width="75%">
-</p>
-
-*Native DOCX opens with distinct structural formatting and named manuscript styles.*
-
-### DOCX in Vellum
-
-<p align="center">
-  <img src="docs/images/27-docx-in-vellum.png" alt="The compiled DOCX imported into Vellum with its book hierarchy and chapter preview visible" width="75%">
-</p>
-
-*Vellum recognises the compiled Part and Chapter hierarchy.*
-
-### ODT in LibreOffice
-
-<p align="center">
-  <img src="docs/images/28-odt-in-libreoffice.png" alt="A compiled manuscript ODT chapter open in LibreOffice Writer" width="75%">
-</p>
-
-*Native ODT carries the manuscript structure into LibreOffice Writer.*
-
-### EPUB Reader
-
-<p align="center">
-  <img src="docs/images/29-epub-reader.png" alt="The compiled EPUB open in a reader with its contents navigation and chapter text visible" width="75%">
-</p>
-
-*The EPUB provides navigable contents and a reflowable reading view.*
 
 ## Documentation
 
@@ -219,39 +125,13 @@ Download `main.js`, `manifest.json`, and `styles.css` from the same [GitHub rele
 
 ## Known Limitations
 
-- Complex tables, embedded media, and advanced Markdown layouts are outside the semantic fiction model.
+- Complex tables, embedded media, and advanced Markdown layouts are outside the supported manuscript model.
 - Save and share behaviour depends on the desktop or mobile host.
 - EPUB and target-application validation still require representative reader testing.
 - Unusual authoring templates may require manual structure correction.
 - Manuscript Compiler is not a fixed-page desktop-publishing engine.
 
 See [Known limitations in the User Guide](USER_GUIDE.md#known-limitations) for details and recommended testing.
-
-## Development and Validation
-
-```bash
-npm ci
-npm run typecheck
-npm run lint
-npm test
-npm run test:docx
-npm run test:odt
-npm run test:epub
-npm run test:html
-npm run test:markdown
-npm run test:xml
-npm run test:exports
-npm run benchmark:large
-npm run build
-npm run package
-npm run package:validate
-npm audit
-git diff --check
-```
-
-The release archive is `release/manuscript-compiler-<version>.zip` and contains exactly `main.js`, `manifest.json`, and `styles.css`. The editable `logo.svg` remains in the repository for README, GitHub, documentation, website, and social branding; its artwork is compiled into `main.js` and it is not a runtime or release-package file.
-
-Automated structural validation is not a substitute for opening outputs in Word, Vellum, LibreOffice, multiple EPUB readers, text editors, and browsers. See the [Manual Release Checklist](MANUAL_TESTING.md).
 
 ## Licence
 
