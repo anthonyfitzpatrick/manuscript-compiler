@@ -59,6 +59,10 @@ For files structurally designated as **Scene**, the Scene title is structural in
 >
 > **Purpose:** Shows what Manuscript Compiler detected and what the user should verify before proceeding to **Contents**.
 
+<p align="center">
+  <img src="docs/images/02-manuscript-stage.png" alt="Manuscript Compiler Manuscript stage showing a selected book folder, detected structure, scan summary, and Review Structure button" width="100%">
+</p>
+
 ## Review Contents
 
 Use Contents to confirm that the expected Parts, Chapters, Scenes, front matter, and back matter are included and in the right order. Read the summary, expand representative branches, and inspect ignored notes and warnings before continuing.
