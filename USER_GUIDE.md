@@ -200,50 +200,60 @@ Excluding a Scene affects only the compilation setup. It does not delete, rename
 
 In this example, the additional Scene remains a Scene in the structure, but its cleared checkbox keeps it out of the compiled manuscript.
 
-## Create file and download output
+## Create the manuscript file
 
-On **Create file**, confirm the prepared summary, choose an output format, check the **Filename** field, and set the meaningful formatting options. The filename is the suggested download filename; its extension is corrected for the selected format when the file is created.
+On **Create file**, confirm the **Book summary**, choose an **Export format**, and review the available **Formatting** options. The stage confirms that your Markdown notes will not be changed: creating an export writes a separate output file and never rewrites the manuscript source.
 
-> **Screenshot 9 — Create file and format choice**
+The six formats are **DOCX** (Microsoft Word document), **ODT** (OpenDocument Text), **EPUB** (Ebook), **HTML** (Standalone webpage), **Markdown** (Portable plain-text manuscript), and **XML** (Structured manuscript). The available formatting controls depend on the selected format. For example, DOCX and ODT offer **Document style**; DOCX, ODT, EPUB, and HTML offer paragraph indentation; and title-page, table-of-contents, scene-break, and chapter-page controls appear where that format supports them.
+
+> **Screenshot 9 — Create file and choose a format**
 >
 > **Where:** Open **Create file** with a prepared sample manuscript.
 >
-> **Show:** The prepared summary, the six format cards—DOCX, ODT, EPUB, HTML, Markdown, and XML—the **Filename** field, and the footer’s **Create and download DOCX** button. Select DOCX but do not start creation.
+> **Show:** The **Book summary**, the six format cards—DOCX, ODT, EPUB, HTML, Markdown, and XML—DOCX selected, the beginning of **Formatting**, and the footer’s **Create and download DOCX** button. Do not start creation.
 >
-> **Purpose:** Shows where output format and suggested filename are chosen before creating a manuscript file.
+> **Purpose:** Shows where to confirm the prepared manuscript, choose an export format, review formatting, and begin output creation.
 
-### The create decision
+<p align="center">
+  <img src="docs/images/09-create-file-and-choose-format.png" alt="Create file stage showing a book summary, six export formats, formatting controls, and the Create and download DOCX button" width="100%">
+</p>
 
-Choose **Create and download _format_** to create one file.
+### Create and save the output file
+
+Choose **Create and download _format_** to create one file. The button changes with the selected format, for example **Create and download DOCX** or **Create and download EPUB**. The **Filename** field lower on the Create file page supplies a suggested output name; it is safely normalised and its extension is corrected when the selected format changes or the file is created.
+
+After Manuscript Compiler generates and validates the file, the host starts its system save, download, or share flow. When a system save dialog appears, choose the filename and destination, then select **Save**. On macOS, this looks like the dialog below; its appearance varies by operating system and host.
+
+> **Screenshot 10 — Choose where to save the generated file**
+>
+> **Where:** After selecting **Create and download DOCX** (or the chosen format), when the host presents a system save dialog.
+>
+> **Show:** The suggested filename, destination control, **Cancel**, and **Save**. Use a neutral filename and location where possible.
+>
+> **Purpose:** Shows that **Save** writes the generated manuscript to the selected location, while **Cancel** dismisses that host save operation without a confirmed output file.
+
+<p align="center">
+  <img src="docs/images/10-choose-save-output-location.png" alt="macOS system save dialog showing filename, Downloads destination, Cancel, and Save" width="347">
+</p>
+
+The plugin cannot inspect the final filesystem location. Depending on the operating system and host settings, the host may instead save to a configured Downloads location or offer sharing. No generated file is written into the vault. If you cancel or dismiss the host flow, no completed output file is confirmed; the **Create file** workspace remains open, and the cancellation makes no further change to the Saved Compilation configuration.
+
+### Save the configuration before creating
+
+**Save changes**, **Save as…**, and **Save** in the system dialog are different actions. **Save changes** updates the current Saved Compilation configuration; **Save as…** creates another Saved Compilation configuration; **Save** in the system dialog saves the generated manuscript output file.
 
 - From a New compilation, Manuscript Compiler asks whether to **Create without saving** or **Save and create**. The latter first opens the naming dialog for a new Saved Compilation, then creates the file.
 - From a Saved Compilation with unsaved setup edits, it asks whether to **Create without saving** or **Save changes and create**.
 - From a clean Saved Compilation, creation starts directly.
 - Choosing **Cancel** in this decision dialog does not save the configuration and does not create a file.
 
-> **Screenshot 10 — Save setup before creating**
+> **Screenshot 11 — Save setup before creating**
 >
 > **Where:** From a New compilation on **Create file**, select **Create and download DOCX** (or the chosen format).
 >
 > **Show:** The **Save compilation?** dialog with **Cancel**, **Create without saving**, and **Save and create**. Do not use an operating-system file dialog.
 >
 > **Purpose:** Shows that this prompt concerns the Saved Compilation configuration, not the generated file’s destination.
-
-### Where the generated file goes
-
-After creation and validation, Manuscript Compiler starts Obsidian’s/browser host download or share flow. The plugin does not show its own destination picker and cannot inspect the final filesystem location.
-
-Depending on the operating system and host settings, the host may ask you to choose a filename and location, save to its configured Downloads location, or offer a share action. This is the same behavior for DOCX, ODT, EPUB, HTML, Markdown, and XML. No generated file is written into the vault before or after that handoff.
-
-If you cancel or dismiss the host’s save/share flow, the plugin cannot confirm a completed external file. The Create file workspace remains available so you can try again. You can cancel preparation before final download dispatch; once the host download has started, it cannot be rolled back by the plugin.
-
-> **Screenshot 11 — Host save or share flow**
->
-> **Where:** After creating a small sample file, capture the actual operating-system or Obsidian-host download/share prompt only if your platform presents one.
->
-> **Show:** The suggested filename and destination controls supplied by the host, with private paths redacted. If your platform saves directly to Downloads or opens a share sheet, capture that real host UI instead.
->
-> **Purpose:** Shows that the destination experience is platform controlled, not a Manuscript Compiler screen.
 
 > **Screenshot 12 — Creation complete**
 >

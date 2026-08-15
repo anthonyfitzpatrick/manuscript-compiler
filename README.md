@@ -34,7 +34,7 @@ When you create a file from a **New compilation**, choose **Save and create** to
 
 **Save changes** and **Save as…** save a Saved Compilation configuration: the selected manuscript, reviewed Contents choices, and output settings. They do not create a manuscript file.
 
-On **Create file**, choose a format and filename, then select **Create and download _format_**. Manuscript Compiler generates and validates the file in memory, then starts Obsidian’s/browser host download or share flow. The host may ask for a destination, save to its configured Downloads location, or offer sharing; Manuscript Compiler does not present its own destination picker and never writes output into the vault. Cancelling the setup-save prompt creates nothing; dismissing a host save/share flow leaves no confirmed output file.
+On **Create file**, confirm the book summary, choose a format and formatting options, then select **Create and download _format_**. Manuscript Compiler generates and validates the file in memory, then starts Obsidian’s/browser host download or share flow. When the host presents a system save dialog, choose the output filename and destination there; other hosts may save to Downloads or offer sharing. Manuscript Compiler does not present its own destination picker and never writes output into the vault. Cancelling the setup-save prompt creates nothing; dismissing a host save/share flow leaves no confirmed output file.
 
 ## Why Manuscript Compiler?
 
