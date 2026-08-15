@@ -289,17 +289,47 @@ After an output is handed to the host save, download, or share flow, the prepare
 
 ### Formatting options
 
-The visible controls depend on the selected format. DOCX and ODT offer **Document style** presets: Vellum, Standard manuscript, and Custom. DOCX, ODT, EPUB, and HTML support first-line indentation; the first paragraph after a heading or scene break remains flush left. Markdown does not have portable first-line indentation, and XML leaves presentation to its consumer.
+Use **Formatting** for the common presentation choices on **Create file**. These settings affect the generated output only: they do not change source Markdown, note names, manuscript folders, or the manuscript content stored in a Saved Compilation.
 
-The main controls include **Scene break**, **Add title page**, **Add table of contents** where supported, and **Start chapters on a new page** for DOCX and ODT. Open **Advanced formatting**—or **Advanced content options** for Markdown and XML—for title/author overrides, available typography controls, Part and Chapter heading styles, and the filename template. XML also offers **Include title page document**.
+The controls shown depend on the selected format. For DOCX and ODT, **Document style** selects the starting preset: **Vellum**, **Standard manuscript**, or **Custom**. DOCX, ODT, EPUB, and HTML also offer **Indent first line of paragraphs**. When it is enabled, **First-line indent (cm)** sets the amount; the first paragraph after a heading or Scene break remains flush left.
 
-> **Screenshot 13 — Advanced formatting**
+Choose a **Scene break** marker for the separator between Scene bodies: **#**, **\***, **\*\*\***, **\* \* \***, **Blank line**, or **Custom**. This controls the separator, not Scene titles: structural Scene titles are still omitted from manuscript body text. **Add title page** and, except for Markdown, **Add table of contents** add those generated elements to the selected output. **Start chapters on a new page** is available for DOCX and ODT.
+
+Markdown instead describes its preserved plain-text structure and does not offer portable first-line indentation. XML leaves paragraph indentation to the application that consumes the XML.
+
+> **Screenshot 13 — Formatting options**
+>
+> **Where:** On **Create file**, select DOCX or ODT and scroll to **Formatting**.
+>
+> **Show:** **Document style**, **Indent first line of paragraphs**, **First-line indent (cm)**, **Scene break**, **Add title page**, **Add table of contents**, and **Start chapters on a new page**. Use neutral values and keep source prose out of frame.
+>
+> **Purpose:** Shows the everyday output-presentation controls available before opening **Advanced formatting**.
+
+<p align="center">
+  <img src="docs/images/13-formatting-options.png" alt="Formatting options showing document style, paragraph indentation, scene break, title page, table of contents, and chapter page-break controls" width="100%">
+</p>
+
+### Advanced formatting
+
+Open **Advanced formatting** for less-frequently changed, document-level choices. It is separate from the common **Formatting** controls above, and its contents vary with the selected output format. Markdown and XML call this disclosure **Advanced content options** instead.
+
+**Book title override** changes the title used in generated output without renaming the book folder, source notes, or Saved Compilation. **Author override** supplies the author value used in generated content and metadata where the selected format supports it. For DOCX, ODT, EPUB, and HTML, the advanced controls also provide **Font** (Times New Roman, Garamond, Georgia, or Arial), **Font size** (11-, 12-, or 13-point), and **Line spacing** (Single, 1.15, 1.5 lines, or Double). **Page size** is available for DOCX and ODT, with A4 and Letter choices.
+
+Use **Custom scene break** to enter the separator used when **Scene break** is set to **Custom**. **Part heading style** and **Chapter heading style** control how those structural headings appear, with number-only, title-only, and number-and-title choices. **Filename template** controls the suggested output filename; use `{BookTitle}` to insert the effective book title. Manuscript Compiler safely corrects the selected format's filename extension when it creates the file.
+
+For XML, **Include title page document** appears in **Advanced content options**. The other advanced controls are shown only where they apply to the chosen output format.
+
+> **Screenshot 14 — Advanced formatting**
 >
 > **Where:** Select DOCX or ODT on **Create file**, then expand **Advanced formatting**.
 >
-> **Show:** The book-title and author overrides, font controls, page size, Part/Chapter heading styles, and filename template. Use neutral example values and leave source prose out of frame.
+> **Show:** The book-title and author overrides, font, font size, line spacing, page size, custom Scene break, Part/Chapter heading styles, and filename template. Use neutral example values and leave source prose out of frame.
 >
 > **Purpose:** Shows which less-common controls are available without implying they apply to every format.
+
+<p align="center">
+  <img src="docs/images/14-advanced-formatting.png" alt="Advanced formatting options showing title and author overrides, typography, page size, scene break, heading styles, and filename template" width="100%">
+</p>
 
 ## Troubleshooting
 
