@@ -99,20 +99,67 @@ A **Saved Compilation** stores a reusable setup for a manuscript: its selected r
 
 There are two different kinds of saving in Manuscript Compiler:
 
-- **Save Changes** saves the current Saved Compilation configuration for later reuse.
+- **Save changes** saves the current Saved Compilation configuration for later reuse.
 - **Create and download** creates the selected manuscript file and starts the host download/share flow. It does not save a configuration unless you explicitly choose a save option when prompted.
 
 ### Create a Saved Compilation
 
 Start a **New compilation**, choose the manuscript folder, and review Contents. Select **Save as…**, enter a name in the **Save compilation** dialog, and choose **Save**. The current workspace becomes that Saved Compilation; the prepared manuscript does not need to be rebuilt solely because it was saved.
 
-Use **Save Changes** when a Saved Compilation has unsaved setup edits. This updates that same Saved Compilation. The button is disabled when there is nothing new to save.
+Use **Save changes** when a Saved Compilation has unsaved setup edits. This updates that same Saved Compilation. The button is disabled when there is nothing new to save.
 
 Use **Save as…** to create a separate Saved Compilation from the current choices. It does not overwrite the current Saved Compilation.
 
-> **Screenshot 5 — Saved Compilation header**
+### Open a Saved Compilation
+
+To access saved setups:
+
+1. Open Obsidian **Settings** and select Manuscript Compiler.
+2. Under **Saved compilations**, select **Manage saved compilations…**.
+
 >
-> Open an existing Saved Compilation with a harmless changed setting so **Save changes** is enabled. Show its name and the **Save changes**, **Save as…**, **Switch…**, and **Manage…** controls. Do not show private manuscript prose. This teaches that these controls save and organise a setup, not a generated file.
+> **Screenshot 5 — Manage Saved Compilations from Settings**
+>
+> **Where:** Open Obsidian **Settings**, then open the Manuscript Compiler plugin settings.
+>
+> **Show:** The **Saved compilations** section and **Manage saved compilations…** button. Keep **Open compiler** visible to establish the plugin settings page; the defaults may remain visible but do not need separate explanation.
+>
+> **Purpose:** Shows where to access Saved Compilations. This control manages reusable compilation setups, not generated manuscript files.
+
+<p align="center">
+  <img src="docs/images/05-manage-saved-compilations-settings.png" alt="Manuscript Compiler plugin settings showing the Saved compilations section and Manage saved compilations button" width="100%">
+</p>
+
+3. Find the setup you want to use and select **Open**.
+4. Manuscript Compiler opens the Saved Compilation and restores its saved configuration.
+
+The manager lists each setup’s name, manuscript folder, vault-relative location, and selected output format. Use the search field to narrow the list.
+
+> **Screenshot 6 — Saved Compilations manager**
+>
+> **Where:** Open **Manage saved compilations…** from the Manuscript Compiler settings.
+>
+> **Show:** The **Saved compilations** title, search field, one neutral Saved Compilation with its manuscript root, vault-relative location, and output format, plus **Open** and **Delete**.
+>
+> **Purpose:** Shows where to search, inspect, open, or delete a reusable Saved Compilation setup.
+
+<p align="center">
+  <img src="docs/images/06-saved-compilations-manager.png" alt="Saved Compilations manager showing a search field, saved setup details, and Open and Delete actions" width="100%">
+</p>
+
+Select **Open** to load the chosen setup back into Manuscript Compiler. **Delete** opens a confirmation and removes only the stored Saved Compilation setup; it does not delete manuscript notes, the book folder, source Markdown, or previously generated files.
+
+> **Screenshot 7 — Opened Saved Compilation**
+>
+> **Where:** Select **Open** for a Saved Compilation in the manager.
+>
+> **Show:** The saved compilation name and **Saved compilation** label at the top, **Save changes**, **Save as…**, **Switch…**, and **Manage…**, the three workflow stages, the restored book folder, detected structure, and **Review Structure**.
+>
+> **Purpose:** Confirms that the Saved Compilation has reopened and its reusable configuration is ready to review, adjust, or continue through **Contents** and **Create file**.
+
+<p align="center">
+  <img src="docs/images/07-opened-saved-compilation.png" alt="Opened Saved Compilation in Manuscript Compiler showing its name, saved configuration controls, restored folder, and detected structure" width="100%">
+</p>
 
 ### Open, switch, and manage Saved Compilations
 
@@ -130,17 +177,25 @@ If a Saved Compilation’s folder has moved, use **Locate manuscript…** to sel
 
 When an existing Saved Compilation is reopened, the manuscript may contain files that were not part of its saved setup. Contents can show a collapsed **Files detected in this folder that are not part of this compilation** section. Expand it to inspect the names, then select **Add** only for files you want to include. Use **Save changes** afterwards if you want that addition retained in the Saved Compilation. Leaving a detected file out does not delete it or add it to the compilation.
 
-> **Screenshot 6 — Detected files**
+> **Screenshot 8 — Detected files**
 >
-> Open a Saved Compilation whose folder contains one neutral new note not already included. On **Contents**, expand **Files detected in this folder that are not part of this compilation** and show one **Add** button. Keep the section title and count visible; use a neutral filename. This teaches that detected files are optional and starts collapsed.
+> **Where:** Open **Contents** for a Saved Compilation whose folder contains one neutral new note not already included.
+>
+> **Show:** The collapsed **Files detected in this folder that are not part of this compilation** section expanded with one **Add** button, its title and count, and a neutral filename.
+>
+> **Purpose:** Shows that newly detected files are optional, start collapsed, and must be explicitly added before they become part of the Saved Compilation.
 
 ## Create file and download output
 
 On **Create file**, confirm the prepared summary, choose an output format, check the **Filename** field, and set the meaningful formatting options. The filename is the suggested download filename; its extension is corrected for the selected format when the file is created.
 
-> **Screenshot 7 — Create file and format choice**
+> **Screenshot 9 — Create file and format choice**
 >
-> Open **Create file** with a prepared sample manuscript. Show the prepared summary, the six format cards—DOCX, ODT, EPUB, HTML, Markdown, and XML—the **Filename** field, and the footer’s **Create and download DOCX** button. Select DOCX but do not start creation. This teaches where output format and suggested filename are chosen.
+> **Where:** Open **Create file** with a prepared sample manuscript.
+>
+> **Show:** The prepared summary, the six format cards—DOCX, ODT, EPUB, HTML, Markdown, and XML—the **Filename** field, and the footer’s **Create and download DOCX** button. Select DOCX but do not start creation.
+>
+> **Purpose:** Shows where output format and suggested filename are chosen before creating a manuscript file.
 
 ### The create decision
 
@@ -151,9 +206,13 @@ Choose **Create and download _format_** to create one file.
 - From a clean Saved Compilation, creation starts directly.
 - Choosing **Cancel** in this decision dialog does not save the configuration and does not create a file.
 
-> **Screenshot 8 — Save setup before creating**
+> **Screenshot 10 — Save setup before creating**
 >
-> From a New compilation on **Create file**, click the Create button and capture the **Save compilation?** dialog. Show **Cancel**, **Create without saving**, and **Save and create**. Do not use an operating-system file dialog. This teaches that this prompt concerns the Saved Compilation configuration.
+> **Where:** From a New compilation on **Create file**, select **Create and download DOCX** (or the chosen format).
+>
+> **Show:** The **Save compilation?** dialog with **Cancel**, **Create without saving**, and **Save and create**. Do not use an operating-system file dialog.
+>
+> **Purpose:** Shows that this prompt concerns the Saved Compilation configuration, not the generated file’s destination.
 
 ### Where the generated file goes
 
@@ -163,13 +222,21 @@ Depending on the operating system and host settings, the host may ask you to cho
 
 If you cancel or dismiss the host’s save/share flow, the plugin cannot confirm a completed external file. The Create file workspace remains available so you can try again. You can cancel preparation before final download dispatch; once the host download has started, it cannot be rolled back by the plugin.
 
-> **Screenshot 9 — Host save or share flow**
+> **Screenshot 11 — Host save or share flow**
 >
-> After creating a small sample file, capture the actual operating-system or Obsidian-host download/share prompt only if your platform presents one. Show the suggested filename and destination controls supplied by the host, with private paths redacted. If your platform saves directly to Downloads or opens a share sheet, capture that real host UI instead. This teaches that the destination experience is platform controlled, not a Manuscript Compiler screen.
+> **Where:** After creating a small sample file, capture the actual operating-system or Obsidian-host download/share prompt only if your platform presents one.
+>
+> **Show:** The suggested filename and destination controls supplied by the host, with private paths redacted. If your platform saves directly to Downloads or opens a share sheet, capture that real host UI instead.
+>
+> **Purpose:** Shows that the destination experience is platform controlled, not a Manuscript Compiler screen.
 
-> **Screenshot 10 — Creation complete**
+> **Screenshot 12 — Creation complete**
 >
-> Return to the still-open **Create file** workspace after a successful sample export. Show the selected format, the Create button available for another export, and any unobtrusive success notice if it remains visible. Do not show personal download paths. This teaches that one prepared compilation can create more than one format.
+> **Where:** Return to the still-open **Create file** workspace after a successful sample export.
+>
+> **Show:** The selected format, the **Create and download** button available for another export, and any unobtrusive success notice if it remains visible. Do not show personal download paths.
+>
+> **Purpose:** Shows that one prepared compilation can create more than one format.
 
 ## Output formats
 
@@ -186,9 +253,13 @@ The visible controls depend on the selected format. DOCX and ODT offer **Documen
 
 The main controls include **Scene break**, **Add title page**, **Add table of contents** where supported, and **Start chapters on a new page** for DOCX and ODT. Open **Advanced formatting**—or **Advanced content options** for Markdown and XML—for title/author overrides, available typography controls, Part and Chapter heading styles, and the filename template. XML also offers **Include title page document**.
 
-> **Screenshot 11 — Advanced formatting**
+> **Screenshot 13 — Advanced formatting**
 >
-> Select DOCX or ODT on **Create file**, then expand **Advanced formatting**. Show the book-title and author overrides, font controls, page size, Part/Chapter heading styles, and filename template. Use neutral example values and leave source prose out of frame. This teaches which less-common controls are available without implying they apply to every format.
+> **Where:** Select DOCX or ODT on **Create file**, then expand **Advanced formatting**.
+>
+> **Show:** The book-title and author overrides, font controls, page size, Part/Chapter heading styles, and filename template. Use neutral example values and leave source prose out of frame.
+>
+> **Purpose:** Shows which less-common controls are available without implying they apply to every format.
 
 ## Troubleshooting
 
