@@ -65,17 +65,33 @@ For files structurally designated as **Scene**, the Scene title is structural in
 
 ## Review Contents
 
-Use Contents to confirm that the expected Parts, Chapters, Scenes, front matter, and back matter are included and in the right order. Read the summary, expand representative branches, and inspect ignored notes and warnings before continuing.
+Use Contents to confirm that the expected Parts, Chapters, Scenes, front matter, and back matter are included and in the right order. Read the summary, expand representative branches, and inspect transparent containers, ignored project notes, and current structure warnings before continuing. Transparent containers organise notes without producing a heading of their own in the compiled manuscript.
 
 Choose **Correct structure** to edit inclusion, role, and order. The available roles are Front matter, Transparent container, Part, Chapter, Scene, Back matter, and Exclude. Use **Finish correcting structure** when you are done. These choices affect only the compilation; they never rename, move, or rewrite the source notes.
 
 > **Screenshot 3 — Contents review**
 >
-> Open **Contents** for a sample novel with at least one Part, two Chapters, and several Scenes. Show the summary and a compact outline with one branch expanded. Keep **Correct structure**, **Ignored project notes**, and **Warnings** visible if present. This teaches the normal review state.
+> **Where:** Open a neutral sample book in **Contents** before activating **Correct structure**.
+>
+> **Show:** **Contents** selected; the included-note, Part, Chapter, Scene, Front Matter, Back Matter, and Ignored summary; **Correct structure**; **Ignored project notes** with **Review**; a representative hierarchy including a Transparent container and Parts; genuine warning labels where present; **Back** and **Continue**. Do not use the correction-mode screen or include private prose.
+>
+> **Purpose:** Shows the normal review state and what to verify— inclusion, detected structure, transparent containers, ignored project notes, and genuine current warnings—before changing anything.
+
+<p align="center">
+  <img src="docs/images/03-contents-review.png" alt="Manuscript Compiler Contents stage showing the normal review state, summary, Correct structure button, ignored project notes, and manuscript hierarchy" width="100%">
+</p>
 
 > **Screenshot 4 — Correct structure**
 >
-> In the same sample, activate **Correct structure**. Expand one Chapter and show its inclusion control, role selector, disclosure control, and Move up/down controls. Include visible Part, Chapter, and Scene roles. This teaches how to correct detection without editing source files.
+> **Where:** On **Contents**, after selecting **Correct structure** for a neutral sample manuscript.
+>
+> **Show:** An expanded Part and Chapter with Scene rows; inclusion checkboxes, disclosure controls, role selectors showing Part, Chapter, and Scene, Move up/down controls, and **Back** and **Continue**. Do not show private manuscript prose.
+>
+> **Purpose:** Shows how to change inclusion, role, and order without renaming, moving, rewriting, or otherwise modifying source notes.
+
+<p align="center">
+  <img src="docs/images/04-correct-structure.png" alt="Manuscript Compiler Contents correction mode showing inclusion checkboxes, role selectors, and ordering controls" width="100%">
+</p>
 
 ## Saved Compilations
 
