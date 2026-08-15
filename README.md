@@ -1,10 +1,10 @@
 # Manuscript Compiler <img src="logo.svg" alt="Manuscript Compiler logo" width="48" align="right">
 
-## Saved compilations
+## Saved Compilations
 
-A Saved compilation stores a reusable compilation setup for a manuscript, not a copy of its prose. Choose **New compilation** to start fresh, or select a **Saved compilation** to continue a setup for the selected manuscript folder.
+A **Saved Compilation** stores a reusable compilation setup for a manuscript, not a copy of its prose. Choose **New compilation** to start fresh, or select a Saved Compilation to continue a setup for the selected manuscript folder.
 
-Use **Save changes** to update the current saved setup. Use **Save as…** to create another saved setup from the current choices. When the manuscript changes, review the Contents stage: new content can be accepted, missing saved references can be removed, and uncertain matches require your explicit choice. If a manuscript folder moves, use **Locate manuscript…** and then Save changes to keep the new association.
+Use **Save changes** to update the current saved setup. Use **Save as…** to create another saved setup from the current choices. When the manuscript changes, review Contents: files detected in the folder but not already in the Saved Compilation are optional until you select **Add**. If a manuscript folder moves, use **Locate manuscript…** and then Save changes to keep the new association.
 
 The workspace shows **Unsaved changes** for saved setup edits.
 
@@ -30,11 +30,19 @@ Manuscript Compiler guides the book through **Manuscript → Contents → Create
 
 When you create a file from a **New compilation**, choose **Save and create** to name and retain the setup, or **Create without saving** to export it only. A dirty Saved Compilation similarly offers **Save changes and create** or **Create without saving**. Clean Saved Compilations create files directly.
 
+## Save a setup, then create a file
+
+**Save changes** and **Save as…** save a Saved Compilation configuration: the selected manuscript, reviewed Contents choices, and output settings. They do not create a manuscript file.
+
+On **Create file**, choose a format and filename, then select **Create and download _format_**. Manuscript Compiler generates and validates the file in memory, then starts Obsidian’s/browser host download or share flow. The host may ask for a destination, save to its configured Downloads location, or offer sharing; Manuscript Compiler does not present its own destination picker and never writes output into the vault. Cancelling the setup-save prompt creates nothing; dismissing a host save/share flow leaves no confirmed output file.
+
 ## Why Manuscript Compiler?
 
 Manuscript Compiler understands a book as **Parts, Chapters, Scenes, Front Matter, and Back Matter**—not merely as a collection of Markdown files. It detects that publishing structure, lets you review and correct inclusion, roles, and order, then compiles only the manuscript you approved.
 
 Designed specifically for long-form authors, it keeps research, dashboards, development notes, and excluded drafts out of the finished book while preserving the hierarchy expected by editing and publishing tools. Your source notes are never rewritten.
+
+For a file designated as a **Scene**, its structural title is used for organisation and navigation, not emitted as manuscript body text. Headings written later in the Scene body remain in the export.
 
 ## Features
 
@@ -80,7 +88,7 @@ Designed specifically for long-form authors, it keeps research, dashboards, deve
 2. Right-click the complete manuscript folder in Obsidian.
 3. Review and correct the detected structure.
 4. Choose an export format and formatting preset.
-5. Select **Create and download**.
+5. Select **Create and download _format_**, then complete the host download or share flow.
 
 See the [User Guide](USER_GUIDE.md) for the complete author workflow.
 
@@ -150,7 +158,7 @@ See the [User Guide](USER_GUIDE.md) for the complete author workflow.
 
 *Correct inclusion, publishing roles, and order without moving or rewriting source notes.*
 
-### Create File
+### Create file
 
 <p align="center">
   <img src="docs/images/13-docx-format.png" alt="DOCX selected with document style, indentation, scene break, title page, table of contents, and chapter controls" width="75%">
@@ -203,7 +211,7 @@ See the [User Guide](USER_GUIDE.md) for the complete author workflow.
 
 ### Community Plugins
 
-Manuscript Compiler is not yet listed in Obsidian's Community Plugins catalogue. Once available, search for **Manuscript Compiler**, select **Install**, then **Enable**.
+Search the [Obsidian Community Plugins directory](https://community.obsidian.md/plugins/manuscript-compiler) for **Manuscript Compiler**, then select **Install** and **Enable**.
 
 ### Manual Installation
 

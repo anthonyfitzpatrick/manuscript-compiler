@@ -61,8 +61,12 @@ export default class ManuscriptCompilerPlugin extends Plugin {
     this.registerCommands();
     this.registerFolderContextMenu();
     this.app.workspace.onLayoutReady(() => {
+      // `onLayoutReady` itself is host-owned and cannot be unregistered. A
+      // disable/reload before it fires must not attach new vault listeners to
+      // an already-unloaded plugin instance.
+      if (!this.active) return;
       this.registerSavedCompilationStalenessEvents();
-      if (this.active && !this.settings.onboardingCompleted) new FirstRunWizardModal(this.app, this).open();
+      if (!this.settings.onboardingCompleted) new FirstRunWizardModal(this.app, this).open();
     });
   }
 

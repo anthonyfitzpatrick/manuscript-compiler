@@ -1070,7 +1070,7 @@ test("production source remains mobile-safe, popout-safe, and lifecycle-register
   assert.doesNotMatch(source, /\(\?<[=!]/, "Production regexes must not use lookbehind on older iOS WebKit.");
   assert.doesNotMatch(source, /\.innerHTML\b|\.style\.(?:display|color|background|width|height)|setAttribute\(["']style["']/);
   assert.doesNotMatch(source, /["']\.obsidian(?:\/|["'])|\bas any\b|\bas TFile\b|\bas TFolder\b/);
-  assert.match(main, /registerEvent\(this\.app\.workspace\.on\("file-menu"/); assert.match(main, /onunload\(\): void \{ this\.active = false; this\.operations\.cancel\(\); \}/); assert.doesNotMatch(main, /hotkeys\s*:/);
+  assert.match(main, /registerEvent\(this\.app\.workspace\.on\("file-menu"/); assert.match(main, /onunload\(\): void \{ this\.active = false; this\.operations\.cancel\(\); \}/); assert.match(main, /onLayoutReady\(\(\) => \{[\s\S]*?if \(!this\.active\) return;[\s\S]*?registerSavedCompilationStalenessEvents\(\)/); assert.doesNotMatch(main, /hotkeys\s*:/);
 });
 test("plugin CSS selectors are owned, theme-safe, and retain accessibility modes", async () => {
   const css = await readFile("styles.css", "utf8"); const selectorBlocks = [...css.matchAll(/(?:^|})(?!\s*@)([^{}]+)\{/g)].map((match) => match[1].trim()).filter((selector) => selector && !selector.startsWith("@"));
