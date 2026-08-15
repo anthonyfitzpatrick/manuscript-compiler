@@ -14,11 +14,23 @@ The workspace has three stages:
 
 Install and enable Manuscript Compiler from [Obsidian Community Plugins](https://community.obsidian.md/plugins/manuscript-compiler). For a manual install, place the matching `main.js`, `manifest.json`, and `styles.css` release files directly in `<vault>/.obsidian/plugins/manuscript-compiler/`, then reload Obsidian and enable the plugin.
 
-Start from File Explorer by right-clicking the folder containing one complete book and choosing **Compile manuscript from this folder**. You can also open **Compile manuscript** from the command palette or **Open compiler** in the plugin settings.
+The recommended starting point is the complete book root:
+
+1. Open File Explorer and locate the folder containing the complete book.
+2. Right-click that book folder.
+3. Choose **Compile manuscript from this folder**.
+
+Manuscript Compiler opens with that folder as the manuscript root. Do not start from an individual Chapter or Scene: it can compile only material inside the folder you select, so a Chapter or Scene selection would omit the rest of the book.
+
+You can also open **Compile manuscript** from the command palette, or choose **Open compiler** in the Manuscript Compiler settings. These routes open the compiler without an already-selected book folder, so choose the complete book root on the Manuscript stage.
 
 > **Screenshot 1 — Start from a book folder**
 >
-> Open File Explorer with a neutral sample book folder visible. Right-click the book folder and show **Compile manuscript from this folder** in the menu. Keep personal vault names out of frame if needed. This teaches the reader to select the complete book root rather than an individual Chapter or Scene.
+> **Where:** File Explorer, with a neutral/sample complete book folder right-clicked.
+>
+> **Show:** Enough of the folder hierarchy to make the selected folder clearly the book root, plus the open context menu with **Compile manuscript from this folder** fully visible. Do not include private manuscript prose, personal vault names, or unrelated panes.
+>
+> **Purpose:** Shows that compilation begins from the complete book folder, not an individual Chapter or Scene.
 
 ## Manuscript structure
 
