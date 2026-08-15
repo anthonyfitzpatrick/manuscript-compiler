@@ -40,7 +40,7 @@ Run and record current output before publishing:
 
 The release archive must be `release/manuscript-compiler-<version>.zip` and contain exactly `main.js`, `manifest.json`, and `styles.css`.
 
-The three runtime assets are `main.js`, `manifest.json`, and `styles.css`. GitHub Artifact Attestations cover those files. The release tag must be `v<manifest version>`; the ZIP is optional and is not an installation dependency.
+The three runtime assets are `main.js`, `manifest.json`, and `styles.css`. GitHub Artifact Attestations cover those files. The release tag must match the manifest version exactly; the ZIP is optional and is not an installation dependency.
 
 `logo.svg` remains the master editable artwork in the repository for branding and documentation. The build bundles its SVG text into `main.js`, so neither the release package nor an installed plugin needs a separate logo file.
 

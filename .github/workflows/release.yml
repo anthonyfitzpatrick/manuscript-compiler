@@ -27,7 +27,7 @@ jobs:
       - name: Verify release tag
         env:
           RELEASE_TAG: ${{ github.event.release.tag_name }}
-        run: test "v$(node -p "require('./manifest.json').version")" = "$RELEASE_TAG"
+        run: test "$(node -p "require('./manifest.json').version")" = "$RELEASE_TAG"
       - name: Build release assets
         run: npm run build
       - name: Attest runtime assets

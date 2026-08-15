@@ -20,7 +20,7 @@ if (process.argv.includes("--validate")) {
   const names = Object.keys(unzipSync(archive)).sort();
   assert(JSON.stringify(names) === JSON.stringify([...required].sort()), `Unexpected archive entries: ${names.join(", ")}`);
   process.stdout.write(`Validated ${archivePath}: ${names.join(", ")}\n`);
-  process.stdout.write(`GitHub release assets ready: ${required.join(", ")} (tag v${manifest.version})\n`);
+  process.stdout.write(`GitHub release assets ready: ${required.join(", ")} (tag ${manifest.version})\n`);
   process.exit(0);
 }
 
@@ -29,7 +29,7 @@ await rm("release", { recursive: true, force: true });
 await mkdir("release", { recursive: true });
 await writeFile(archivePath, zipSync(Object.fromEntries(entries.map((entry) => [entry.name, entry.data])), { level: 9 }));
 process.stdout.write(`Created ${archivePath} with only ${required.join(", ")}\n`);
-process.stdout.write(`GitHub release assets ready: ${required.join(", ")} (tag v${manifest.version})\n`);
+process.stdout.write(`GitHub release assets ready: ${required.join(", ")} (tag ${manifest.version})\n`);
 
 async function validateAssets() {
   for (const name of required) {
