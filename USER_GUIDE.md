@@ -28,8 +28,6 @@ You can also open **Compile manuscript** from the command palette, or choose **O
   <img src="docs/images/01-start-from-book-folder.png" alt="Obsidian File Explorer with a book folder selected and the Compile manuscript from this folder context-menu command visible" width="429">
 </p>
 
-*Screenshot 1 — Start from a book folder.*
-
 ## Manuscript structure
 
 The compiler recognises **Front matter**, **Part**, **Chapter**, **Scene**, and **Back matter**. It also recognises **Transparent container** folders: these organise notes in the vault but do not create headings in the generated manuscript. Typical project folders such as Research, Development, Archive, Dashboards, Templates, and Exports are excluded by default and remain reviewable on Contents.
@@ -49,8 +47,6 @@ For files structurally designated as **Scene**, the Scene title is structural in
   <img src="docs/images/02-manuscript-stage.png" alt="Manuscript Compiler Manuscript stage showing a selected book folder, detected structure, scan summary, and Review Structure button" width="100%">
 </p>
 
-*Screenshot 2 — Manuscript stage.*
-
 ## Review Contents
 
 Use Contents to confirm that the expected Parts, Chapters, Scenes, front matter, and back matter are included and in the right order. Read the summary, expand representative branches, and inspect transparent containers, ignored project notes, and current structure warnings before continuing. Transparent containers organise notes without producing a heading of their own in the compiled manuscript.
@@ -61,13 +57,9 @@ Choose **Correct structure** to edit inclusion, role, and order. The available r
   <img src="docs/images/03-contents-review.png" alt="Manuscript Compiler Contents stage showing the normal review state, summary, Correct structure button, ignored project notes, and manuscript hierarchy" width="100%">
 </p>
 
-*Screenshot 3 — Contents review.*
-
 <p align="center">
   <img src="docs/images/04-correct-structure.png" alt="Manuscript Compiler Contents correction mode showing inclusion checkboxes, role selectors, and ordering controls" width="100%">
 </p>
-
-*Screenshot 4 — Correct structure.*
 
 ## Saved Compilations
 
@@ -97,8 +89,6 @@ To access saved setups:
   <img src="docs/images/05-manage-saved-compilations-settings.png" alt="Manuscript Compiler plugin settings showing the Saved compilations section and Manage saved compilations button" width="100%">
 </p>
 
-*Screenshot 5 — Manage Saved Compilations from Settings.*
-
 3. Find the setup you want to use and select **Open**.
 4. Manuscript Compiler opens the Saved Compilation and restores its saved configuration.
 
@@ -108,15 +98,11 @@ The manager lists each setup’s name, manuscript folder, vault-relative locatio
   <img src="docs/images/06-saved-compilations-manager.png" alt="Saved Compilations manager showing a search field, saved setup details, and Open and Delete actions" width="100%">
 </p>
 
-*Screenshot 6 — Saved Compilations manager.*
-
 Select **Open** to load the chosen setup back into Manuscript Compiler. **Delete** opens a confirmation and removes only the stored Saved Compilation setup; it does not delete manuscript notes, the book folder, source Markdown, or previously generated files.
 
 <p align="center">
   <img src="docs/images/07-opened-saved-compilation.png" alt="Opened Saved Compilation in Manuscript Compiler showing its name, saved configuration controls, restored folder, and detected structure" width="100%">
 </p>
-
-*Screenshot 7 — Opened Saved Compilation.*
 
 ### Open, switch, and manage Saved Compilations
 
@@ -147,8 +133,6 @@ Excluding a Scene affects only the compilation setup. It does not delete, rename
   <img src="docs/images/08-include-or-exclude-new-scene.png" alt="Contents correction mode showing a Scene with its inclusion checkbox cleared while its role remains Scene" width="100%">
 </p>
 
-*Screenshot 8 — Include or exclude a new Scene.*
-
 In this example, the additional Scene remains a Scene in the structure, but its cleared checkbox keeps it out of the compiled manuscript.
 
 ## Create the manuscript file
@@ -161,8 +145,6 @@ The six formats are **DOCX** (Microsoft Word document), **ODT** (OpenDocument Te
   <img src="docs/images/09-create-file-and-choose-format.png" alt="Create file stage showing a book summary, six export formats, formatting controls, and the Create and download DOCX button" width="100%">
 </p>
 
-*Screenshot 9 — Create file and choose a format.*
-
 ### Create and save the output file
 
 Choose **Create and download _format_** to create one file. The button changes with the selected format, for example **Create and download DOCX** or **Create and download EPUB**. The **Filename** field lower on the Create file page supplies a suggested output name; it is safely normalised and its extension is corrected when the selected format changes or the file is created.
@@ -172,8 +154,6 @@ For a New compilation or a Saved Compilation with unsaved setup edits, first res
 <p align="center">
   <img src="docs/images/10-choose-save-output-location.png" alt="macOS system save dialog showing filename, Downloads destination, Cancel, and Save" width="347">
 </p>
-
-*Screenshot 10 — Choose where to save the generated file.*
 
 The plugin cannot inspect the final filesystem location. Depending on the operating system and host settings, the host may instead save to a configured Downloads location or offer sharing. No generated file is written into the vault. If you cancel or dismiss the host flow, no completed output file is confirmed; the **Create file** workspace remains open, and the cancellation makes no further change to the Saved Compilation configuration.
 
@@ -193,8 +173,6 @@ For a Saved Compilation with unsaved setup edits, the dialog is titled **Save ch
   <img src="docs/images/11-save-setup-before-creating.png" alt="Save compilation dialog with Cancel, Create without saving, and Save and create actions" width="544">
 </p>
 
-*Screenshot 11 — Save setup before creating.*
-
 ### Create another output
 
 After an output is handed to the host save, download, or share flow, the prepared **Create file** workspace remains open. There is no persistent creation-complete banner. You can select another format or use the current format again and choose **Create and download _format_** without rescanning or rebuilding the manuscript structure solely because you made an earlier output.
@@ -202,8 +180,6 @@ After an output is handed to the host save, download, or share flow, the prepare
 <p align="center">
   <img src="docs/images/12-create-another-output.png" alt="Create file workspace remaining open after export with format choices and Create and download DOCX available" width="100%">
 </p>
-
-*Screenshot 12 — Create another output.*
 
 ## Output formats
 
@@ -228,8 +204,6 @@ Markdown instead describes its preserved plain-text structure and does not offer
   <img src="docs/images/13-formatting-options.png" alt="Formatting options showing document style, paragraph indentation, scene break, title page, table of contents, and chapter page-break controls" width="100%">
 </p>
 
-*Screenshot 13 — Formatting options.*
-
 ### Advanced formatting
 
 Open **Advanced formatting** for less-frequently changed, document-level choices. It is separate from the common **Formatting** controls above, and its contents vary with the selected output format. Markdown and XML call this disclosure **Advanced content options** instead.
@@ -243,8 +217,6 @@ For XML, **Include title page document** appears in **Advanced content options**
 <p align="center">
   <img src="docs/images/14-advanced-formatting.png" alt="Advanced formatting options showing title and author overrides, typography, page size, scene break, heading styles, and filename template" width="100%">
 </p>
-
-*Screenshot 14 — Advanced formatting.*
 
 ## Troubleshooting
 
