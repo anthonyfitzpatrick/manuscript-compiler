@@ -26,7 +26,7 @@ Compile structured Obsidian manuscripts into publication-ready DOCX, ODT, EPUB, 
 
 *The final Create file stage: a reviewed 129,576-word novel, ready to compile into any of six native publishing formats.*
 
-Manuscript Compiler guides the book through **Manuscript → Contents → Create file**. By the time this screen appears, the selected notes have been scanned, their publishing roles and order have been reviewed, and one semantic Book has been prepared for every format. Choose the output and formatting you need, then create the file locally—without rewriting the Markdown manuscript. The workspace stays open after each file so you can inspect it, adjust settings, create another format, or save the compilation when ready.
+Manuscript Compiler guides the book through **Manuscript → Contents → Create file**. By the time this screen appears, the selected notes have been scanned, their publishing roles and order have been reviewed, and one semantic Book has been prepared for every format. Choose the output and formatting you need, then create the file locally—without rewriting the Markdown manuscript. The workspace stays open after each file so you can inspect it, adjust settings, create another format from the current preparation, or save the compilation when ready.
 
 When you create a file from a **New compilation**, choose **Save and create** to name and retain the setup, or **Create without saving** to export it only. A dirty Saved Compilation similarly offers **Save changes and create** or **Create without saving**. Clean Saved Compilations create files directly.
 

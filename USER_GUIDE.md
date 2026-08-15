@@ -222,7 +222,7 @@ The six formats are **DOCX** (Microsoft Word document), **ODT** (OpenDocument Te
 
 Choose **Create and download _format_** to create one file. The button changes with the selected format, for example **Create and download DOCX** or **Create and download EPUB**. The **Filename** field lower on the Create file page supplies a suggested output name; it is safely normalised and its extension is corrected when the selected format changes or the file is created.
 
-After Manuscript Compiler generates and validates the file, the host starts its system save, download, or share flow. When a system save dialog appears, choose the filename and destination, then select **Save**. On macOS, this looks like the dialog below; its appearance varies by operating system and host.
+For a New compilation or a Saved Compilation with unsaved setup edits, first resolve the configuration decision described in the next section. A clean Saved Compilation begins output creation directly. After Manuscript Compiler generates and validates the file, the host starts its system save, download, or share flow. When a system save dialog appears, choose the filename and destination, then select **Save**. On macOS, this looks like the dialog below; its appearance varies by operating system and host.
 
 > **Screenshot 10 — Choose where to save the generated file**
 >
@@ -242,10 +242,13 @@ The plugin cannot inspect the final filesystem location. Depending on the operat
 
 **Save changes**, **Save as…**, and **Save** in the system dialog are different actions. **Save changes** updates the current Saved Compilation configuration; **Save as…** creates another Saved Compilation configuration; **Save** in the system dialog saves the generated manuscript output file.
 
-- From a New compilation, Manuscript Compiler asks whether to **Create without saving** or **Save and create**. The latter first opens the naming dialog for a new Saved Compilation, then creates the file.
-- From a Saved Compilation with unsaved setup edits, it asks whether to **Create without saving** or **Save changes and create**.
-- From a clean Saved Compilation, creation starts directly.
-- Choosing **Cancel** in this decision dialog does not save the configuration and does not create a file.
+From a **New compilation**, selecting **Create and download _format_** opens **Save compilation?**:
+
+- **Cancel** returns to Create file without saving the setup or creating output.
+- **Create without saving** continues toward output creation without making the current setup a Saved Compilation.
+- **Save and create** opens the **Save compilation** dialog. Enter a **Name** and select **Save** to retain the setup, then output creation continues.
+
+For a Saved Compilation with unsaved setup edits, the dialog is titled **Save changes?** and offers **Create without saving** or **Save changes and create**. A clean Saved Compilation starts creation directly, without this configuration decision.
 
 > **Screenshot 11 — Save setup before creating**
 >
@@ -255,13 +258,25 @@ The plugin cannot inspect the final filesystem location. Depending on the operat
 >
 > **Purpose:** Shows that this prompt concerns the Saved Compilation configuration, not the generated file’s destination.
 
-> **Screenshot 12 — Creation complete**
+<p align="center">
+  <img src="docs/images/11-save-setup-before-creating.png" alt="Save compilation dialog with Cancel, Create without saving, and Save and create actions" width="544">
+</p>
+
+### Create another output
+
+After an output is handed to the host save, download, or share flow, the prepared **Create file** workspace remains open. There is no persistent creation-complete banner. You can select another format or use the current format again and choose **Create and download _format_** without rescanning or rebuilding the manuscript structure solely because you made an earlier output.
+
+> **Screenshot 12 — Create another output**
 >
 > **Where:** Return to the still-open **Create file** workspace after a successful sample export.
 >
-> **Show:** The selected format, the **Create and download** button available for another export, and any unobtrusive success notice if it remains visible. Do not show personal download paths.
+> **Show:** The saved compilation name, **Create file** selected, the Book summary, format selector, Formatting controls, **Back**, and the active **Create and download DOCX** button. Do not show a success banner or personal download paths.
 >
-> **Purpose:** Shows that one prepared compilation can create more than one format.
+> **Purpose:** Shows that the prepared compilation remains ready for another copy or a different output format.
+
+<p align="center">
+  <img src="docs/images/12-create-another-output.png" alt="Create file workspace remaining open after export with format choices and Create and download DOCX available" width="100%">
+</p>
 
 ## Output formats
 
