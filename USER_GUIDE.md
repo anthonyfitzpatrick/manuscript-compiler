@@ -32,6 +32,10 @@ You can also open **Compile manuscript** from the command palette, or choose **O
 >
 > **Purpose:** Shows that compilation begins from the complete book folder, not an individual Chapter or Scene.
 
+<p align="center">
+  <img src="docs/images/01-start-from-book-folder.png" alt="Obsidian File Explorer with a book folder selected and the Compile manuscript from this folder context-menu command visible" width="429">
+</p>
+
 ## Manuscript structure
 
 The compiler recognises **Front matter**, **Part**, **Chapter**, **Scene**, and **Back matter**. It also recognises **Transparent container** folders: these organise notes in the vault but do not create headings in the generated manuscript. Typical project folders such as Research, Development, Archive, Dashboards, Templates, and Exports are excluded by default and remain reviewable on Contents.
