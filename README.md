@@ -136,3 +136,7 @@ See [Known limitations in the User Guide](USER_GUIDE.md#known-limitations) for d
 ## Licence
 
 [MIT](LICENSE)
+
+## Author
+
+Created by [Anthony Fitzpatrick](https://www.anthonyfitzpatrick.me/) and published by [Wolf 359 Press AB](https://wolf359.press/). See the [product page on wolf359.app](https://wolf359.app/manuscript-compiler/) for more, and [wolf359.app](https://wolf359.app/) for the other plugins and themes.
